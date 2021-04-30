@@ -1,8 +1,8 @@
 # -------------------------------
-# Title: MetaGEN_Run_Pipeline.py
+# Title: MetaGEN_Main.py
 # Author: Silver A. Wolf
-# Last Modified: Mon, 25.01.2021
-# Version: 0.2.4
+# Last Modified: Fri, 30.04.2021
+# Version: 0.2.5
 # -------------------------------
 
 # Imports
@@ -13,13 +13,23 @@ import csv
 import os
 
 # Settings
+
+# MetaSUB
 name_project = "MetaSUB/"
-input_folder = "input/" + name_project
-input_pe = input_folder + "PE/"
-input_se = input_folder + "SE/"
 read_1_identifier = "read1.fastq.gz"
 read_2_identifier = "read2.fastq.gz"
-version = "0.2.4"
+
+# Horses
+#name_project = "Horses/"
+#read_1_identifier = "R1_001.fastq.gz"
+#read_2_identifier = "R2_001.fastq.gz"
+
+# General
+input_folder = "input/" + name_project
+input_metadata = input_folder + "metadata/"
+input_sequences = input_folder + "sequences/"
+output_folder = "output/" + name_project
+version = "0.2.5"
 
 def set_reference(host):
 	ref_seq = ""
@@ -34,140 +44,123 @@ def set_reference(host):
 
 def download_metasub(city):
 	print("Step 1/8 - Fetching Data [MetaSUB]:\n")
-	os.system("mkdir -p " + input_pe)
-	os.system("mkdir -p " + input_se)
+	os.system("mkdir -p " + input_metadata)
+	os.system("mkdir -p " + input_sequences)
 	
 	print("MetaSUB: Downloading Metadata Table.")
-	os.system("wget -N -P " + input_folder + " https://github.com/MetaSUB/MetaSUB-metadata/raw/master/complete_metadata.csv")
+	os.system("wget -N -P " + input_metadata + " " +
+			  "https://github.com/MetaSUB/MetaSUB-metadata/raw/master/complete_metadata.csv")
 	
-	with open(input_folder + "complete_metadata.csv") as metadata_file:
+	with open(input_metadata + "complete_metadata.csv") as metadata_file:
 		for line in csv.reader(metadata_file, delimiter = ","):
 			if len(line) > 0:
 				if city in line[4]:
 					sample_name = line[0].strip()
 					sample_list = sample_name.split("_")
 					print("MetaSUB: Downloading " + sample_name + ".")
-					command = "wget -N -P " + input_pe + " http://s3.wasabisys.com/metasub/human_filtered_data/hudson_alpha_library/" + sample_list[0] + "/" + sample_list[1] + "/" + sample_name + ".filter_human_dna.nonhuman_read"
+					command = ("wget -N -P " + input_sequences + " " +
+							   "http://s3.wasabisys.com/metasub/human_filtered_data/hudson_alpha_library/" +
+							   sample_list[0] + "/" + sample_list[1] + "/" + sample_name +
+							   ".filter_human_dna.nonhuman_read"
+							  )
 					os.system(command + "1.fastq.gz")
-					os.system(command + "2.fastq.gz")		
+					os.system(command + "2.fastq.gz")
 
 	# Move known SE sequences
 	print("Unix: Cleaning up output.")
-	os.system("mv " + input_pe + "haib17CEM4890_H7KYMCCXY_SL273100* " + input_se)
+	os.system("mv " + input_sequences + "haib17CEM4890_H7KYMCCXY_SL273100* " + input_metadata)
 	
 	print("MetaSUB: Finished.\n")	
 	
 def run_fastp(host, memory, threads):
 	print("Step 2/8 - Quality Control [fastp]:\n")
-	os.system("mkdir -p output/fastp/reports/")
+	os.system("mkdir -p " + output_folder + "fastp/reports/")
 	
 	read_list_pe = sorted([name for name in os.listdir(input_pe) if fnmatch(name, "*" + read_1_identifier)])
-	read_list_se = sorted([name for name in os.listdir(input_se) if fnmatch(name, "*" + read_2_identifier)])
-	output_dir = "output/fastp/"
+	fastp_dir = output_folder + "fastp/"
 	c = 0
 	
 	for read in read_list_pe:
-		# Output naming convention
-		sample_name = read.split(".filter")[0].split("_")[-1]
+		# Define output naming convention
+		if name_project == "MetaSUB":
+			sample_name = read.split(".filter")[0].split("_")[-1]
+		else:
+			sample_name = read.split("-L")[0]
 
 		print("fastp: Analyzing " + read + " (PE).")
 
-		bbsplit_scaf_12 = "output/bbmap/" + sample_name + "_scaffolds_12.txt"
-		bbsplit_stats_12 = "output/bbmap/" + sample_name + "_stats_12.txt"
-		bbsplit_scaf_3 = "output/bbmap/" + sample_name + "_scaffolds_3.txt"
-		bbsplit_stats_3 = "output/bbmap/" + sample_name + "_stats_3.txt"
+		bbsplit_R12_scaf = output_folder + "bbmap/" + sample_name + "_scaffolds_12.txt"
+		bbsplit_R12_stat = output_folder + "bbmap/" + sample_name + "_stats_12.txt"
+		bbsplit_R3_scaf = output_folder + "bbmap/" + sample_name + "_scaffolds_3.txt"
+		bbsplit_R3_stat = output_folder + "bbmap/" + sample_name + "_stats_3.txt"
 		
-		read_1_in = input_pe + read
-		read_2_in = input_pe + read.split(read_1_identifier)[0] + read_2_identifier
-		read_1_out = output_dir + sample_name + "_" + read_1_identifier
-		read_2_out = output_dir + sample_name + "_" + read_2_identifier
-		read_3_out = output_dir + sample_name + "_read3.fastq.gz"
-		read_4_out = output_dir + sample_name + "_read4.fastq.gz"
-		read_html_out = output_dir + "reports/" + sample_name + ".fastp.html"
-		read_json_out = output_dir + "reports/" + sample_name + ".fastp.json"
-		read_merged_se_out = "tmp/" + sample_name + ".reads.se.merged.fastq.gz"
-		read_unpaired_out = "tmp/" + sample_name + ".reads.unpaired.fastq.gz"
-		read_tmp_1 = "tmp/" + sample_name + "_R1.tmp.fastq.gz"
-		read_tmp_2 = "tmp/" + sample_name + "_R2.tmp.fastq.gz"
+		read1_in = input_pe + read
+		read2_in = input_pe + read.split(read_1_identifier)[0] + read_2_identifier
+		
+		read1_out = fastp_dir + sample_name + "_R1.fastq.gz"
+		read2_out = fastp_dir + sample_name + "_R2.fastq.gz"
+		read3_out = fastp_dir + sample_name + "_R3.fastq.gz"
+		
+		read1_tmp = "tmp/" + sample_name + "_R1.tmp.fastq.gz"
+		read2_tmp = "tmp/" + sample_name + "_R2.tmp.fastq.gz"
+		read3_tmp = "tmp/" + sample_name + "_R3.tmp.fastq.gz"
+		
+		html_out = fastp_dir + "reports/" + sample_name + ".fastp.html"
+		json_out = fastp_dir + "reports/" + sample_name + ".fastp.json"
 		
 		print("fastp: Performing QC.")
-		os.system("fastp --in1 " + read_1_in + " --out1 " + read_tmp_1 + " --in2 " + read_2_in + " --out2 " + read_tmp_2 + " --unpaired1 " + read_unpaired_out + " --unpaired2 " + read_unpaired_out + " --merge --merged_out " + read_merged_se_out + " --compression 9 --detect_adapter_for_pe --thread " + threads + " --html " + read_html_out + " --json " + read_json_out + " --overrepresentation_analysis --overrepresentation_sampling 20 --correction --cut_tail --cut_window_size 4 --cut_mean_quality 20")
+		
+		os.system("fastp" +
+				  " --in1 " + read1_in +
+				  " --out1 " + read1_tmp +
+				  " --in2 " + read2_in +
+				  " --out2 " + read2_tmp +
+				  " --unpaired1 " + read3_tmp +
+				  " --unpaired2 " + read3_tmp +
+				  " --html " + html_out +
+				  " --json " + json_out +
+				  " --thread " + threads +
+				  " --compression 9" +
+				  " --correction" +
+				  " --cut_tail" +
+				  " --cut_window_size 4" +
+				  " --cut_mean_quality 20" +
+				  " --detect_adapter_for_pe" +
+				  " --overrepresentation_analysis" +
+				  " --overrepresentation_sampling 20"
+				 )
 		
 		print("BBMap: Removing Host Genome Contamination.")
-		os.system("bbsplit.sh in1=" + read_tmp_1 + " in2=" + read_tmp_2 + " ref=" + host + " outu1=" + read_1_out + " outu2=" + read_2_out + " threads=" + threads + " path=tmp/ -Xmx" + memory + "g scafstats=" + bbsplit_scaf_12 + " refstats=" + bbsplit_stats_12)
 		
-		print("Unix: Concatenating Merged and Unpaired SE Reads.")
-		read_merged_final_out = "tmp/" + sample_name + ".reads.final.merged.fastq.gz" 
-		os.system("cat " + read_merged_se_out + " " + read_unpaired_out + " > " + read_merged_final_out)
+		os.system("bbsplit.sh" +
+				  " in1=" + read1_tmp +
+				  " in2=" + read2_tmp +
+				  " ref=" + host +
+				  " outu1=" + read1_out +
+				  " outu2=" + read2_out +
+				  " path=tmp/" +
+				  " threads=" + threads +
+				  " refstats=" + bbsplit_R12_stat +
+				  " scafstats=" + bbsplit_R12_scaf +
+				  " -Xmx" + memory + "g"
+				 )
 		
-		print("BBMap: Removing Host Genome Contamination.")
-		os.system("bbsplit.sh in=" + read_merged_final_out + " ref=" + host + " outu=" + read_3_out + " threads=" + threads + " path=tmp/ -Xmx" + memory + "g scafstats=" + bbsplit_scaf_3 + " refstats=" + bbsplit_stats_3)
-		
-		print("BBMap: Reverse Complementing Read 2.")  
-		read_2_rev_out = "tmp/" + sample_name + "_read2.reverse.fastq.gz"
-		os.system("reformat.sh in=" + read_2_out + " out=" + read_2_rev_out + " rcomp=t -Xmx" + memory + "g zl=9 threads=" + threads)
-		
-		print("BBMap: Concatenating PE Reads.")
-		read_merged_pe_out = "tmp/" + sample_name + "_read1_2.merged.fastq.gz"
-		os.system("fuse.sh in1=" + read_1_out + " in2=" + read_2_rev_out + " out=" + read_merged_pe_out + " fusepairs=t pad=1 -Xmx" + memory + "g ziplevel=9 threads=" + threads)
-		
-		print("Unix: Adjusting PE Read Separators.")
-		os.system("gunzip " + read_merged_pe_out)
-		read_merged_pe_out_naked = read_merged_pe_out.split(".gz")[0]
-		os.system("sed -i \'s/ANA/AXA/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/ANC/AXC/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/ANG/AXG/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/ANT/AXT/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/CNA/CXA/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/CNC/CXC/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/CNG/CXG/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/CNT/CXT/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/GNA/GXA/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/GNC/GXC/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/GNT/GXT/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/GNG/GXG/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/TNA/TXA/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/TNC/TXC/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/TNG/TXG/\' " + read_merged_pe_out_naked)
-		os.system("sed -i \'s/TNT/TXT/\' " + read_merged_pe_out_naked)
-		os.system("gzip " + read_merged_pe_out_naked)
-		
-		print("Unix: Merging PE and SE Reads.")
-		os.system("cat " + read_merged_pe_out + " " + read_3_out + " > " + read_4_out)
+		os.system("bbsplit.sh" +
+				  " in=" + read3_tmp +
+				  " ref=" + host +
+				  " outu=" + read3_out +
+				  " path=tmp/ " +
+				  " threads=" + threads +
+				  " refstats=" + bbsplit_R3_stat +
+				  " scafstats=" + bbsplit_R3_scaf +
+				  " -Xmx" + memory + "g"
+				 )
 		
 		print("Unix: Cleaning up output.")
 		os.system("rm -r tmp/*")
 				
 		c = c + 1
 		print("")
-
-	for read in read_list_se:
-		# Output naming convention
-		sample_name = read.split(".filter")[0].split("_")[-1]
-
-		print("fastp: Analyzing " + read + " (SE).")
-		
-		bbsplit_scaf = "output/bbmap/" + sample_name + "_scaffolds.txt"
-		bbsplit_stats = "output/bbmap/" + sample_name + "_stats.txt"
-		
-		read_in = input_se + read
-		read_out = output_dir + sample_name + "_read4.fastq.gz"
-		read_tmp = "tmp/" + sample_name + ".reads.final.fastq.gz"
-		
-		read_html_out = output_dir + "reports/" + sample_name + ".fastp.html"
-		read_json_out = output_dir + "reports/" + sample_name + ".fastp.json"
-		
-		print("fastp: Performing QC.")
-		os.system("fastp -i " + read_in + " -o " + read_tmp + " --compression 9 --thread " + threads + " --html " + read_html_out + " --json " + read_json_out + " --overrepresentation_analysis --overrepresentation_sampling 20 --cut_tail --cut_window_size 4 --cut_mean_quality 20")
-		
-		print("BBMap: Removing Host Genome Contamination.")
-		os.system("bbsplit.sh in=" + read_tmp + " ref=" + host + " outu=" + read_out + " threads=" + threads + " path=tmp/ -Xmx" + memory + "g scafstats=" + bbsplit_scaf + " refstats=" + bbsplit_stats)
-		
-		print("Unix: Cleaning up output.")
-		os.system("rm -r tmp/*")
-
-		c = c + 1
-		print("")	
 		
 	print("fastp: " + str(c) + " files successfully analyzed.")
 	print("fastp: Finished.\n")
@@ -178,23 +171,23 @@ def run_kraken2(database, read_length, bracken_threshold, fastp_dir, bracken_dir
 	os.system("mkdir -p " + kraken_dir)
 	
 	print("kraken2: Computing Taxonomic Classification.")
-	read_list = sorted([name for name in os.listdir(fastp_dir) if fnmatch(name, "*_read4.fastq.gz")])
-	c = 0
-	
+	read_list = sorted([name for name in os.listdir(fastp_dir) if fnmatch(name, "*_R1.fastq.gz")])
 	levels = ["Phylum", "Genus", "Species"]
-	
-	for read in read_list:
-		sample_name = read.split("_read4")[0]
-		print("kraken2: Analyzing " + read + ".")
+	c = 0
+
+	for read1 in read_list:
+		sample_name = read.split("_R1")[0]
+		read2 = sample_name + "_R2.fastq.gz"
+		print("kraken2: Analyzing " + sample_name + ".")
 		os.system("kraken2" +
 				  " --db " + database +
 				  " --threads " + threads +
 				  " --report " + kraken_dir + sample_name + ".report" +
-				  " " + fastp_dir + read +
+				  " --paired " + fastp_dir + read1 + " " + fastp_dir + read2 +
 				  " > " + kraken_dir + sample_name + ".stdout"
 				 )
 		for level in levels:
-			print("Bracken: Analyzing " + read + " (" + level + ").")
+			print("Bracken: Analyzing " + sample_name + " (" + level + ").")
 			os.system("bracken" +
 					  " -d " + database +
 					  " -i " + kraken_dir + sample_name + ".report" +
@@ -262,15 +255,15 @@ def run_megahit(megahit_input, megahit_output, threads):
 	print("Step 6/8 - Metagenome Assembly [MEGAHIT]:\n")
 	
 	print("MEGAHIT: Creating Assemblies.")
-	read_list = sorted([name for name in os.listdir(megahit_input) if fnmatch(name, "*_read1.fastq.gz")])
+	read_list = sorted([name for name in os.listdir(megahit_input) if fnmatch(name, "*_R1.fastq.gz")])
 	c = 0
 	
 	# PE + SE
 	for read in read_list:
+		sample_name = read.split("_R1")[0]
 		read_1 = megahit_input + read
-		read_2 = megahit_input + read.split("_read1")[0] + "_read2.fastq.gz"
-		read_3 = megahit_input + read.split("_read1")[0] + "_read3.fastq.gz"
-		sample_name = read.split("_read1")[0]
+		read_2 = megahit_input + sample_name + "_R2.fastq.gz"
+		read_3 = megahit_input + sample_name + "_R3.fastq.gz"
 		print("MEGAHIT: Assembling " + sample_name + ".")
 		os.system("megahit" +
 				  " -1 " + read_1 +
@@ -290,31 +283,11 @@ def run_megahit(megahit_input, megahit_output, threads):
 		c = c + 1
 		print("")
 	
-	# SE
-	read_se = megahit_input + "SL273100_read4.fastq.gz"
-	sample_name = "SL273100"
-	print("MEGAHIT: Assembling " + sample_name + ".")
-	os.system("megahit" +
-			  " -r " + read_se +
-			  " -m 0.5" +
-			  " -t " + threads +
-			  " --min-contig-len 150" +
-			  " --out-prefix " + sample_name +
-			  " --tmp-dir tmp/" +
-			  " -o " + megahit_output + "/" + sample_name
-			 )
-	print("Unix: Cleaning up output.")
-	os.system("mv " + megahit_output + "/" + sample_name + "/" + sample_name + ".contigs.fa " +
-			  megahit_output + "/" + sample_name + ".fa")
-	os.system("rm -r " + megahit_output + "/" + sample_name + "/")
-	c = c + 1
+	print("Unix: Compressing Assemblies.")
+	os.system("gzip " + megahit_output + "/*.fa")
 	print("")
 	
 	print("MEGAHIT: " + str(c) + " files successfully assembled.")
-	
-	print("Unix: Compressing Assemblies.")
-	os.system("gzip " + megahit_output + "/*.fa")
-	
 	print("MEGAHIT: Finished.\n")
 
 def run_metaquast(metaquast_input, metaquast_output, threads):
@@ -366,9 +339,9 @@ def run_metabat(fastp_input, megahit_input, metabat_output, threads):
 				  " --quiet" +
 				  " -p " + threads +
 				  " -x " + bowtie_index +
-				  " -1 " + fastp_input + sample_name + "_read1.fastq.gz" +
-				  " -2 " + fastp_input + sample_name + "_read2.fastq.gz" +
-				  " -U " + fastp_input + sample_name + "_read2.fastq.gz" +
+				  " -1 " + fastp_input + sample_name + "_R1.fastq.gz" +
+				  " -2 " + fastp_input + sample_name + "_R2.fastq.gz" +
+				  " -U " + fastp_input + sample_name + "_R3.fastq.gz" +
 				  " -S " + bowtie_sam
 				 )
 		
@@ -405,29 +378,97 @@ def run_metabat(fastp_input, megahit_input, metabat_output, threads):
 # Main
 def main():
 	parser = argparse.ArgumentParser(description = "")
-	parser.add_argument("-b", "--bracken_threshold", type = int, default = "10", required = False, help = "Bracken read threshold")
-	parser.add_argument("-c", "--city_of_interest", type = str, default = "berlin", required = False, help = "Name of the city of interest (see Metadata Table for options)")
-	parser.add_argument("-k", "--kraken2_db", type = str, default = "/scratch1/databases/kraken/20200226_kraken2_standard_database/", required = False, help = "Path to local kraken2 database")
-	parser.add_argument("-m", "--memory", type = int, default = "32", required = False, help = "Amount of memory used for running MetaGEN")
-	parser.add_argument("-r", "--read_length", type = int, default = "150", required = False, help = "Minimum expected read length")
-	parser.add_argument("-s", "--host_species", type = str, default = "human", required = False, help = "Specify the host species of the metagenomic data (human or horse)")
-	parser.add_argument("-t", "--threads", type = int, default = "32", required = False, help = "Amount of threads used for running MetaGEN")
+	parser.add_argument("-b",
+						"--bracken_threshold",
+						type = int,
+						default = "10",
+						required = False,
+						help = "Bracken read threshold"
+					   )
+	parser.add_argument("-c",
+						"--city_of_interest",
+						type = str,
+						default = "berlin",
+						required = False,
+						help = "MetaSUB: Name of the city of interest"
+					   )
+	parser.add_argument("-k",
+						"--kraken2_db",
+						type = str,
+						default = "/scratch1/databases/kraken/20200226_kraken2_standard_database/",
+						required = False,
+						help = "Path to local kraken2 database"
+					   )
+	parser.add_argument("-m",
+						"--memory",
+						type = int,
+						default = "32",
+						required = False,
+						help = "Amount of memory used for running MetaGEN"
+					   )
+	parser.add_argument("-r",
+						"--read_length",
+						type = int,
+						default = "150",
+						required = False,
+						help = "Minimum expected read length"
+					   )
+	parser.add_argument("-s",
+						"--host_species",
+						type = str,
+						default = "human",
+						required = False,
+						help = "Specify the host species of the metagenomic data (human or horse)"
+					   )
+	parser.add_argument("-t",
+						"--threads",
+						type = int,
+						default = "32",
+						required = False,
+						help = "Amount of threads used for running MetaGEN"
+					   )
 
 	args = parser.parse_args()
 	
 	print("Running MetaGEN Pipeline Version " + version + "\n")
 	
 	reference_genome = set_reference(args.host_species)
-	#download_metasub(args.city_of_interest)
-	#run_fastp(reference_genome, str(args.memory), str(args.threads))
-	run_kraken2(args.kraken2_db, str(args.read_length), str(args.bracken_threshold), "output/fastp/", "output/bracken/", "output/kraken2/", str(args.threads))
-	#run_krona("output/kraken2/", "output/krona/")
-	#run_multiqc("output/fastp/reports/", "output/multiqc/fastp/", "output/kraken2/", "output/multiqc/kraken2/")
-	#run_megahit("output/fastp/", "output/megahit/", str(args.threads))
-	#run_metaquast("output/megahit/", "output/metaquast/", str(args.threads))
-	#run_metabat("output/fastp/", "output/megahit/", "output/metabat/", str(args.threads))
+	download_metasub(args.city_of_interest)
+	run_fastp(reference_genome,
+			  str(args.memory),
+			  str(args.threads)
+			 )
+	run_kraken2(args.kraken2_db,
+				str(args.read_length),
+				str(args.bracken_threshold),
+				output_folder + "fastp/",
+				output_folder + "bracken/",
+				output_folder + "kraken2/",
+				str(args.threads)
+			   )
+	run_krona(output_folder + "kraken2/",
+			  output_folder + "krona/"
+			 )
+	run_multiqc(output_folder + "fastp/reports/",
+				output_folder + "multiqc/fastp/",
+				output_folder + "kraken2/",
+				output_folder + "multiqc/kraken2/"
+			   )
+	run_megahit(output_folder + "fastp/",
+				output_folder + "megahit/",
+				str(args.threads)
+			   )
+	run_metaquast(output_folder + "megahit/",
+				  output_folder + "metaquast/",
+				  str(args.threads)
+				 )
+	run_metabat(output_folder + "fastp/",
+				output_folder + "megahit/",
+				output_folder + "metabat/",
+				str(args.threads)
+			   )
 	
 	print("MetaGEN: Finished.")
-		
+
 if __name__ == "__main__":
 	main()
