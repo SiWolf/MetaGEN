@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.py
 # Author: Silver A. Wolf
-# Last Modified: Fri, 30.04.2021
-# Version: 0.2.5
+# Last Modified: Tue, 04.05.2021
+# Version: 0.2.8
 # -------------------------------
 
 # Imports
@@ -15,32 +15,21 @@ import os
 # Settings
 
 # MetaSUB
-name_project = "MetaSUB/"
-read_1_identifier = "read1.fastq.gz"
-read_2_identifier = "read2.fastq.gz"
+#name_project = "MetaSUB/"
+#read_1_identifier = "read1.fastq.gz"
+#read_2_identifier = "read2.fastq.gz"
 
 # Horses
-#name_project = "Horses/"
-#read_1_identifier = "R1_001.fastq.gz"
-#read_2_identifier = "R2_001.fastq.gz"
+name_project = "Horses/"
+read_1_identifier = "R1_001.fastq.gz"
+read_2_identifier = "R2_001.fastq.gz"
 
 # General
 input_folder = "input/" + name_project
 input_metadata = input_folder + "metadata/"
 input_sequences = input_folder + "sequences/"
 output_folder = "output/" + name_project
-version = "0.2.5"
-
-def set_reference(host):
-	ref_seq = ""
-	if host == "human":
-		ref_seq = "references/GCF_000001405.39_GRCh38.p13_genomic.fna.gz"
-	elif host == "horse":
-		ref_seq = "references/GCF_002863925.1_EquCab3.0_genomic.fna.gz"
-	else:
-		print("Error - Unknown reference species, please try a different species.")
-		quit()
-	return(ref_seq)
+version = "0.2.8"
 
 def download_metasub(city):
 	print("Step 1/8 - Fetching Data [MetaSUB]:\n")
@@ -72,30 +61,30 @@ def download_metasub(city):
 	
 	print("MetaSUB: Finished.\n")	
 	
-def run_fastp(host, memory, threads):
+def run_fastp(memory, threads):
 	print("Step 2/8 - Quality Control [fastp]:\n")
 	os.system("mkdir -p " + output_folder + "fastp/reports/")
 	
-	read_list_pe = sorted([name for name in os.listdir(input_pe) if fnmatch(name, "*" + read_1_identifier)])
+	read_list_pe = sorted([name for name in os.listdir(input_sequences) if fnmatch(name, "*" + read_1_identifier)])
 	fastp_dir = output_folder + "fastp/"
 	c = 0
 	
 	for read in read_list_pe:
 		# Define output naming convention
-		if name_project == "MetaSUB":
+		if name_project == "MetaSUB/":
 			sample_name = read.split(".filter")[0].split("_")[-1]
 		else:
 			sample_name = read.split("-L")[0]
 
-		print("fastp: Analyzing " + read + " (PE).")
+		print("fastp: Analyzing " + sample_name + " (PE).")
 
 		bbsplit_R12_scaf = output_folder + "bbmap/" + sample_name + "_scaffolds_12.txt"
 		bbsplit_R12_stat = output_folder + "bbmap/" + sample_name + "_stats_12.txt"
 		bbsplit_R3_scaf = output_folder + "bbmap/" + sample_name + "_scaffolds_3.txt"
 		bbsplit_R3_stat = output_folder + "bbmap/" + sample_name + "_stats_3.txt"
 		
-		read1_in = input_pe + read
-		read2_in = input_pe + read.split(read_1_identifier)[0] + read_2_identifier
+		read1_in = input_sequences + read
+		read2_in = input_sequences + read.split(read_1_identifier)[0] + read_2_identifier
 		
 		read1_out = fastp_dir + sample_name + "_R1.fastq.gz"
 		read2_out = fastp_dir + sample_name + "_R2.fastq.gz"
@@ -130,15 +119,23 @@ def run_fastp(host, memory, threads):
 				  " --overrepresentation_sampling 20"
 				 )
 		
+		#print("BBMap: Generating Host Index.")
+		#os.system("rm -r references/ref/")
+		#os.system("bbsplit.sh" +
+		#		  " ref=references/" +
+		#		  " path=references/" +
+		#		  " threads=" + threads +
+		#		  " -Xmx" + memory + "g"
+		#		 )
+		
 		print("BBMap: Removing Host Genome Contamination.")
 		
 		os.system("bbsplit.sh" +
 				  " in1=" + read1_tmp +
 				  " in2=" + read2_tmp +
-				  " ref=" + host +
 				  " outu1=" + read1_out +
 				  " outu2=" + read2_out +
-				  " path=tmp/" +
+				  " path=references/" +
 				  " threads=" + threads +
 				  " refstats=" + bbsplit_R12_stat +
 				  " scafstats=" + bbsplit_R12_scaf +
@@ -147,9 +144,8 @@ def run_fastp(host, memory, threads):
 		
 		os.system("bbsplit.sh" +
 				  " in=" + read3_tmp +
-				  " ref=" + host +
 				  " outu=" + read3_out +
-				  " path=tmp/ " +
+				  " path=references/" +
 				  " threads=" + threads +
 				  " refstats=" + bbsplit_R3_stat +
 				  " scafstats=" + bbsplit_R3_scaf +
@@ -158,7 +154,7 @@ def run_fastp(host, memory, threads):
 		
 		print("Unix: Cleaning up output.")
 		os.system("rm -r tmp/*")
-				
+			
 		c = c + 1
 		print("")
 		
@@ -172,11 +168,11 @@ def run_kraken2(database, read_length, bracken_threshold, fastp_dir, bracken_dir
 	
 	print("kraken2: Computing Taxonomic Classification.")
 	read_list = sorted([name for name in os.listdir(fastp_dir) if fnmatch(name, "*_R1.fastq.gz")])
-	levels = ["Phylum", "Genus", "Species"]
+	levels = ["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"]
 	c = 0
 
 	for read1 in read_list:
-		sample_name = read.split("_R1")[0]
+		sample_name = read1.split("_R1")[0]
 		read2 = sample_name + "_R2.fastq.gz"
 		print("kraken2: Analyzing " + sample_name + ".")
 		os.system("kraken2" +
@@ -192,7 +188,7 @@ def run_kraken2(database, read_length, bracken_threshold, fastp_dir, bracken_dir
 					  " -d " + database +
 					  " -i " + kraken_dir + sample_name + ".report" +
 					  " -o " + bracken_dir + sample_name + "." + level.lower() + ".bracken" +
-					  " -w " + bracken_dir + sample_name + ".report" +
+					  " -w " + bracken_dir + sample_name + "." + level.lower() + ".report" +
 					  " -r " + read_length +
 					  " -l " + level[0] +
 					  " -t " + bracken_threshold
@@ -206,12 +202,18 @@ def run_kraken2(database, read_length, bracken_threshold, fastp_dir, bracken_dir
 				  " --files " + bracken_dir + "*." + level.lower() + ".bracken" +
 				  " -o " + bracken_dir + "bracken_" + level.lower() + "_all.bracken"
 				 )
+		
+		print("kraken-biom: Exporting bracken reports (" + level + ").")
+		os.system("kraken-biom " + bracken_dir + "*." + level.lower() + ".report" +
+				  " -o " + bracken_dir + "bracken_" + level.lower() + ".biom" +
+				  " --fmt " + "json"
+				 )
 	
-	print("kraken-biom: Exporting bracken reports.")
-	os.system("kraken-biom " + bracken_dir + "*.report" +
-			  " -o " + bracken_dir + "bracken.biom" +
-			  " --fmt " + "json"
-			 )
+		print("kraken-biom: Exporting kraken2 reports.")
+		os.system("kraken-biom " + kraken_dir + "*.report" +
+				  " -o " + kraken_dir + "kraken2.biom" +
+				  " --fmt " + "json"
+				 )
 	
 	print("kraken2: " + str(c) + " files successfully analyzed.")
 	print("kraken2: Finished.\n")
@@ -251,44 +253,45 @@ def run_multiqc(fastp_input, fastp_output, kraken2_input, kraken2_output):
 	
 	print("multiqc: Finished.\n")	
 
-def run_megahit(megahit_input, megahit_output, threads):
-	print("Step 6/8 - Metagenome Assembly [MEGAHIT]:\n")
+def run_metaspades(metaspades_input, metaspades_output, threads):
+	print("Step 6/8 - Metagenome Assembly [metaSPAdes]:\n")
 	
-	print("MEGAHIT: Creating Assemblies.")
-	read_list = sorted([name for name in os.listdir(megahit_input) if fnmatch(name, "*_R1.fastq.gz")])
+	print("metaSPAdes: Creating Assemblies.")
+	read_list = sorted([name for name in os.listdir(metaspades_input) if fnmatch(name, "*_R1.fastq.gz")])
 	c = 0
+	
+	os.system("mkdir -p " + metaspades_output)
 	
 	# PE + SE
 	for read in read_list:
 		sample_name = read.split("_R1")[0]
-		read_1 = megahit_input + read
-		read_2 = megahit_input + sample_name + "_R2.fastq.gz"
-		read_3 = megahit_input + sample_name + "_R3.fastq.gz"
-		print("MEGAHIT: Assembling " + sample_name + ".")
-		os.system("megahit" +
+		read_1 = metaspades_input + read
+		read_2 = metaspades_input + sample_name + "_R2.fastq.gz"
+		read_3 = metaspades_input + sample_name + "_R3.fastq.gz"
+		print("metaSPAdes: Assembling " + sample_name + ".")
+		
+		os.system("spades.py" +
+				  " -o " + metaspades_output + sample_name +
+				  " --meta " +
 				  " -1 " + read_1 +
 				  " -2 " + read_2 +
-				  " -r " + read_3 +
-				  " -m 0.5" +
+				  " -s " + read_3 +
 				  " -t " + threads +
-				  " --min-contig-len 150" +
-				  " --out-prefix " + sample_name +
-				  " --tmp-dir tmp/" +
-				  " -o " + megahit_output + "/" + sample_name
+				  " --tmp-dir tmp/"
 				 )
+		
 		print("Unix: Cleaning up output.")
-		os.system("mv " + megahit_output + "/" + sample_name + "/" + sample_name + ".contigs.fa" + " " +
-				  megahit_output + "/" + sample_name + ".fa")
-		os.system("rm -r " + megahit_output + "/" + sample_name + "/")
+		os.system("mv " + metaspades_output + sample_name + "/scaffolds.fasta " + metaspades_output + sample_name + ".fa")
+		os.system("rm -r " + metaspades_output + sample_name + "/")
 		c = c + 1
 		print("")
 	
 	print("Unix: Compressing Assemblies.")
-	os.system("gzip " + megahit_output + "/*.fa")
+	os.system("gzip " + metaspades_output + "*.fa")
 	print("")
 	
-	print("MEGAHIT: " + str(c) + " files successfully assembled.")
-	print("MEGAHIT: Finished.\n")
+	print("metaSPAdes: " + str(c) + " files successfully assembled.")
+	print("metaSPAdes: Finished.\n")
 
 def run_metaquast(metaquast_input, metaquast_output, threads):
 	print("Step 7/8 - Quality Control [MetaQUAST]:\n")
@@ -310,11 +313,11 @@ def run_metaquast(metaquast_input, metaquast_output, threads):
 	print("MetaQUAST: " + str(c) + " files successfully analyzed.")
 	print("MetaQUAST: Finished.\n")
 
-def run_metabat(fastp_input, megahit_input, metabat_output, threads):
+def run_metabat(fastp_input, metaspades_input, metabat_output, threads):
 	print("Step 8/8 - Assembly Binning [MetaBAT]:\n")
 	os.system("mkdir -p " + metabat_output)
 	
-	file_list = glob(megahit_input + "*.gz")
+	file_list = glob(metaspades_input + "*.gz")
 	c = 0
 	
 	for assembly in file_list:
@@ -395,7 +398,7 @@ def main():
 	parser.add_argument("-k",
 						"--kraken2_db",
 						type = str,
-						default = "/scratch1/databases/kraken/20200226_kraken2_standard_database/",
+						default = "/scratch1/databases/kraken/20210429_kraken2_standard_new_database/",
 						required = False,
 						help = "Path to local kraken2 database"
 					   )
@@ -413,17 +416,10 @@ def main():
 						required = False,
 						help = "Minimum expected read length"
 					   )
-	parser.add_argument("-s",
-						"--host_species",
-						type = str,
-						default = "human",
-						required = False,
-						help = "Specify the host species of the metagenomic data (human or horse)"
-					   )
 	parser.add_argument("-t",
 						"--threads",
 						type = int,
-						default = "32",
+						default = "64",
 						required = False,
 						help = "Amount of threads used for running MetaGEN"
 					   )
@@ -432,10 +428,8 @@ def main():
 	
 	print("Running MetaGEN Pipeline Version " + version + "\n")
 	
-	reference_genome = set_reference(args.host_species)
-	download_metasub(args.city_of_interest)
-	run_fastp(reference_genome,
-			  str(args.memory),
+	#download_metasub(args.city_of_interest)
+	run_fastp(str(args.memory),
 			  str(args.threads)
 			 )
 	run_kraken2(args.kraken2_db,
@@ -454,19 +448,19 @@ def main():
 				output_folder + "kraken2/",
 				output_folder + "multiqc/kraken2/"
 			   )
-	run_megahit(output_folder + "fastp/",
-				output_folder + "megahit/",
-				str(args.threads)
-			   )
-	run_metaquast(output_folder + "megahit/",
-				  output_folder + "metaquast/",
-				  str(args.threads)
-				 )
-	run_metabat(output_folder + "fastp/",
-				output_folder + "megahit/",
-				output_folder + "metabat/",
-				str(args.threads)
-			   )
+	run_metaspades(output_folder + "fastp/",
+				   output_folder + "metaspades/",
+				   str(args.threads)
+				  )
+	#run_metaquast(output_folder + "metaspades/",
+	#			  output_folder + "metaquast/",
+	#			  str(args.threads)
+	#			 )
+	#run_metabat(output_folder + "fastp/",
+	#			output_folder + "metaspades/",
+	#			output_folder + "metabat/",
+	#			str(args.threads)
+	#		   )
 	
 	print("MetaGEN: Finished.")
 
