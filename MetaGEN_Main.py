@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.py
 # Author: Silver A. Wolf
-# Last Modified: Tue, 04.05.2021
-# Version: 0.2.8
+# Last Modified: Thu, 10.06.2021
+# Version: 0.3.1
 # -------------------------------
 
 # Imports
@@ -29,7 +29,7 @@ input_folder = "input/" + name_project
 input_metadata = input_folder + "metadata/"
 input_sequences = input_folder + "sequences/"
 output_folder = "output/" + name_project
-version = "0.2.8"
+version = "0.3.1"
 
 def download_metasub(city):
 	print("Step 1/8 - Fetching Data [MetaSUB]:\n")
@@ -161,7 +161,68 @@ def run_fastp(memory, threads):
 	print("fastp: " + str(c) + " files successfully analyzed.")
 	print("fastp: Finished.\n")
 
-def run_kraken2(database, read_length, bracken_threshold, fastp_dir, bracken_dir, kraken_dir, threads):
+def run_kraken2_assembly(database, confidence_score, read_length, bracken_threshold, spades_dir, bracken_dir, kraken_dir, threads):
+	print("Step 3/8 - Taxonomic Classification [kraken2]:\n")
+	os.system("mkdir -p " + bracken_dir)
+	os.system("mkdir -p " + kraken_dir)
+	
+	print("kraken2: Computing Taxonomic Classification.")
+	file_list = glob(spades_dir + "*.gz")
+	levels = ["Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"]
+	c = 0
+	
+	for assembly in file_list:
+		sample_name = assembly.split("/")[-1].split(".gz")[0]
+		print("kraken2: Analyzing " + sample_name + ".")
+		os.system("kraken2" +
+				  " --db " + database +
+				  " --threads " + threads +
+				  " --confidence " + confidence_score +
+				  " --report " + kraken_dir + sample_name + ".report" +
+				  " " + assembly +
+				  " > " + kraken_dir + sample_name + ".stdout"
+				 )
+		for level in levels:
+			print("Bracken: Analyzing " + sample_name + " (" + level + ").")
+			os.system("bracken" +
+					  " -d " + database +
+					  " -i " + kraken_dir + sample_name + ".report" +
+					  " -o " + bracken_dir + sample_name + "." + level.lower() + ".bracken" +
+					  " -w " + bracken_dir + sample_name + "." + level.lower() + ".report" +
+					  " -r " + read_length +
+					  " -l " + level[0] +
+					  " -t " + bracken_threshold
+					 )
+		c = c + 1
+		print("")
+
+	for level in levels:
+		print("Bracken: Merging " + str(c) + " results (" + level + ").")
+		os.system("combine_bracken_outputs.py" +
+				  " --files " + bracken_dir + "*." + level.lower() + ".bracken" +
+				  " -o " + bracken_dir + "bracken_" + level.lower() + ".bracken"
+				 )
+		
+		print("kraken-biom: Exporting bracken reports (" + level + ").")
+		os.system("kraken-biom " + bracken_dir + "*." + level.lower() + ".report" +
+				  " -o " + bracken_dir + "bracken_" + level.lower() + ".biom" +
+				  " --fmt " + "json" +
+				  " --max " + "D" +
+				  " --min " + "S"
+				 )
+	
+		print("kraken-biom: Exporting kraken2 reports.")
+		os.system("kraken-biom " + kraken_dir + "*.report" +
+				  " -o " + kraken_dir + "kraken2.biom" +
+				  " --fmt " + "json" +
+				  " --max " + "D" +
+				  " --min " + "S"
+				 )
+	
+	print("kraken2: " + str(c) + " files successfully analyzed.")
+	print("kraken2: Finished.\n")
+	
+def run_kraken2_reads(database, confidence_score, read_length, bracken_threshold, fastp_dir, bracken_dir, kraken_dir, threads):
 	print("Step 3/8 - Taxonomic Classification [kraken2]:\n")
 	os.system("mkdir -p " + bracken_dir)
 	os.system("mkdir -p " + kraken_dir)
@@ -178,6 +239,7 @@ def run_kraken2(database, read_length, bracken_threshold, fastp_dir, bracken_dir
 		os.system("kraken2" +
 				  " --db " + database +
 				  " --threads " + threads +
+				  " --confidence " + confidence_score +
 				  " --report " + kraken_dir + sample_name + ".report" +
 				  " --paired " + fastp_dir + read1 + " " + fastp_dir + read2 +
 				  " > " + kraken_dir + sample_name + ".stdout"
@@ -200,19 +262,23 @@ def run_kraken2(database, read_length, bracken_threshold, fastp_dir, bracken_dir
 		print("Bracken: Merging " + str(c) + " results (" + level + ").")
 		os.system("combine_bracken_outputs.py" +
 				  " --files " + bracken_dir + "*." + level.lower() + ".bracken" +
-				  " -o " + bracken_dir + "bracken_" + level.lower() + "_all.bracken"
+				  " -o " + bracken_dir + "bracken_" + level.lower() + ".bracken"
 				 )
 		
 		print("kraken-biom: Exporting bracken reports (" + level + ").")
 		os.system("kraken-biom " + bracken_dir + "*." + level.lower() + ".report" +
 				  " -o " + bracken_dir + "bracken_" + level.lower() + ".biom" +
-				  " --fmt " + "json"
+				  " --fmt " + "json" +
+				  " --max " + "D" +
+				  " --min " + "S"
 				 )
 	
 		print("kraken-biom: Exporting kraken2 reports.")
 		os.system("kraken-biom " + kraken_dir + "*.report" +
 				  " -o " + kraken_dir + "kraken2.biom" +
-				  " --fmt " + "json"
+				  " --fmt " + "json" +
+				  " --max " + "D" +
+				  " --min " + "S"
 				 )
 	
 	print("kraken2: " + str(c) + " files successfully analyzed.")
@@ -222,7 +288,7 @@ def run_krona(krona_input, krona_output):
 	print("Step 4/8 - Visualizing Taxonomic Classification [Krona]:\n")
 	os.system("mkdir -p " + krona_output)
 
-	print("Krona: Updating Taxonomic Database.")
+	#print("Krona: Updating Taxonomic Database.")
 	#os.system("ktUpdateTaxonomy.sh")
 	
 	print("Krona: Preprocessing Taxonomic Files.")
@@ -416,6 +482,13 @@ def main():
 						required = False,
 						help = "Minimum expected read length"
 					   )
+	parser.add_argument("-s",
+						"--kraken2_confidence_score",
+						type = float,
+						default = "0.0",
+						required = False,
+						help = "Kraken2 confidence score"
+					   )
 	parser.add_argument("-t",
 						"--threads",
 						type = int,
@@ -429,29 +502,39 @@ def main():
 	print("Running MetaGEN Pipeline Version " + version + "\n")
 	
 	#download_metasub(args.city_of_interest)
-	run_fastp(str(args.memory),
-			  str(args.threads)
-			 )
-	run_kraken2(args.kraken2_db,
-				str(args.read_length),
-				str(args.bracken_threshold),
-				output_folder + "fastp/",
-				output_folder + "bracken/",
-				output_folder + "kraken2/",
-				str(args.threads)
-			   )
-	run_krona(output_folder + "kraken2/",
-			  output_folder + "krona/"
+	#run_fastp(str(args.memory),
+	#		  str(args.threads)
+	#		 )
+	run_kraken2_reads(args.kraken2_db,
+					  str(args.kraken2_confidence_score),
+					  str(args.read_length),
+					  str(args.bracken_threshold),
+					  output_folder + "fastp/",
+					  output_folder + "bracken/reads/",
+					  output_folder + "kraken2/reads/",
+					  str(args.threads)
+					 )
+	run_krona(output_folder + "kraken2/reads/",
+			  output_folder + "krona/reads/"
 			 )
 	run_multiqc(output_folder + "fastp/reports/",
 				output_folder + "multiqc/fastp/",
-				output_folder + "kraken2/",
+				output_folder + "kraken2/reads/",
 				output_folder + "multiqc/kraken2/"
 			   )
-	run_metaspades(output_folder + "fastp/",
-				   output_folder + "metaspades/",
-				   str(args.threads)
-				  )
+	#run_metaspades(output_folder + "fastp/",
+	#			   output_folder + "metaspades/",
+	#			   str(args.threads)
+	#			  )
+	run_kraken2_assembly(args.kraken2_db,
+						 str(args.kraken2_confidence_score),
+						 str(args.read_length),
+						 str(args.bracken_threshold),
+						 output_folder + "kraken2/reads/",
+						 output_folder + "bracken/assembly/",
+						 output_folder + "kraken2/assembly/",
+						 str(args.threads)
+						)
 	#run_metaquast(output_folder + "metaspades/",
 	#			  output_folder + "metaquast/",
 	#			  str(args.threads)
