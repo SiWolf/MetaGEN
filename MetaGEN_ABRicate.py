@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_ABRicate.py
 # Author: Silver A. Wolf
-# Last Modified: Fri, 14.05.2021
-# Version: 0.0.3
+# Last Modified: Fri, 11.06.2021
+# Version: 0.0.4
 # -------------------------------
 
 # Imports
@@ -14,10 +14,10 @@ import os
 #name_project = "MetaSUB/"
 name_project = "Horses/"
 output_folder = "output/" + name_project
-version = "0.0.3"
+version = "0.0.4"
 
 def run_abricate(metaspades_input, abricate_output, threads):
-	print("Step 9/8 - Scanning for AMR Genes [ABRicate]:\n")
+	print("Step 10/10 - Scanning for AMR Genes [ABRicate]:\n")
 	os.system("mkdir -p " + abricate_output)
 	
 	file_list = glob(metaspades_input + "*.gz")
