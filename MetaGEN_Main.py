@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.py
 # Author: Silver A. Wolf
-# Last Modified: Fri, 11.06.2021
-# Version: 0.3.2
+# Last Modified: Tue, 15.06.2021
+# Version: 0.3.3
 # -------------------------------
 
 # Imports
@@ -29,7 +29,7 @@ input_folder = "input/" + name_project
 input_metadata = input_folder + "metadata/"
 input_sequences = input_folder + "sequences/"
 output_folder = "output/" + name_project
-version = "0.3.2"
+version = "0.3.3"
 
 def download_metasub(city):
 	print("Step 1/10 - Fetching Data [MetaSUB]:\n")
@@ -157,7 +157,18 @@ def run_fastp(memory, threads):
 			
 		c = c + 1
 		print("")
-		
+	
+	os.system("Unix: Calculating Read Statistics.")
+	stat_list = sorted([name for name in os.listdir(fastp_dir) if fnmatch(name, "*_R1.fastq.gz")])
+	stat_sums = open(fastp_dir + "reports/stat_sums.csv", "w")
+	stat_sums.write("SAMPLE,NUM_READS_PE,BP_PE")
+	for read1 in stat_list:
+		read2 = fastp_dir + read1.split("_R1")[0] + "_R2.fastq.gz"
+		num_reads = os.popen("echo $(zcat " + fastp_dir + read1 + " " + read2 + "|wc -l)/4|bc").read()
+		nun_bases = os.popen("zcat " + fastp_dir + read1 + " " + read2 + "| paste - - - - | cut -f 2 | tr -d '\n' | wc -c").read()
+		stat_sums.write(read1.split("_R1")[0] + "," + num_reads.strip() + "," + nun_bases.strip() + "\n")
+	stat_sums.close()
+	
 	print("fastp: " + str(c) + " files successfully analyzed.")
 	print("fastp: Finished.\n")
 	
