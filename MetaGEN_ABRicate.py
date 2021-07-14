@@ -12,7 +12,7 @@ import os
 
 # Settings
 #name_project = "MetaSUB/"
-name_project = "Horses/"
+name_project = "Horses_Gut/"
 output_folder = "output/" + name_project
 version = "0.0.4"
 

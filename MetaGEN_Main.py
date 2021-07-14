@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.py
 # Author: Silver A. Wolf
-# Last Modified: Tue, 15.06.2021
-# Version: 0.3.3
+# Last Modified: Wed, 07.07.2021
+# Version: 0.3.4
 # -------------------------------
 
 # Imports
@@ -20,7 +20,7 @@ import os
 #read_2_identifier = "read2.fastq.gz"
 
 # Horses
-name_project = "Horses/"
+name_project = "Horses_Gut/"
 read_1_identifier = "R1_001.fastq.gz"
 read_2_identifier = "R2_001.fastq.gz"
 
@@ -29,7 +29,7 @@ input_folder = "input/" + name_project
 input_metadata = input_folder + "metadata/"
 input_sequences = input_folder + "sequences/"
 output_folder = "output/" + name_project
-version = "0.3.3"
+version = "0.3.4"
 
 def download_metasub(city):
 	print("Step 1/10 - Fetching Data [MetaSUB]:\n")
@@ -318,7 +318,7 @@ def run_kraken2_assembly(database, confidence_score, spades_dir, kraken_dir, thr
 	c = 0
 	
 	for assembly in file_list:
-		sample_name = assembly.split("/")[-1].split(".gz")[0]
+		sample_name = assembly.split("/")[-1].split(".fa")[0]
 		print("kraken2: Analyzing " + sample_name + ".")
 		os.system("kraken2" +
 				  " --db " + database +
@@ -438,7 +438,7 @@ def main():
 	parser.add_argument("-k",
 						"--kraken2_db",
 						type = str,
-						default = "/scratch1/databases/kraken/20210429_kraken2_standard_new_database/",
+						default = "/scratch1/databases/kraken/20200226_kraken2_standard_database/",
 						required = False,
 						help = "Path to local kraken2 database"
 					   )
