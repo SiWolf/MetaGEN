@@ -438,7 +438,7 @@ def main():
 	parser.add_argument("-k",
 						"--kraken2_db",
 						type = str,
-						default = "/scratch1/databases/kraken/20200226_kraken2_standard_database/",
+						default = "/scratch1/databases/kraken/20210610_kraken2_nt_database_fast_build/",
 						required = False,
 						help = "Path to local kraken2 database"
 					   )
