@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_CoverM.py
 # Author: Silver A. Wolf
-# Last Modified: Fri, 16.07.2021
-# Version: 0.0.3
+# Last Modified: Tue, 20.07.2021
+# Version: 0.0.4
 # -------------------------------
 
 # Imports
@@ -15,7 +15,7 @@ import os
 #name_project = "MetaSUB/"
 name_project = "Horses_Gut/"
 output_folder = "output/" + name_project
-version = "0.0.3"
+version = "0.0.4"
 
 def run_coverm(coverm_input, coverm_output, threads):
 	print("Step 11/11 - AMR Scan [CoverM]:\n")
@@ -51,11 +51,11 @@ def run_coverm(coverm_input, coverm_output, threads):
 				 )
 		c = c + 1
 	print("CoverM: " + str(c) + " files successfully analyzed.")
-
+	
 	print("CoverM: Merging results.")
 	coverm_results = sorted([name for name in os.listdir(coverm_output) if fnmatch(name, "*.txt")])
 	ref_names = []
-	ref_seqs = "MegaRes"
+	ref_seqs = "MegaRes_ID\tResistance_Type\tResistance_Class\tResistance_Gene\tResistance_Symbol"
 	
 	for c in coverm_results:
 		ref_seqs = ref_seqs + "\t" + c.split(".txt")[0]
@@ -74,9 +74,9 @@ def run_coverm(coverm_input, coverm_output, threads):
 			with open(coverm_output + l, "r") as cover_file:
 				for line in cover_file:
 					if line.split("\t")[0] == r:
-						val.append(line.split("\t")[1])
+						val.append(line.split("\t")[1].replace(".", ","))
 						break
-		f.write(r + "\t" + "\t".join(val) + "\n")
+		f.write("\t".join(r.split("|")[0:5]) + "\t" + "\t".join(val) + "\n")
 	
 	f.close()
 	print("CoverM: Finished.\n")
