@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_CoverM.py
 # Author: Silver A. Wolf
-# Last Modified: Tue, 20.07.2021
-# Version: 0.0.4
+# Last Modified: Fri, 23.07.2021
+# Version: 0.0.5
 # -------------------------------
 
 # Imports
@@ -15,10 +15,10 @@ import os
 #name_project = "MetaSUB/"
 name_project = "Horses_Gut/"
 output_folder = "output/" + name_project
-version = "0.0.4"
+version = "0.0.5"
 
 def run_coverm(coverm_input, coverm_output, threads):
-	print("Step 11/11 - AMR Scan [CoverM]:\n")
+	print("Step 11/12 - AMR Scan [CoverM]:\n")
 	
 	#print("USEARCH: Cluster MegaRES database (90% identity).")
 	#os.system("./usearch11.0.667_i86linux32 " +
@@ -29,7 +29,12 @@ def run_coverm(coverm_input, coverm_output, threads):
 	#		 )
 	
 	read_list = sorted([name for name in os.listdir(coverm_input) if fnmatch(name, "*_R1.fastq.gz")])
-	os.system("mkdir -p " + coverm_output)
+	
+	output_bam = coverm_output + "bam/"
+	output_txt = coverm_output + "txt/"
+	
+	os.system("mkdir -p " + output_bam)
+	os.system("mkdir -p " + output_txt)
 	c = 0
 	
 	# PE + SE
@@ -43,38 +48,41 @@ def run_coverm(coverm_input, coverm_output, threads):
 				  "-1 " + read_1 + " " +
 				  "-2 " + read_2 + " " +
 				  "--single " + read_3 + " " +
-				  "-r amr/megares.fasta " + 
-				  "-p minimap2-sr " + 
-				  "-m tpm " +
-				  "-o " + coverm_output + sample_name + ".txt "
-				  "-t " + threads
+				  "-r amr/megares_full_database_v2.00.fasta " + 
+				  "-p bwa-mem " + 
+				  "-m count " +
+				  "-o " + output_txt + sample_name + ".txt "
+				  "--bam-file-cache-directory " + output_bam + " " +
+				  "--discard-unmapped " +
+				  "-t " + threads + " " +
+				  "--exclude-supplementary"
 				 )
 		c = c + 1
 	print("CoverM: " + str(c) + " files successfully analyzed.")
 	
 	print("CoverM: Merging results.")
-	coverm_results = sorted([name for name in os.listdir(coverm_output) if fnmatch(name, "*.txt")])
+	coverm_results = sorted([name for name in os.listdir(output_txt) if fnmatch(name, "*.txt")])
 	ref_names = []
 	ref_seqs = "MegaRes_ID\tResistance_Type\tResistance_Class\tResistance_Gene\tResistance_Symbol"
 	
 	for c in coverm_results:
 		ref_seqs = ref_seqs + "\t" + c.split(".txt")[0]
 	
-	with open(coverm_output + coverm_results[0], "r") as ref_file:
+	with open(output_txt + coverm_results[0], "r") as ref_file:
 		for line in ref_file:
 			ref_names.append(line.split("\t")[0])
 	
 	ref_names.remove("Contig")
-	f = open(coverm_output + "summary.tsv", "w")
+	f = open(output_txt + "summary.tsv", "w")
 	f.write(ref_seqs + "\n")
 	
 	for r in ref_names:
 		val = []
 		for l in coverm_results:
-			with open(coverm_output + l, "r") as cover_file:
+			with open(output_txt + l, "r") as cover_file:
 				for line in cover_file:
 					if line.split("\t")[0] == r:
-						val.append(line.split("\t")[1].replace(".", ","))
+						val.append(str(int(line.split("\t")[1].replace(".", ",")) + int(line.split("\t")[2].replace(".", ","))))
 						break
 		f.write("\t".join(r.split("|")[0:5]) + "\t" + "\t".join(val) + "\n")
 	

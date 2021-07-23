@@ -1,8 +1,8 @@
 # -------------------------------
-# Title: MetaGEN_CoverM.py
+# Title: MetaGEN_KMC.py
 # Author: Silver A. Wolf
-# Last Modified: Fri, 16.07.2021
-# Version: 0.0.1
+# Last Modified: Fri, 23.07.2021
+# Version: 0.0.2
 # -------------------------------
 
 # Imports
@@ -15,10 +15,10 @@ import os
 #name_project = "MetaSUB/"
 name_project = "Horses_Gut/"
 output_folder = "output/" + name_project
-version = "0.0.1"
+version = "0.0.2"
 
 def run_coverm(kmc_input, kmc_output, threads):
-	print("Step 11/11 - Calculating k-mer statistics [KMC]:\n")
+	print("Step 12/12 - Calculating k-mer statistics [KMC]:\n")
 	
 	read_list = sorted([name for name in os.listdir(kmc_input) if fnmatch(name, "*_R1.fastq.gz")])
 	os.system("mkdir -p " + kmc_output)
@@ -31,7 +31,6 @@ def run_coverm(kmc_input, kmc_output, threads):
 		read_2 = kmc_input + sample_name + "_R2.fastq.gz"
 		read_3 = kmc_input + sample_name + "_R3.fastq.gz"
 		
-		os.system("rm tmp/sample_list.txt")
 		f = open("tmp/sample_list.txt", "w")
 		f.write(read_1 + "\n" + read_2 + "\n" + read_3)
 		f.close()
@@ -48,8 +47,9 @@ def run_coverm(kmc_input, kmc_output, threads):
 				  "-cs999 " +
 				  "-t" + threads
 				 )
+		os.system("rm tmp/sample_list.txt")
 		c = c + 1
-		
+
 	print("KMC: " + str(c) + " files successfully analyzed.")
 	print("KMC: Finished.\n")
 	

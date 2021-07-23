@@ -17,7 +17,7 @@ output_folder = "output/" + name_project
 version = "0.0.4"
 
 def run_abricate(metaspades_input, abricate_output, threads):
-	print("Step 10/10 - Scanning for AMR Genes [ABRicate]:\n")
+	print("Step 10/12 - Scanning for AMR Genes [ABRicate]:\n")
 	os.system("mkdir -p " + abricate_output)
 	
 	file_list = glob(metaspades_input + "*.gz")

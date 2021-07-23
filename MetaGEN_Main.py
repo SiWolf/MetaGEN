@@ -32,7 +32,7 @@ output_folder = "output/" + name_project
 version = "0.3.4"
 
 def download_metasub(city):
-	print("Step 1/10 - Fetching Data [MetaSUB]:\n")
+	print("Step 1/12 - Fetching Data [MetaSUB]:\n")
 	os.system("mkdir -p " + input_metadata)
 	os.system("mkdir -p " + input_sequences)
 	
@@ -62,7 +62,7 @@ def download_metasub(city):
 	print("MetaSUB: Finished.\n")	
 	
 def run_fastp(memory, threads):
-	print("Step 2/10 - Quality Control [fastp]:\n")
+	print("Step 2/12 - Quality Control [fastp]:\n")
 	os.system("mkdir -p " + output_folder + "fastp/reports/")
 	
 	read_list_pe = sorted([name for name in os.listdir(input_sequences) if fnmatch(name, "*" + read_1_identifier)])
@@ -173,7 +173,7 @@ def run_fastp(memory, threads):
 	print("fastp: Finished.\n")
 	
 def run_kraken2_reads(database, confidence_score, read_length, bracken_threshold, fastp_dir, bracken_dir, kraken_dir, threads):
-	print("Step 3/10 - Reads - Taxonomic Classification [kraken2]:\n")
+	print("Step 3/12 - Reads - Taxonomic Classification [kraken2]:\n")
 	os.system("mkdir -p " + bracken_dir)
 	os.system("mkdir -p " + kraken_dir)
 	
@@ -235,7 +235,7 @@ def run_kraken2_reads(database, confidence_score, read_length, bracken_threshold
 	print("kraken2: Finished.\n")
 
 def run_krona(krona_input, krona_output):
-	print("Step 4/10 - Visualizing Taxonomic Classification [Krona]:\n")
+	print("Step 4/12 - Visualizing Taxonomic Classification [Krona]:\n")
 	os.system("mkdir -p " + krona_output)
 
 	#print("Krona: Updating Taxonomic Database.")
@@ -257,7 +257,7 @@ def run_krona(krona_input, krona_output):
 	print("Krona: Finished.\n")
 	
 def run_multiqc(fastp_input, fastp_output, kraken2_input, kraken2_output):
-	print("Step 5/10 - Quality Control [multiqc]:\n")
+	print("Step 5/12 - Quality Control [multiqc]:\n")
 	
 	print("MultiQC: Summarizing Results (fastp).")
 	os.system("mkdir -p " + fastp_output)
@@ -270,7 +270,7 @@ def run_multiqc(fastp_input, fastp_output, kraken2_input, kraken2_output):
 	print("multiqc: Finished.\n")	
 
 def run_metaspades(metaspades_input, metaspades_output, threads):
-	print("Step 6/10 - Metagenome Assembly [metaSPAdes]:\n")
+	print("Step 6/12 - Metagenome Assembly [metaSPAdes]:\n")
 	
 	print("metaSPAdes: Creating Assemblies.")
 	read_list = sorted([name for name in os.listdir(metaspades_input) if fnmatch(name, "*_R1.fastq.gz")])
@@ -310,7 +310,7 @@ def run_metaspades(metaspades_input, metaspades_output, threads):
 	print("metaSPAdes: Finished.\n")
 
 def run_kraken2_assembly(database, confidence_score, spades_dir, kraken_dir, threads):
-	print("Step 7/10 - Assembly - Taxonomic Classification [kraken2]:\n")
+	print("Step 7/12 - Assembly - Taxonomic Classification [kraken2]:\n")
 	os.system("mkdir -p " + kraken_dir)
 	
 	print("kraken2: Computing Taxonomic Classification.")
@@ -334,7 +334,7 @@ def run_kraken2_assembly(database, confidence_score, spades_dir, kraken_dir, thr
 	print("kraken2: Finished.\n")
 	
 def run_metaquast(metaquast_input, metaquast_output, threads):
-	print("Step 8/10 - Quality Control [MetaQUAST]:\n")
+	print("Step 8/12 - Quality Control [MetaQUAST]:\n")
 	
 	file_list = glob(metaquast_input + "*.gz")
 	c = 0
@@ -354,7 +354,7 @@ def run_metaquast(metaquast_input, metaquast_output, threads):
 	print("MetaQUAST: Finished.\n")
 
 def run_metabat(fastp_input, metaspades_input, metabat_output, threads):
-	print("Step 9/10 - Assembly Binning [MetaBAT]:\n")
+	print("Step 9/12 - Assembly Binning [MetaBAT]:\n")
 	os.system("mkdir -p " + metabat_output)
 	
 	file_list = glob(metaspades_input + "*.gz")
@@ -476,9 +476,9 @@ def main():
 	print("Running MetaGEN Pipeline Version " + version + "\n")
 	
 	#download_metasub(args.city_of_interest)
-	#run_fastp(str(args.memory),
-	#		  str(args.threads)
-	#		 )
+	run_fastp(str(args.memory),
+			  str(args.threads)
+			 )
 	run_kraken2_reads(args.kraken2_db,
 					  str(args.kraken2_confidence_score),
 					  str(args.read_length),
@@ -496,25 +496,25 @@ def main():
 				output_folder + "kraken2/reads/",
 				output_folder + "multiqc/kraken2/"
 			   )
-	#run_metaspades(output_folder + "fastp/",
-	#			   output_folder + "metaspades/",
-	#			   str(args.threads)
-	#			  )
+	run_metaspades(output_folder + "fastp/",
+				   output_folder + "metaspades/",
+				   str(args.threads)
+				  )
 	run_kraken2_assembly(args.kraken2_db,
 						 str(args.kraken2_confidence_score),
 						 output_folder + "metaspades/",
 						 output_folder + "kraken2/assembly/",
 						 str(args.threads)
 						)
-	#run_metaquast(output_folder + "metaspades/",
-	#			  output_folder + "metaquast/",
-	#			  str(args.threads)
-	#			 )
-	#run_metabat(output_folder + "fastp/",
-	#			output_folder + "metaspades/",
-	#			output_folder + "metabat/",
-	#			str(args.threads)
-	#		   )
+	run_metaquast(output_folder + "metaspades/",
+				  output_folder + "metaquast/",
+				  str(args.threads)
+				 )
+	run_metabat(output_folder + "fastp/",
+				output_folder + "metaspades/",
+				output_folder + "metabat/",
+				str(args.threads)
+			   )
 	
 	print("MetaGEN: Finished.")
 
