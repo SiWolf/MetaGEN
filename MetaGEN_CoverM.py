@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_CoverM.py
 # Author: Silver A. Wolf
-# Last Modified: Fri, 23.07.2021
-# Version: 0.0.5
+# Last Modified: Tue, 27.07.2021
+# Version: 0.0.6
 # -------------------------------
 
 # Imports
@@ -50,12 +50,14 @@ def run_coverm(coverm_input, coverm_output, threads):
 				  "--single " + read_3 + " " +
 				  "-r amr/megares_full_database_v2.00.fasta " + 
 				  "-p bwa-mem " + 
-				  "-m count " +
-				  "-o " + output_txt + sample_name + ".txt "
+				  "-m mean trimmed_mean covered_fraction covered_bases variance length count reads_per_base rpkm tpm " +
+				  "-o " + output_txt + sample_name + ".txt " +
+				  "-t " + threads + " " +
 				  "--bam-file-cache-directory " + output_bam + " " +
 				  "--discard-unmapped " +
-				  "-t " + threads + " " +
-				  "--exclude-supplementary"
+				  "--exclude-supplementary " +
+				  "--min-read-aligned-percent 80 " +
+				  "--min-read-percent-identity 80"
 				 )
 		c = c + 1
 	print("CoverM: " + str(c) + " files successfully analyzed.")
@@ -82,7 +84,7 @@ def run_coverm(coverm_input, coverm_output, threads):
 			with open(output_txt + l, "r") as cover_file:
 				for line in cover_file:
 					if line.split("\t")[0] == r:
-						val.append(str(int(line.split("\t")[1].replace(".", ",")) + int(line.split("\t")[2].replace(".", ","))))
+						val.append(str(int(line.split("\t")[7].replace(".", ",")) + int(line.split("\t")[17].replace(".", ","))))
 						break
 		f.write("\t".join(r.split("|")[0:5]) + "\t" + "\t".join(val) + "\n")
 	
