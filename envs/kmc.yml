@@ -13,4 +13,3 @@ dependencies:
   - libgomp=9.3.0=h2828fa1_19
   - libstdcxx-ng=9.3.0=h6de172a_19
   - zlib=1.2.11=h516909a_1010
-prefix: /home/silver/miniconda3/envs/kmc3

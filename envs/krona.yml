@@ -26,4 +26,3 @@ dependencies:
   - perl=5.26.2=h36c2ea0_1008
   - tk=8.6.11=h27826a3_1
   - zlib=1.2.11=h36c2ea0_1013
-prefix: /home/silver/miniconda3/envs/krona

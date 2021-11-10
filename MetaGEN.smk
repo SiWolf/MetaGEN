@@ -7,6 +7,8 @@
 
 # How to run MetaGEN
 #snakemake -s MetaGEN.smk -c 64 --use-conda
+#snakemake -F -s MetaGEN.smk -c 64 --use-conda
+#snakemake -n -s MetaGEN.smk -c 64 --use-conda
 #snakemake --dag -s MetaGEN.smk -c 64 --use-conda | dot -Tsvg > MetaGEN.svg
 
 # -------------------------------
@@ -20,22 +22,25 @@ import os
 configfile: "config/config.yml"
 
 # Global parameters
-(SAMPLES,) = glob_wildcards("input/{sample}_L001_R1_001.fastq.gz")
+(SAMPLES,) = glob_wildcards("input/{sample}_R1.fastq.gz")
 
 # One rule to rule them all
 rule all:
 	input:
 		"output/01_preprocessing/seqfu/stats.tsv",
-		"output/02_taxonomic_profiling/multiqc/",
+		"output/01_preprocessing/multiqc/multiqc_report.html",
+		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/kraken_biom/kraken2.biom",
+		"output/02_taxonomic_profiling/bracken/species.summary",
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
+		#expand("output/04_assemblies/plasflow/{sample}.txt", sample = SAMPLES)
 		"output/04_assemblies/metaquast/report.html",
 		expand("output/04_assemblies/metabat/{sample}.fa.gz.depth.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metabat/{sample}.fa.gz.paired.txt", sample = SAMPLES),
 		"output/05_amr/abricate/kraken2.summary",
-		"output/05_amr/coverm/coverm.summary",
+		"output/05_amr/coverm/coverm.summary"
 
 # -------------------------------
 # V: AMR Profiling
@@ -50,7 +55,7 @@ rule coverm_summary:
 	threads:
 		1
 	message:
-		"[CoverM] Merging results."
+		"[CoverM] summarizing results."
 	run:
 		coverm_results = sorted(input.coverm_profile)
 		ref_names = []
@@ -91,14 +96,17 @@ rule coverm:
 	threads:
 		16
 	message:
-		"[CoverM] Mapping reads to the MegaRES database."
+		"[CoverM] mapping reads to the MegaRES database."
+	params:
+		identity = config["amr_identity"]
+		coverage = config["amr_coverage"]
 	shell:
 		"""
 		wget -N -P db/ https://megares.meglab.org/download/megares_v2.00/megares_full_database_v2.00.fasta
 		coverm contig -1 {input.b1} -2 {input.b2} --single {input.b3} -r db/megares_full_database_v2.00.fasta \
 		-p bwa-mem -m mean trimmed_mean covered_fraction covered_bases variance length count reads_per_base rpkm tpm \
 		-o {output.coverm_profile} -t {threads} --bam-file-cache-directory tmp/ --discard-unmapped --exclude-supplementary \
-		--min-read-aligned-percent 80 --min-read-percent-identity 80
+		--min-read-aligned-percent {params.coverage} --min-read-percent-identity {params.identity}
 		"""
 
 # ABRicate TaxCaller
@@ -112,7 +120,7 @@ rule abricate_taxcaller:
 	threads:
 		1
 	message:
-		"[ABRicate] Summarizing results."
+		"[ABRicate] merging results with taxonomic classifications."
 	run:
 		kraken_reports = sorted(input.a_stdout)
 		kraken_tax_ids = []
@@ -172,7 +180,7 @@ rule abricate_summary:
 	threads:
 		1
 	message:
-		"[ABRicate] Summarizing results."
+		"[ABRicate] summarizing results."
 	shell:
 		"""
 		abricate --summary --nopath output/05_amr/abricate/*.tab > {output.abricate_sum}
@@ -189,10 +197,13 @@ rule abricate:
 	threads:
 		16
 	message:
-		"[ABRicate] Scanning for AMR Genes."
+		"[ABRicate] scanning for AMR Genes."
+	params:
+		identity = config["amr_identity"]
+		coverage = config["amr_coverage"]
 	shell:
 		"""
-		abricate --db megares --threads {threads} --nopath {input.renamed} > {output.abricate_profile}
+		abricate --db megares --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath {input.renamed} > {output.abricate_profile}
 		"""
 
 # -------------------------------
@@ -243,6 +254,23 @@ rule metaquast:
 		metaquast -o output/04_assemblies/metaquast/ -t {threads} {input.renamed} --glimmer --rna-finding --plots-format png --silent -m 100
 		"""
 
+#PlasFlow
+#rule plasflow:
+#	input:
+#		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
+#	output:
+#		plasmids = "output/04_assemblies/plasflow/{sample}.txt"
+#	conda:
+#		"envs/plasflow.yml"
+#	threads:
+#		1
+#	message:
+#		"[PlasFlow] detecting plasmid sequences in the assembly of {wildcards.sample}."
+#	shell:
+#		"""
+#		PlasFlow.py --input {input.renamed} --output {output.plasmids}
+#		"""
+
 # kraken2
 rule kraken2_assembly:
 	input:
@@ -256,9 +284,11 @@ rule kraken2_assembly:
 		32
 	message:
 		"[kraken2] assessing taxonomic content of assembly for {wildcards.sample}."
+	params:
+		db = config["kraken_db"]
 	shell:
 		"""
-		kraken2 --db {config[kraken2db]} --threads {threads} --report {output.a_report} --output {output.a_stdout} {input.renamed}
+		kraken2 --db {params.db} --threads {threads} --report {output.a_report} --output {output.a_stdout} {input.renamed}
 		"""
 
 # bbmap rename
@@ -273,9 +303,11 @@ rule bbmap_rename:
 		16
 	message:
 		"[bbmap] renaming contigs of {wildcards.sample}."
+	params:
+		min_length = config["assembly_min"]
 	shell:
 		"""
-		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} zl=9 -Xmx{threads}g
+		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} zl=9 minscaf={params.min_length} -Xmx{threads}g
 		"""
 
 # metaspades
@@ -318,12 +350,12 @@ rule kmc3:
 	threads:
 		64
 	message:
-		"[KMC3] Calculating k-mer statistics for {wildcards.sample}."
+		"[KMC3] calculating k-mer statistics for {wildcards.sample}."
 	shell:
 		"""
-		echo {b1} > tmp/sample_list.txt
-		echo {b2} >> tmp/sample_list.txt
-		echo {b3} >> tmp/sample_list.txt
+		echo {input.b1} > tmp/sample_list.txt
+		echo {input.b2} >> tmp/sample_list.txt
+		echo {input.b3} >> tmp/sample_list.txt
 		kmc @tmp/sample_list.txt output/03_kmer_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
 		"""
 
@@ -342,7 +374,7 @@ rule krona:
 	threads:
 		1
 	message:
-		"[Krona] Visualizing taxonomic classification."
+		"[Krona] visualizing taxonomic compositions."
 	shell:
 		"""
 		ktUpdateTaxonomy.sh
@@ -400,9 +432,12 @@ rule bracken_abundancies:
 		1
 	message:
 		"[bracken] re-estimating species abundancies for {wildcards.sample}."
+	params:
+		db = config["kraken_db"]
+		length = config["kraken_read_length"]
 	shell:
 		"""
-		bracken -d {config[kraken2db]} -i {input.k_report} -o {output.b_output} -w {output.b_report} -r {config[read_length]} -l S
+		bracken -d {params.db} -i {input.k_report} -o {output.b_output} -w {output.b_report} -r {params.length} -l S
 		"""
 
 # kraken2
@@ -419,9 +454,11 @@ rule kraken2_reads:
 		32
 	message:
 		"[kraken2] assessing taxonomic profile for {wildcards.sample}."
+	params:
+		db = config["kraken_db"]
 	shell:
 		"""
-		kraken2 --db {config[kraken2db]} --threads {threads} --report {output.k_report} --output {output.k_stdout} --paired {input.b1} {input.b2}
+		kraken2 --db {params.db} --threads {threads} --report {output.k_report} --output {output.k_stdout} --paired {input.b1} {input.b2}
 		"""
 
 # -------------------------------
@@ -434,8 +471,8 @@ rule multiqc:
 		json = expand("output/01_preprocessing/fastp/reports/{sample}.fastp.json", sample = SAMPLES),
 		k_report = expand("output/02_taxonomic_profiling/kraken2/{sample}.report", sample = SAMPLES)
 	output:
-		qc_fastp = directory("output/01_preprocessing/multiqc/"),
-		qc_kraken2 = directory("output/02_taxonomic_profiling/multiqc/")
+		qc_fastp = "output/01_preprocessing/multiqc/multiqc_report.html",
+		qc_kraken2 = "output/02_taxonomic_profiling/multiqc/multiqc_report.html"
 	conda:
 		"envs/multiqc.yml"
 	threads:
@@ -444,10 +481,8 @@ rule multiqc:
 		"[multiqc] summarizing fastp and kraken2 reports."
 	shell:
 		"""
-		mkdir -p {output.qc_fastp}
-		multiqc -o {output.qc_fastp} output/01_preprocessing/fastp/reports/* -q -z
-		mkdir -p {output.qc_kraken2}
-		multiqc -o {output.qc_kraken2} output/02_taxonomic_profiling/kraken2/* -q -z
+		multiqc -o output/01_preprocessing/multiqc/ output/01_preprocessing/fastp/reports/* -q -z
+		multiqc -o output/02_taxonomic_profiling/multiqc/ output/02_taxonomic_profiling/kraken2/* -q -z
 		"""
 
 # SeqFu
@@ -463,7 +498,7 @@ rule seqfu:
 	threads:
 		1
 	message:
-		"[seqfu] calculating read stats for {wildcards.sample}."
+		"[seqfu] calculating read statistics."
 	shell:
 		"""
 		seqfu stats output/01_preprocessing/bbmap/* > {output.stats}
@@ -498,8 +533,8 @@ rule bbmap_split:
 # fastp
 rule fastp:
 	input:
-		r1 = "input/{sample}_L001_R1_001.fastq.gz",
-		r2 = "input/{sample}_L001_R2_001.fastq.gz"
+		r1 = "input/{sample}_R1.fastq.gz",
+		r2 = "input/{sample}_R2.fastq.gz"
 	output:
 		f1 = "output/01_preprocessing/fastp/{sample}_R1.fastq.gz",
 		f2 = "output/01_preprocessing/fastp/{sample}_R2.fastq.gz",

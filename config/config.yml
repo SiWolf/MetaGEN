@@ -1,5 +1,5 @@
-name_project: Horses_Gut
-read_1_identifier: R1_001.fastq.gz
-read_1_identifier: R2_001.fastq.gz
-kraken2db: /scratch1/databases/kraken/20210810_kraken2_standard/
-read_length: 150
+amr_identity: 90
+amr_coverage: 90
+assembly_min: 1000
+kraken_db: /scratch1/databases/kraken/20210810_kraken2_standard/
+kraken_read_length: 150
