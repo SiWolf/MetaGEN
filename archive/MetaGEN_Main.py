@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.py
 # Author: Silver A. Wolf
-# Last Modified: Wed, 07.07.2021
-# Version: 0.3.4
+# Last Modified: Wed, 04.08.2021
+# Version: 0.3.5
 # -------------------------------
 
 # Imports
@@ -438,7 +438,7 @@ def main():
 	parser.add_argument("-k",
 						"--kraken2_db",
 						type = str,
-						default = "/scratch1/databases/kraken/20210610_kraken2_nt_database_fast_build/",
+						default = "/scratch1/databases/kraken/20210810_kraken2_standard/",
 						required = False,
 						help = "Path to local kraken2 database"
 					   )

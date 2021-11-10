@@ -8,20 +8,20 @@ dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=1_gnu
   - _sysroot_linux-64_curr_repodata_hack=3=ha9d2b57_10
-  - bbmap=38.90=he522d1c_1
+  - bbmap=38.91=he522d1c_1
   - biom-format=2.1.10=py37ha21ca33_0
   - blast=2.5.0=hc0b0e79_3
   - boost=1.74.0=py37h6dcda5c_3
   - boost-cpp=1.74.0=h9359b55_0
-  - bowtie2=2.4.2=py37he8e2a3f_2
+  - bowtie2=2.4.4=py37h13ad519_0
   - bracken=2.6.1=py37h22450f8_2
   - brotlipy=0.7.0=py37h5e8e339_1001
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.17.1=h7f98852_1
-  - ca-certificates=2020.12.5=ha878542_0
+  - ca-certificates=2021.5.30=ha878542_0
   - cached-property=1.5.2=hd8ed1ab_1
   - cached_property=1.5.2=pyha770c72_1
-  - certifi=2020.12.5=py37h89c1867_1
+  - certifi=2021.5.30=py37h89c1867_0
   - cffi=1.14.5=py37hc58025e_0
   - chardet=4.0.0=py37h89c1867_1
   - circos=0.69.8=hdfd78af_1
@@ -56,7 +56,7 @@ dependencies:
   - kernel-headers_linux-64=3.10.0=h77966d4_10
   - kiwisolver=1.3.1=py37h2527ec5_1
   - kraken-biom=1.0.1=py_2
-  - kraken2=2.1.1=pl5262h7d875b9_1
+  - kraken2=2.1.2=pl5262h7d875b9_0
   - krb5=1.17.2=h926e7f8_0
   - krona=2.8=pl5262hdfd78af_2
   - lcms2=2.12=hddcbb42_0
@@ -96,7 +96,7 @@ dependencies:
   - matplotlib-base=3.4.1=py37hdd32ed1_0
   - metabat2=2.12.1=1
   - minimap2=2.18=h5bf99c6_0
-  - multiqc=1.10.1=pyhdfd78af_1
+  - multiqc=1.11=pyhdfd78af_0
   - ncurses=6.2=h58526e2_4
   - networkx=2.5.1=pyhd8ed1ab_0
   - numpy=1.20.2=py37h038b26d_0
@@ -165,7 +165,7 @@ dependencies:
   - setuptools=49.6.0=py37h89c1867_3
   - simplejson=3.17.2=py37h5e8e339_2
   - six=1.16.0=pyh6c4a22f_0
-  - spades=3.15.2=h95f258a_1
+  - spades=3.15.3=h95f258a_0
   - spectra=0.0.11=py_1
   - sqlite=3.35.5=h74cdb3f_0
   - sysroot_linux-64=2.17=h77966d4_10
