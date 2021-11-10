@@ -35,7 +35,7 @@ rule all:
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
-		#expand("output/04_assemblies/plasflow/{sample}.txt", sample = SAMPLES)
+		expand("output/04_assemblies/plasflow/{sample}.txt", sample = SAMPLES)
 		"output/04_assemblies/metaquast/report.html",
 		expand("output/04_assemblies/metabat/{sample}.fa.gz.depth.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metabat/{sample}.fa.gz.paired.txt", sample = SAMPLES),
@@ -255,21 +255,21 @@ rule metaquast:
 		"""
 
 #PlasFlow
-#rule plasflow:
-#	input:
-#		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
-#	output:
-#		plasmids = "output/04_assemblies/plasflow/{sample}.txt"
-#	conda:
-#		"envs/plasflow.yml"
-#	threads:
-#		1
-#	message:
-#		"[PlasFlow] detecting plasmid sequences in the assembly of {wildcards.sample}."
-#	shell:
-#		"""
-#		PlasFlow.py --input {input.renamed} --output {output.plasmids}
-#		"""
+rule plasflow:
+	input:
+		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa.gz"
+	output:
+		plasmids = "output/04_assemblies/plasflow/{sample}.txt"
+	conda:
+		"envs/plasflow.yml"
+	threads:
+		1
+	message:
+		"[PlasFlow] detecting plasmid sequences in the assembly of {wildcards.sample}."
+	shell:
+		"""
+		PlasFlow.py --input {input.renamed} --output {output.plasmids}
+		"""
 
 # kraken2
 rule kraken2_assembly:
@@ -291,23 +291,25 @@ rule kraken2_assembly:
 		kraken2 --db {params.db} --threads {threads} --report {output.a_report} --output {output.a_stdout} {input.renamed}
 		"""
 
-# bbmap rename
-rule bbmap_rename:
+# bbmap reformat
+rule bbmap_reformat:
 	input:
 		assembly = "output/04_assemblies/metaspades/{sample}.fa.gz"
 	output:
+		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa.gz"
 		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
 	conda:
 		"envs/bbmap.yml"
 	threads:
 		16
 	message:
-		"[bbmap] renaming contigs of {wildcards.sample}."
+		"[bbmap] renaming and filtering contigs of {wildcards.sample}."
 	params:
 		min_length = config["assembly_min"]
 	shell:
 		"""
-		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} zl=9 minscaf={params.min_length} -Xmx{threads}g
+		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} zl=9 -Xmx{threads}g
+		reformat.sh in={output.renamed} out={output.filtered} minlength={params.min_length} zl=9 -Xmx{threads}g
 		"""
 
 # metaspades
