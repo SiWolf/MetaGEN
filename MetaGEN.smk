@@ -6,10 +6,10 @@
 # -------------------------------
 
 # How to run MetaGEN
-#snakemake -s MetaGEN.smk -c 80 --use-conda
-#snakemake -F -s MetaGEN.smk -c 80 --use-conda
-#snakemake -n -s MetaGEN.smk -c 80 --use-conda
-#snakemake --dag -s MetaGEN.smk -c 80 --use-conda | dot -Tsvg > MetaGEN.svg
+#snakemake -s MetaGEN.smk -c 128 --use-conda
+#snakemake -F -s MetaGEN.smk -c 128 --use-conda
+#snakemake -n -s MetaGEN.smk -c 128 --use-conda
+#snakemake --dag -s MetaGEN.smk -c 128 --use-conda | dot -Tsvg > MetaGEN.svg
 
 # -------------------------------
 # MetaGEN Settings
@@ -37,21 +37,20 @@ rule all:
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		"output/04_assemblies/metaquast/report.html",
-		expand("output/04_assemblies/metabat/{sample}.fa.depth.txt", sample = SAMPLES),
-		expand("output/04_assemblies/metabat/{sample}.fa.paired.txt", sample = SAMPLES),
-		"output/05_amr/abricate/kraken2.summary",
-		"output/05_amr/coverm/coverm.summary"
+		expand("output/05_genomic_bins/checkm/{sample}/checkm.log", sample = SAMPLES),
+		"output/06_amr/abricate/amr/kraken2.summary",
+		"output/06_amr/coverm/coverm.summary"
 
 # -------------------------------
-# V: AMR Profiling
+# VI: AMR & Virulence Profiling
 # -------------------------------
 
 # CoverM Summary
 rule coverm_summary:
 	input:
-		coverm_profile = expand("output/05_amr/coverm/{sample}.txt", sample = SAMPLES)
+		coverm_profile = expand("output/06_amr/coverm/{sample}.txt", sample = SAMPLES)
 	output:
-		coverm_sum = "output/05_amr/coverm/coverm.summary"
+		coverm_sum = "output/06_amr/coverm/coverm.summary"
 	threads:
 		1
 	message:
@@ -90,7 +89,7 @@ rule coverm:
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
 	output:
-		coverm_profile = "output/05_amr/coverm/{sample}.txt"
+		coverm_profile = "output/06_amr/coverm/{sample}.txt"
 	conda:
 		"envs/coverm.yml"
 	threads:
@@ -113,10 +112,10 @@ rule coverm:
 rule abricate_taxcaller:
 	input:
 		a_stdout = expand("output/04_assemblies/kraken2/{sample}.stdout", sample = SAMPLES),
-		abricate_profile = expand("output/05_amr/abricate/{sample}.tab", sample = SAMPLES),
-		abricate_sum = "output/05_amr/abricate/abricate.summary"
+		abricate_profile = expand("output/06_amr/abricate/amr/{sample}.tab", sample = SAMPLES),
+		abricate_sum = "output/06_amr/abricate/amr/abricate.summary"
 	output:
-		kraken2_sum = "output/05_amr/abricate/kraken2.summary"
+		kraken2_sum = "output/06_amr/abricate/amr/kraken2.summary"
 	threads:
 		1
 	message:
@@ -133,7 +132,7 @@ rule abricate_taxcaller:
 		for k in kraken_reports:
 			sample_name = k.split(".stdout")[0].split("/")[-1]
 			contigs = []
-			with open("output/05_amr/abricate/" + sample_name + ".tab") as kreport:
+			with open("output/06_amr/abricate/amr/" + sample_name + ".tab") as kreport:
 				for line in kreport:
 					if line[0] != "#":
 						c = line.split("\t")[1]
@@ -152,7 +151,7 @@ rule abricate_taxcaller:
 			contigs = []
 			tax_ids = []
 			tmpstr = ""
-			with open("output/05_amr/abricate/" + sample_name + ".tab") as kreport:
+			with open("output/06_amr/abricate/amr/" + sample_name + ".tab") as kreport:
 				for line in kreport:
 					if line[0] != "#":
 						c = line.split("\t")[1]
@@ -172,9 +171,11 @@ rule abricate_taxcaller:
 # ABRicate Summary
 rule abricate_summary:
 	input:
-		renamed = expand("output/05_amr/abricate/{sample}.tab", sample = SAMPLES)
+		amr_profile = expand("output/06_amr/abricate/amr/{sample}.tab", sample = SAMPLES),
+		vir_profile = expand("output/06_amr/abricate/vir/{sample}.tab", sample = SAMPLES)
 	output:
-		abricate_sum = "output/05_amr/abricate/abricate.summary"
+		amr_sum = "output/06_amr/abricate/amr/abricate.summary",
+		vir_sum = "output/06_amr/abricate/vir/abricate.summary"
 	conda:
 		"envs/abricate.yml"
 	threads:
@@ -183,7 +184,8 @@ rule abricate_summary:
 		"[ABRicate] summarizing results."
 	shell:
 		"""
-		abricate --summary --nopath output/05_amr/abricate/*.tab > {output.abricate_sum}
+		abricate --summary --nopath output/06_amr/abricate/amr/*.tab > {output.amr_sum}
+		abricate --summary --nopath output/06_amr/abricate/vir/*.tab > {output.vir_sum}
 		"""
 
 # ABRicate
@@ -191,24 +193,45 @@ rule abricate:
 	input:
 		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
 	output:
-		abricate_profile = "output/05_amr/abricate/{sample}.tab"
+		amr_profile = "output/06_amr/abricate/amr/{sample}.tab",
+		vir_profile = "output/06_amr/abricate/vir/{sample}.tab"
 	conda:
 		"envs/abricate.yml"
 	threads:
 		16
 	message:
-		"[ABRicate] scanning for AMR Genes."
+		"[ABRicate] scanning for AMR and virulence genes."
 	params:
 		identity = config["amr_identity"],
 		coverage = config["amr_coverage"]
 	shell:
 		"""
-		abricate --db megares --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath {input.renamed} > {output.abricate_profile}
+		abricate --db megares --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath {input.renamed} > {output.amr_profile}
+		abricate --db vfdb --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath {input.renamed} > {output.vir_profile}
 		"""
 
 # -------------------------------
-# IV: Assemblies
+# V: Genomic Binning
 # -------------------------------
+
+# CheckM
+rule checkm:
+	input:
+		fasta_bins = "output/05_genomic_bins/metabat/{sample}.fa.metabat-bins32/bin.1.fa",
+		stats_depth = "output/05_genomic_bins/metabat/{sample}.fa.depth.txt",
+		stats_paired = "output/05_genomic_bins/metabat/{sample}.fa.paired.txt"
+	output:
+		checkm_log = "output/05_genomic_bins/checkm/{sample}/checkm.log"
+	conda:
+		"envs/checkm.yml"
+	threads:
+		16
+	message:
+		"[CheckM] Assessing genomic bin quality of {wildcards.sample}."
+	shell:
+		"""
+		checkm lineage_wf -t {threads} -x fa output/05_genomic_bins/metabat/{wildcards.sample}.fa.metabat-bins32/ output/05_genomic_bins/checkm/{wildcards.sample}/
+		"""
 
 # MetaBAT
 rule metabat:
@@ -218,8 +241,9 @@ rule metabat:
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
 		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa"
 	output:
-		bin_depth = "output/04_assemblies/metabat/{sample}.fa.depth.txt",
-		bin_paired = "output/04_assemblies/metabat/{sample}.fa.paired.txt"
+		fasta_bins = "output/05_genomic_bins/metabat/{sample}.fa.metabat-bins32/bin.1.fa",
+		stats_depth = "output/05_genomic_bins/metabat/{sample}.fa.depth.txt",
+		stats_paired = "output/05_genomic_bins/metabat/{sample}.fa.paired.txt"
 	conda:
 		"envs/metabat.yml"
 	threads:
@@ -234,8 +258,12 @@ rule metabat:
 		samtools sort tmp/{wildcards.sample}.bam -o tmp/{wildcards.sample}_sorted.bam
 		samtools index tmp/{wildcards.sample}_sorted.bam
 		runMetaBat.sh -m 1500 -t {threads} {input.filtered} tmp/{wildcards.sample}_sorted.bam
-		mv {wildcards.sample}* output/04_assemblies/metabat/
+		mv -f {wildcards.sample}* output/05_genomic_bins/metabat/
 		"""
+
+# -------------------------------
+# IV: Assemblies
+# -------------------------------
 
 # MetaQUAST
 rule metaquast:
@@ -246,7 +274,7 @@ rule metaquast:
 	conda:
 		"envs/metaquast.yml"
 	threads:
-		64
+		32
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
 	shell:
