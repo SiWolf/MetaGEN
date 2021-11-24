@@ -1,15 +1,15 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 10.11.2021
-# Version: 0.4.0
+# Last Modified: Wed, 24.11.2021
+# Version: 0.4.1
 # -------------------------------
 
 # How to run MetaGEN
-#snakemake -s MetaGEN.smk -c 64 --use-conda
-#snakemake -F -s MetaGEN.smk -c 64 --use-conda
-#snakemake -n -s MetaGEN.smk -c 64 --use-conda
-#snakemake --dag -s MetaGEN.smk -c 64 --use-conda | dot -Tsvg > MetaGEN.svg
+#snakemake -s MetaGEN.smk -c 80 --use-conda
+#snakemake -F -s MetaGEN.smk -c 80 --use-conda
+#snakemake -n -s MetaGEN.smk -c 80 --use-conda
+#snakemake --dag -s MetaGEN.smk -c 80 --use-conda | dot -Tsvg > MetaGEN.svg
 
 # -------------------------------
 # MetaGEN Settings
@@ -35,10 +35,10 @@ rule all:
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
-		expand("output/04_assemblies/plasflow/{sample}.txt", sample = SAMPLES)
+		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		"output/04_assemblies/metaquast/report.html",
-		expand("output/04_assemblies/metabat/{sample}.fa.gz.depth.txt", sample = SAMPLES),
-		expand("output/04_assemblies/metabat/{sample}.fa.gz.paired.txt", sample = SAMPLES),
+		expand("output/04_assemblies/metabat/{sample}.fa.depth.txt", sample = SAMPLES),
+		expand("output/04_assemblies/metabat/{sample}.fa.paired.txt", sample = SAMPLES),
 		"output/05_amr/abricate/kraken2.summary",
 		"output/05_amr/coverm/coverm.summary"
 
@@ -64,7 +64,7 @@ rule coverm_summary:
 		for c in coverm_results:
 			ref_seqs = ref_seqs + "\t" + c.split(".txt")[0]
 		
-		with open("output/05_amr/coverm/" + coverm_results[0], "r") as ref_file:
+		with open(coverm_results[0], "r") as ref_file:
 			for line in ref_file:
 				ref_names.append(line.split("\t")[0])
 		
@@ -75,7 +75,7 @@ rule coverm_summary:
 		for r in ref_names:
 			val = []
 			for l in coverm_results:
-				with open("output/05_amr/coverm/" + l, "r") as cover_file:
+				with open(l, "r") as cover_file:
 					for line in cover_file:
 						if line.split("\t")[0] == r:
 							val.append(str(int(line.split("\t")[7].replace(".", ",")) + int(line.split("\t")[17].replace(".", ","))))
@@ -98,7 +98,7 @@ rule coverm:
 	message:
 		"[CoverM] mapping reads to the MegaRES database."
 	params:
-		identity = config["amr_identity"]
+		identity = config["amr_identity"],
 		coverage = config["amr_coverage"]
 	shell:
 		"""
@@ -131,7 +131,7 @@ rule abricate_taxcaller:
 					break
 		# Generate overview of all required taxids
 		for k in kraken_reports:
-			sample_name = k.split(".stdout")[0]
+			sample_name = k.split(".stdout")[0].split("/")[-1]
 			contigs = []
 			with open("output/05_amr/abricate/" + sample_name + ".tab") as kreport:
 				for line in kreport:
@@ -148,7 +148,7 @@ rule abricate_taxcaller:
 		summary_table = open(output.kraken2_sum, "w")
 		summary_table.write("SAMPLE\t" + "\t".join(kraken_tax_ids) + "\n")
 		for k in kraken_reports:
-			sample_name = k.split(".stdout")[0]
+			sample_name = k.split(".stdout")[0].split("/")[-1]
 			contigs = []
 			tax_ids = []
 			tmpstr = ""
@@ -199,7 +199,7 @@ rule abricate:
 	message:
 		"[ABRicate] scanning for AMR Genes."
 	params:
-		identity = config["amr_identity"]
+		identity = config["amr_identity"],
 		coverage = config["amr_coverage"]
 	shell:
 		"""
@@ -216,10 +216,10 @@ rule metabat:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
-		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
+		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa"
 	output:
-		bin_depth = "output/04_assemblies/metabat/{sample}.fa.gz.depth.txt",
-		bin_paired = "output/04_assemblies/metabat/{sample}.fa.gz.paired.txt"
+		bin_depth = "output/04_assemblies/metabat/{sample}.fa.depth.txt",
+		bin_paired = "output/04_assemblies/metabat/{sample}.fa.paired.txt"
 	conda:
 		"envs/metabat.yml"
 	threads:
@@ -228,12 +228,12 @@ rule metabat:
 		"[MetaBAT] binning assembly of {wildcards.sample}."
 	shell:
 		"""
-		bowtie2-build --quiet --threads {threads} {input.renamed} tmp/{wildcards.sample}
+		bowtie2-build --quiet --threads {threads} {input.filtered} tmp/{wildcards.sample}
 		bowtie2 --quiet -p {threads} -x tmp/{wildcards.sample} -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/{wildcards.sample}.sam
 		samtools view -bS -o tmp/{wildcards.sample}.bam tmp/{wildcards.sample}.sam
 		samtools sort tmp/{wildcards.sample}.bam -o tmp/{wildcards.sample}_sorted.bam
 		samtools index tmp/{wildcards.sample}_sorted.bam
-		runMetaBat.sh -m 1500 -t {threads} renamed {wildcards.sample}_sorted.bam
+		runMetaBat.sh -m 1500 -t {threads} {input.filtered} tmp/{wildcards.sample}_sorted.bam
 		mv {wildcards.sample}* output/04_assemblies/metabat/
 		"""
 
@@ -246,7 +246,7 @@ rule metaquast:
 	conda:
 		"envs/metaquast.yml"
 	threads:
-		32
+		64
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
 	shell:
@@ -254,21 +254,21 @@ rule metaquast:
 		metaquast -o output/04_assemblies/metaquast/ -t {threads} {input.renamed} --glimmer --rna-finding --plots-format png --silent -m 100
 		"""
 
-#PlasFlow
-rule plasflow:
+#PlasClass
+rule plasclass:
 	input:
-		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa.gz"
+		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa"
 	output:
-		plasmids = "output/04_assemblies/plasflow/{sample}.txt"
+		plasmids = "output/04_assemblies/plasclass/{sample}.txt"
 	conda:
-		"envs/plasflow.yml"
+		"envs/plasclass.yml"
 	threads:
-		1
+		32
 	message:
-		"[PlasFlow] detecting plasmid sequences in the assembly of {wildcards.sample}."
+		"[PlasClass] detecting plasmid sequences in the assembly of {wildcards.sample}."
 	shell:
 		"""
-		PlasFlow.py --input {input.renamed} --output {output.plasmids}
+		classify_fasta.py -f {input.filtered} -o {output.plasmids} -p {threads}
 		"""
 
 # kraken2
@@ -296,7 +296,7 @@ rule bbmap_reformat:
 	input:
 		assembly = "output/04_assemblies/metaspades/{sample}.fa.gz"
 	output:
-		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa.gz"
+		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa",
 		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
 	conda:
 		"envs/bbmap.yml"
@@ -309,7 +309,7 @@ rule bbmap_reformat:
 	shell:
 		"""
 		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} zl=9 -Xmx{threads}g
-		reformat.sh in={output.renamed} out={output.filtered} minlength={params.min_length} zl=9 -Xmx{threads}g
+		reformat.sh in={output.renamed} out={output.filtered} minlength={params.min_length} -Xmx{threads}g
 		"""
 
 # metaspades
@@ -435,7 +435,7 @@ rule bracken_abundancies:
 	message:
 		"[bracken] re-estimating species abundancies for {wildcards.sample}."
 	params:
-		db = config["kraken_db"]
+		db = config["kraken_db"],
 		length = config["kraken_read_length"]
 	shell:
 		"""
