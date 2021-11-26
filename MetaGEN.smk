@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 24.11.2021
-# Version: 0.4.1
+# Last Modified: Fri, 26.11.2021
+# Version: 0.4.2
 # -------------------------------
 
 # How to run MetaGEN
@@ -274,12 +274,12 @@ rule metaquast:
 	conda:
 		"envs/metaquast.yml"
 	threads:
-		32
+		64
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
 	shell:
 		"""
-		metaquast -o output/04_assemblies/metaquast/ -t {threads} {input.renamed} --glimmer --rna-finding --plots-format png --silent -m 100
+		metaquast -o output/04_assemblies/metaquast/ -t {threads} {input.renamed} --rna-finding --plots-format png --silent -m 100
 		"""
 
 #PlasClass
