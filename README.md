@@ -4,5 +4,4 @@
 A all-in-one solution for streamlining metagenomic analyses.
 
 # License
-
 This project is licensed under the GPLv3 License. See the [LICENSE](LICENSE) file for more details.
