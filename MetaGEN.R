@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Wed, 01.12.2021
-# Version: 0.4.3
+# Last Modified: Fri, 03.12.2021
+# Version: 0.4.4
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -10,7 +10,6 @@
 library("circlize")
 library("ComplexHeatmap")
 library("edgeR")
-library("ggConvexHull")
 library("ggpubr")
 library("metagMisc")
 library("microbiome")
@@ -131,12 +130,14 @@ ggscatter(data.pcoa,
           shape = "TIMEPOINT",
           #star.plot = TRUE,
           #mean.point = TRUE,
-          #ellipse = TRUE,
-          title = "All Samples - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
-          palette = colours.days
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
+          palette = colours.days,
+          title = "All Samples - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = TIMEPOINT))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Timepoints - SSG
@@ -152,12 +153,14 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "SSG", ],
           shape = "TIMEPOINT",
           #star.plot = TRUE,
           #mean.point = TRUE,
-          #ellipse = TRUE,
-          title = "SSG - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
-          palette = colours.days
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
+          palette = colours.days,
+          title = "SSG - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = TIMEPOINT))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Timepoints - 5DG
@@ -173,12 +176,14 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "5DG", ],
           shape = "TIMEPOINT",
           #star.plot = TRUE,
           #mean.point = TRUE,
-          #ellipse = TRUE,
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
+          palette = colours.days,
           title = "5DG - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
-          palette = colours.days
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = TIMEPOINT))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Groups - All Samples
@@ -192,14 +197,14 @@ ggscatter(data.pcoa,
           ylim = c(-0.35, 0.6),
           color = "AB_GROUP",
           shape = "AB_GROUP",
-          #star.plot = TRUE,
-          #mean.point = TRUE,
-          #ellipse = TRUE,
-          title = "All Samples - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
-          palette = colours.groups
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
+          palette = colours.groups,
+          title = "All Samples - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = AB_GROUP))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Groups - t0
@@ -215,12 +220,14 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t0", ],
           shape = "AB_GROUP",
           #star.plot = TRUE,
           #mean.point = TRUE,
-          #ellipse = TRUE,
-          title = "t0 - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
-          palette = colours.groups[1:2]
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
+          palette = colours.groups[1:2],
+          title = "t0 - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = AB_GROUP))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Groups - t1
@@ -236,12 +243,14 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t1", ],
           shape = "AB_GROUP",
           #star.plot = TRUE,
           #mean.point = TRUE,
-          #ellipse = TRUE,
-          title = "t1 - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
-          palette = colours.groups[1:2]
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
+          palette = colours.groups[1:2],
+          title = "t1 - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = AB_GROUP))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Groups - t2
@@ -257,12 +266,14 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t2", ],
           shape = "AB_GROUP",
           #star.plot = TRUE,
           #mean.point = TRUE,
-          #ellipse = TRUE,
-          title = "t2 - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
-          palette = colours.groups[1:2]
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
+          palette = colours.groups[1:2],
+          title = "t2 - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = AB_GROUP))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Timepoints-Groups - All Samples
@@ -278,11 +289,13 @@ ggscatter(data.pcoa.filtered,
           #shape = "TIME_GROUP",
           #star.plot = TRUE,
           #mean.point = TRUE,
-          #ellipse = TRUE,
+          ellipse = TRUE,
+          ellipse.alpha = 0.3,
+          ellipse.border.remove = TRUE,
+          ellipse.type = "convex",
           title = "All Samples - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        geom_convexhull(alpha = 0.3, aes(fill = TIME_GROUP))
+        theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 # Boxplots
@@ -346,6 +359,14 @@ bar_data_melted$OTU[bar_data_melted$OTU == "p__"] <- "Unclassified"
 bar_data_melted$OTU <- gsub("p__", "", bar_data_melted$OTU)
 #bar_data_melted$OTU <- gsub(" 1", "", bar_data_melted$OTU)
 bar_data_melted$OTU <- bar_data_melted$OTU
+
+# Prepare order based on taxa abundance
+# Deleting this section will result in alphabetical order within the barcharts
+#bar_order <- unique(bar_data_melted$OTU)
+#bar_order <- bar_order[bar_order != "Other" & bar_order != "Unclassified"]
+#bar_order[length(bar_order) + 1] <- "Other"
+#bar_order[length(bar_order) + 1] <- "Unclassified"
+#bar_data_melted$OTU <- factor(bar_data_melted$OTU, levels = bar_order)
 
 # Individual Horses - 5DG
 bar_data_5dg <- bar_data_melted[bar_data_melted$AB_GROUP == "5DG",]
