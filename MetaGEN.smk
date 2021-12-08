@@ -225,7 +225,7 @@ rule checkm:
 	conda:
 		"envs/checkm.yml"
 	threads:
-		16
+		64
 	message:
 		"[CheckM] Assessing genomic bin quality of {wildcards.sample}."
 	shell:
@@ -274,7 +274,7 @@ rule metaquast:
 	conda:
 		"envs/metaquast.yml"
 	threads:
-		32
+		128
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
 	shell:
