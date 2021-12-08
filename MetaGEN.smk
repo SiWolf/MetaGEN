@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 26.11.2021
-# Version: 0.4.2
+# Last Modified: Wed, 08.12.2021
+# Version: 0.4.3
 # -------------------------------
 
 # How to run MetaGEN
@@ -36,7 +36,7 @@ rule all:
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
-		"output/04_assemblies/metaquast/report.html",
+		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		expand("output/05_genomic_bins/checkm/{sample}/checkm.log", sample = SAMPLES),
 		"output/06_amr/abricate/amr/kraken2.summary",
 		"output/06_amr/coverm/coverm.summary"
@@ -268,18 +268,18 @@ rule metabat:
 # MetaQUAST
 rule metaquast:
 	input:
-		renamed = expand("output/04_assemblies/bbmap/{sample}.fa.gz", sample = SAMPLES)
+		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
 	output:
-		qc_assembly = "output/04_assemblies/metaquast/report.html"
+		qc_assembly = "output/04_assemblies/metaquast/{sample}/report.html"
 	conda:
 		"envs/metaquast.yml"
 	threads:
-		64
+		32
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
 	shell:
 		"""
-		metaquast -o output/04_assemblies/metaquast/ -t {threads} {input.renamed} --rna-finding --plots-format png --silent -m 100
+		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent -m 500
 		"""
 
 #PlasClass
