@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 08.12.2021
-# Version: 0.4.3
+# Last Modified: Tue, 11.01.2022
+# Version: 0.4.4
 # -------------------------------
 
 # How to run MetaGEN
@@ -191,7 +191,7 @@ rule abricate_summary:
 # ABRicate
 rule abricate:
 	input:
-		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
+		renamed = "output/04_assemblies/bbmap/{sample}.fa"
 	output:
 		amr_profile = "output/06_amr/abricate/amr/{sample}.tab",
 		vir_profile = "output/06_amr/abricate/vir/{sample}.tab"
@@ -268,7 +268,7 @@ rule metabat:
 # MetaQUAST
 rule metaquast:
 	input:
-		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
+		renamed = "output/04_assemblies/bbmap/filtered/{sample}.fa"
 	output:
 		qc_assembly = "output/04_assemblies/metaquast/{sample}/report.html"
 	conda:
@@ -279,7 +279,7 @@ rule metaquast:
 		"[MetaQUAST] assessing quality of assemblies."
 	shell:
 		"""
-		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent -m 500
+		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent
 		"""
 
 #PlasClass
@@ -302,7 +302,7 @@ rule plasclass:
 # kraken2
 rule kraken2_assembly:
 	input:
-		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
+		renamed = "output/04_assemblies/bbmap/{sample}.fa"
 	output:
 		a_report = "output/04_assemblies/kraken2/{sample}.report",
 		a_stdout = "output/04_assemblies/kraken2/{sample}.stdout"
@@ -325,7 +325,7 @@ rule bbmap_reformat:
 		assembly = "output/04_assemblies/metaspades/{sample}.fa.gz"
 	output:
 		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa",
-		renamed = "output/04_assemblies/bbmap/{sample}.fa.gz"
+		renamed = "output/04_assemblies/bbmap/{sample}.fa"
 	conda:
 		"envs/bbmap.yml"
 	threads:
@@ -336,7 +336,7 @@ rule bbmap_reformat:
 		min_length = config["assembly_min"]
 	shell:
 		"""
-		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} zl=9 -Xmx{threads}g
+		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} -Xmx{threads}g
 		reformat.sh in={output.renamed} out={output.filtered} minlength={params.min_length} -Xmx{threads}g
 		"""
 
@@ -553,7 +553,7 @@ rule bbmap_split:
 	threads:
 		64
 	message:
-		"[bbmap] removing host contamination for {wildcards.sample}."
+		"[bbmap] removing host contamination in {wildcards.sample}."
 	shell:
 		"""
 		bbsplit.sh in1={input.f1} in2={input.f2} outu1={output.b1} outu2={output.b2} path=references/ threads={threads} refstats={output.ref12} scafstats={output.scaf12} -Xmx{threads}g
