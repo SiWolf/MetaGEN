@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Tue, 11.01.2022
-# Version: 0.4.4
+# Last Modified: Mon, 18.01.2022
+# Version: 0.4.5
 # -------------------------------
 
 # How to run MetaGEN
@@ -139,7 +139,7 @@ rule abricate_taxcaller:
 						if c not in contigs:
 							contigs.append(c)
 			for c in contigs:
-				command = "grep \"" + c + "\" output/04_assemblies/kraken2/" + k
+				command = "grep \"" + c + "\" " + k
 				stdout = os.popen(command).read().split("\t")[2]
 				if stdout not in kraken_tax_ids:
 					kraken_tax_ids.append(stdout)
@@ -157,7 +157,7 @@ rule abricate_taxcaller:
 						c = line.split("\t")[1]
 						contigs.append(c)
 			for c in contigs:
-				command = "grep \"" + c + "\" output/04_assemblies/kraken2/" + k
+				command = "grep \"" + c + "\" " + k
 				stdout = os.popen(command).read().split("\t")[2]
 				tax_ids.append(stdout)
 			for t in kraken_tax_ids:
