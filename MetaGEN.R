@@ -81,30 +81,14 @@ data.pcoa$TIME_GROUP = paste(meta.sorted$Timepoint, meta.sorted$AB_Group, sep = 
 data.pcoa.filtered <- data.pcoa[data.pcoa$AB_GROUP != "SWITCHED", ]
 
 # Export Diversities
-write.csv(data.alpha, file = "output/07_visualization/tab_div_alpha_raw.csv")
-write.csv(data.alpha.rarefy, file = "output/07_visualization/tab_div_alpha_rarefy.csv")
-write.csv(data.bray, file = "output/07_visualization/tab_div_beta_distance.csv")
-write.csv(data.pcoa, file = "output/07_visualization/tab_div_beta_pcoa.csv")
+write.csv(data.alpha, file = "output/07_visualization/tab_div_alpha_raw.csv", quote = FALSE)
+write.csv(data.alpha.rarefy, file = "output/07_visualization/tab_div_alpha_rarefy.csv", quote = FALSE)
+write.csv(data.bray, file = "output/07_visualization/tab_div_beta_distance.csv", quote = FALSE)
+write.csv(data.pcoa, file = "output/07_visualization/tab_div_beta_pcoa.csv", quote = FALSE)
 
 # Export human-readable OTU table
-data.df <- phyloseq_to_df(data.rarefy)
-
-data.df$TAXA <- paste(data.df$Rank1, data.df$Rank2, data.df$Rank3,
-                      data.df$Rank4, data.df$Rank5, data.df$Rank6,
-                      data.df$Rank7,
-                      sep = "; ")
-
-write.table(data.df, file = "output/07_visualization/tab_otu_old.csv", col.names = TRUE, row.names = FALSE, sep = ";", quote = FALSE)
-
-data.df.transposed <- t(data.df[,-c(2:8)])
-
-data.df.transposed <- cbind(T1 = c("AB_GROUP", as.character(data.alpha.rarefy$AB_GROUP), "TAXA"),
-                            T2 = c("TIMEPOINT", data.alpha.rarefy$TIMEPOINT, "TAXA"),
-                            T3 = c("HORSE", data.alpha.rarefy$HORSE, "TAXA"),
-                            T4 = rownames(data.df.transposed),
-                            data.df.transposed)
-
-write.table(data.df.transposed, file = "output/07_visualization/tab_otu.csv", col.names = FALSE, row.names = FALSE, sep = ",")
+data.otu <- phyloseq_to_df(data.rarefy)
+write.csv(data.otu, file = "output/07_visualization/tab_otu.csv", row.names = FALSE, quote = FALSE)
 
 # PCA
 colours.days = c("t0" = "#00BA38",
@@ -534,7 +518,7 @@ abricate.meta$DIV = data.alpha.rarefy$diversity_shannon
 
 # Export updated AMR counts
 amr.df <- data.frame(ids = rownames(abricate), counts = amr.counts)
-write.csv(amr.df, file = "output/07_visualization/tab_amr_counts.csv")
+write.csv(amr.df, file = "output/07_visualization/tab_amr_counts.csv", quote = FALSE)
 
 # Read AMR Normalization by #Reads
 amr.norm.reads <- read.csv2("output/06_amr/abricate/amr_normalization.csv", sep = "\t")
@@ -806,7 +790,7 @@ Gene_dgeFullFilter <- edgeR::calcNormFactors(Gene_dgeFullFilter, method = "TMM")
 
 # Output TMM values
 Gene_normCounts <- cpm(Gene_dgeFullFilter)
-write.csv(Gene_normCounts, file = "output/07_visualization/tab_amr_tmm.csv")
+write.csv(Gene_normCounts, file = "output/07_visualization/tab_amr_tmm.csv", quote = FALSE)
 
 # Bin TMM values by counts
 Gene_groupedCounts = Gene_normCounts
@@ -884,7 +868,7 @@ Class_dgeFullFilter <- edgeR::calcNormFactors(Class_dgeFullFilter, method = "TMM
 
 # Output TMM values
 Class_normCounts <- cpm(Class_dgeFullFilter)
-write.csv(Class_normCounts, file = "output/07_visualization/tab_amr_tmm_classes.csv")
+write.csv(Class_normCounts, file = "output/07_visualization/tab_amr_tmm_classes.csv", quote = FALSE)
 
 # Bin TMM values by counts
 Class_groupedCounts = Class_normCounts
@@ -1088,55 +1072,55 @@ edger.dge <- phyloseq_to_edgeR(edger.aggretated, group = edger.groups)
 edger.res.c1 <- exactTest(edger.dge, pair = c("t0 SSG", "t1 SSG"))
 edger.top.c1 <- topTags(edger.res.c1, n = nrow(edger.res.c1$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c1 <- edger.top.c1$table[edger.top.c1$table$FDR < 0.05 & abs(edger.top.c1$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t0_t1.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t0_t1.csv", quote = FALSE)
 
 # C2 - SSG: t1 vs. t2
 edger.res.c2 <- exactTest(edger.dge, pair = c("t1 SSG", "t2 SSG"))
 edger.top.c2 <- topTags(edger.res.c2, n = nrow(edger.res.c2$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c2 <- edger.top.c2$table[edger.top.c2$table$FDR < 0.05 & abs(edger.top.c2$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t1_t2.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t1_t2.csv", quote = FALSE)
 
 # C3 - SSG: t0 vs. t2
 edger.res.c3 <- exactTest(edger.dge, pair = c("t0 SSG", "t2 SSG"))
 edger.top.c3 <- topTags(edger.res.c3, n = nrow(edger.res.c3$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c3 <- edger.top.c3$table[edger.top.c3$table$FDR < 0.05 & abs(edger.top.c3$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t0_t2.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t0_t2.csv", quote = FALSE)
 
 # C4 - 5DG: t0 vs. t1
 edger.res.c4 <- exactTest(edger.dge, pair = c("t0 5DG", "t1 5DG"))
 edger.top.c4 <- topTags(edger.res.c4, n = nrow(edger.res.c4$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c4 <- edger.top.c4$table[edger.top.c4$table$FDR < 0.05 & abs(edger.top.c4$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t0_t1.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t0_t1.csv", quote = FALSE)
 
 # C5 - 5DG: t1 vs. t2
 edger.res.c5 <- exactTest(edger.dge, pair = c("t1 5DG", "t2 5DG"))
 edger.top.c5 <- topTags(edger.res.c5, n = nrow(edger.res.c5$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c5 <- edger.top.c5$table[edger.top.c5$table$FDR < 0.05 & abs(edger.top.c5$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t1_t2.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t1_t2.csv", quote = FALSE)
 
 # C6 - 5DG: t0 vs. t2
 edger.res.c6 <- exactTest(edger.dge, pair = c("t0 5DG", "t2 5DG"))
 edger.top.c6 <- topTags(edger.res.c6, n = nrow(edger.res.c6$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c6 <- edger.top.c6$table[edger.top.c6$table$FDR < 0.05 & abs(edger.top.c6$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t0_t2.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t0_t2.csv", quote = FALSE)
 
 # C7 - t0: SSG vs. 5DG
 edger.res.c7 <- exactTest(edger.dge, pair = c("t0 SSG", "t0 5DG"))
 edger.top.c7 <- topTags(edger.res.c7, n = nrow(edger.res.c7$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c7 <- edger.top.c7$table[edger.top.c7$table$FDR < 0.05 & abs(edger.top.c7$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t0_ssg_5dg.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t0_ssg_5dg.csv", quote = FALSE)
 
 # C8 - t1: SSG vs. 5DG
 edger.res.c8 <- exactTest(edger.dge, pair = c("t1 SSG", "t1 5DG"))
 edger.top.c8 <- topTags(edger.res.c8, n = nrow(edger.res.c8$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c8 <- edger.top.c8$table[edger.top.c8$table$FDR < 0.05 & abs(edger.top.c8$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t1_ssg_5dg.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t1_ssg_5dg.csv", quote = FALSE)
 
 # C9 - t2: SSG vs. 5DG
 edger.res.c9 <- exactTest(edger.dge, pair = c("t2 SSG", "t2 5DG"))
 edger.top.c9 <- topTags(edger.res.c9, n = nrow(edger.res.c9$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c9 <- edger.top.c9$table[edger.top.c9$table$FDR < 0.05 & abs(edger.top.c9$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t2_ssg_5dg.csv")
+write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t2_ssg_5dg.csv", quote = FALSE)
 
 # --------------------------------------------------------------------------------------------------------
 
