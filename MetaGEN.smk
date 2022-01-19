@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Mon, 18.01.2022
-# Version: 0.4.5
+# Last Modified: Wed, 19.01.2022
+# Version: 0.4.6
 # -------------------------------
 
 # How to run MetaGEN
@@ -279,7 +279,7 @@ rule metaquast:
 		"[MetaQUAST] assessing quality of assemblies."
 	shell:
 		"""
-		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent
+		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent --max-ref-number 10
 		"""
 
 #PlasClass
