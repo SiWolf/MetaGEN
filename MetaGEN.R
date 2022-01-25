@@ -1,14 +1,15 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Tue, 18.01.2022
-# Version: 0.4.5
+# Last Modified: Tue, 25.01.2022
+# Version: 0.4.6
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
 
 library("circlize")
 library("ComplexHeatmap")
+library("dplyr")
 library("edgeR")
 library("ggpubr")
 library("metagMisc")
@@ -19,22 +20,43 @@ library("PathoStat")
 library("phyloseq")
 library("stringr")
 library("taxonomizr")
+library("tidyr")
 
 # --------------------------------------------------------------------------------------------------------
 
 # [1] Import and preprocess analysis data
 
 # Abricate Results
-abricate <- read.csv("output/06_amr/abricate/abricate_summary_edit.tab", sep = "\t")
-abricate.ext <- read.csv("output/06_amr/abricate/abricate_summary_ext_edit.tab", sep = ":", header = FALSE)
-abricate.ext <- abricate.ext[order(abricate.ext$V4),]
-rownames(abricate.ext) <- abricate.ext$V4
+abricate <- read.csv("output/06_amr/abricate/amr/abricate.summary", sep = "\t")
+abricate$X.FILE <- gsub(".tab", "", abricate$X.FILE)
+
+# MegaRes database
+megares.db <- read.csv("db/megares_drugs_annotations_v2.00.csv")
+megares.db.filtered <- megares.db %>% separate(header, into = c("ID", "C1", "C2", "C3", "SYMBOL"), sep = "\\|", extra = "drop")
+megares.db.filtered$group <- gsub("-", ".", megares.db.filtered$group)
+megares.db.filtered <- megares.db.filtered[megares.db.filtered$group %in% colnames(abricate)[-c(1,2)],][,-c(1)]
+megares.db.filtered <- unique(megares.db.filtered)
+megares.db.clean <- data.frame(V1 = megares.db.filtered$C1, V2 = megares.db.filtered$C2, V3 = megares.db.filtered$C3, V4 = megares.db.filtered$group)
+megares.db.clean <- megares.db.clean[order(megares.db.clean$V4),]
+rownames(megares.db.clean) <- megares.db.clean$V4
+megares.db.clean$V2 <- tolower(megares.db.clean$V2)
+
+# Sequence Stats
+seqreport = read.csv("output/01_preprocessing/seqfu/stats.tsv", header = TRUE, sep = "\t", row.names = 1)
+tmp1 <- do.call(rbind, strsplit(rownames(seqreport), "/"))
+tmp2 <- do.call(rbind, strsplit(data.frame(tmp1)$X4, "_"))
+tmp3 <- data.frame(tmp2)$X1
+tmp4 <- do.call(rbind, strsplit(data.frame(tmp2)$X2, ".fastq"))
+tmp5 <- do.call(rbind, strsplit(data.frame(tmp4)$X1, "_"))
+tmp6 <- data.frame(tmp5)$tmp5
+seqreport$SAMPLE <- tmp3
+seqreport$READ <- tmp6
 
 # CoverM Results
-rawCountTable <- read.table("output/06_amr/coverm/summary.tsv", header = TRUE, sep = "\t", row.names = 1)
+rawCountTable <- read.table("output/06_amr/coverm/coverm.summary", header = TRUE, sep = "\t", row.names = 1)
 
 # BIOM File
-data.biom <- import_biom("output/02_taxonomic_profiling/kraken2/kraken2.biom", parseFunction = parse_taxonomy_default)
+data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/kraken2.biom", parseFunction = parse_taxonomy_default)
 
 # Metadata
 meta <- read.csv("metadata/16s_Horses_Overview_Reordered.csv", sep = "\t")
@@ -497,7 +519,7 @@ dev.off()
 # Count individual resistance genes
 abricate.count <- abricate
 for (i in 1:36){
-        for (j in 3:166){
+        for (j in 3:ncol(abricate)){
                 d = abricate[i,j]
                 if (d == "."){
                         k = 0
@@ -516,43 +538,54 @@ abricate.meta <- meta.filtered[match(rownames(abricate.matrix), meta.filtered$Sa
 abricate.meta$AMR_FOUND <- amr.counts
 abricate.meta$DIV = data.alpha.rarefy$diversity_shannon
 
-# Export updated AMR counts
-amr.df <- data.frame(ids = rownames(abricate), counts = amr.counts)
-write.csv(amr.df, file = "output/07_visualization/tab_amr_counts.csv", quote = FALSE)
+# Update AMR counts
+amr.df.counts <- data.frame(ids = rownames(abricate), counts = amr.counts)
+seqreport.filtered <- seqreport[seqreport$READ == "R1",]
+rownames(seqreport.filtered) <- seqreport.filtered$SAMPLE
+amr.df.stats <- merge(x = seqreport.filtered, y = amr.df.counts, by = "row.names")
+amr.df.stats <- subset(amr.df.stats, select = c("SAMPLE", "X.Seq", "counts"))
 
 # Read AMR Normalization by #Reads
-amr.norm.reads <- read.csv2("output/06_amr/abricate/amr_normalization.csv", sep = "\t")
+amr.df.stats$X.Seq <- amr.df.stats$X.Seq*2
+amr.df.stats$Norm <- amr.df.stats$counts/amr.df.stats$X.Seq
+amr.df.stats$CPM <- amr.df.stats$counts/(amr.df.stats$X.Seq/1000000)
+amr.df.stats$CP60M <- amr.df.stats$CPM*60
+colnames(amr.df.stats) <- c("SAMPLE", "#PE_READS", "AMR_COUNTS", "NORM_COUNT", "CPM", "CP60M")
+write.csv(amr.df.stats, file = "output/07_visualization/tab_amr_counts.csv", quote = FALSE)
+
+# Prepare dataframe for heatmap
+amr.norm.reads <- subset(amr.df.stats, select = c("SAMPLE", "CPM", "CP60M"))
 amr.norm.reads$DIV = data.alpha.rarefy$diversity_shannon
 amr.norm.reads$TIMEPOINT = data.alpha.rarefy$TIMEPOINT
 amr.norm.reads$AB_GROUP = data.alpha.rarefy$AB_GROUP
 amr.norm.reads.filtered <- amr.norm.reads[amr.norm.reads$AB_GROUP != "SWITCHED",]
 
 # Define colours for heatmap
-colours.amr = c("Aminoglycosides" = "#e6194B",
-                "Betalactams" = "#3cb44b",
-                "Drug_And_Biocide_Resistance" = "#ffe119",
-                "Drug_And_Biocide_And_Metal_Resistance" = "#4363d8",
-                "Rifampin" = "#f58231",
-                "Multi_Drug_Resistance" = "#911eb4",
-                "Bacitracin" = "#42d4f4",
-                "Phenicol" = "#f032e6",
-                "Trimethoprim" = "#bfef45",
-                "Cationic_Antimicrobial_Peptides" = "#fabed4",
-                "MLS" = "#469990",
-                "Fosfomycin" = "#dcbeff",
-                "Lipopeptides" = "#9A6324",
-                "Metronidazole" = "#fffac8",
-                "Fluoroquinolones" = "#800000",
-                "Nucleosides" = "#aaffc3",
-                "Sulfonamides" = "#808000",
-                "Tetracyclines" = "#ffd8b1",
-                "Glycopeptides" = "#000075"
+colours.amr = c("aminoglycosides" = "#e6194B",
+                "betalactams" = "#3cb44b",
+                "drug_and_biocide_resistance" = "#ffe119",
+                "drug_and_biocide_and_metal_resistance" = "#4363d8",
+                "rifampin" = "#f58231",
+                "multi-drug_resistance" = "#911eb4",
+                "bacitracin" = "#42d4f4",
+                "phenicol" = "#f032e6",
+                "trimethoprim" = "#bfef45",
+                "cationic_antimicrobial_peptides" = "#fabed4",
+                "mls" = "#469990",
+                "fosfomycin" = "#dcbeff",
+                "lipopeptides" = "#9A6324",
+                "metronidazole" = "#fffac8",
+                "fluoroquinolones" = "#800000",
+                "nucleosides" = "#aaffc3",
+                "sulfonamides" = "#808000",
+                "tetracyclines" = "#ffd8b1",
+                "glycopeptides" = "#000075"
                 )
 
 colours.genes = colorRamp2(c(1, 50, 100, 180), c("grey", "yellow", "orange", "red"))
 
 # Set Annotations for Heatmap
-annot.column = HeatmapAnnotation(class = abricate.ext$V2,
+annot.column = HeatmapAnnotation(class = megares.db.clean$V2,
                                  col = list(class = colours.amr)
                                  )
 
@@ -570,7 +603,7 @@ annot.row.right = rowAnnotation(horse = anno_text(abricate.meta$HorseID,
                                                   )
                                 )
 
-re.order.cols = abricate.ext[order(abricate.ext$V2),]
+re.order.cols = megares.db.clean[order(megares.db.clean$V2),]
 re.order.rows <- abricate.meta[with(abricate.meta, order(Day, AB_Group, HorseID)), ]
 
 # Group all counts > 1 into a single class
@@ -608,11 +641,11 @@ dev.off()
 # [4] Statistical Correlation (Assembly)
 
 # Correlation - AMR and Diversity
-cor.test(amr.norm.reads$RP60M, amr.norm.reads$DIV, method = "spearman")
+cor.test(amr.norm.reads$CP60M, amr.norm.reads$DIV, method = "spearman")
 
 png("output/07_visualization/amr_div_cor.png", width = 17, height = 16, units = "cm", res = 500)
 ggscatter(amr.norm.reads,
-          x = "RP60M",
+          x = "CP60M",
           y = "DIV",
           color = "TIMEPOINT",
           shape = "AB_GROUP",
@@ -706,19 +739,19 @@ stat.res
 
 # Significant Differences between t0 and t1 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t2" & amr.norm.reads$AB_GROUP == "SSG",]
-stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t1 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t0" & amr.norm.reads$AB_GROUP == "SSG",]
-stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t0 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t1" & amr.norm.reads$AB_GROUP == "SSG",]
-stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
 stat.res
 
@@ -726,19 +759,19 @@ stat.res
 
 # Significant Differences between t0 and t1 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t2" & amr.norm.reads$AB_GROUP == "5DG",]
-stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t1 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t0" & amr.norm.reads$AB_GROUP == "5DG",]
-stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t0 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t1" & amr.norm.reads$AB_GROUP == "5DG",]
-stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
 stat.res
 
@@ -746,25 +779,25 @@ stat.res
 
 # Significant Differences at t0-t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$AB_GROUP != "SWITCHED",]
-stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t0 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t0" & amr.norm.reads$AB_GROUP != "SWITCHED",]
-stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t1 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t1" & amr.norm.reads$AB_GROUP != "SWITCHED",]
-stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & amr.norm.reads$AB_GROUP != "SWITCHED",]
-stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$RP60M)
+stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
@@ -1185,16 +1218,16 @@ alpha.ssg.diff.t0.t1 = round(alpha.ssg.t1 - alpha.ssg.t0, 2)
 alpha.ssg.diff.t1.t2 = round(alpha.ssg.t2 - alpha.ssg.t1, 2)
 
 # ARG abundance (assembly)
-arg.5dg.t0 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t0", ]$RP60M)
-arg.5dg.t1 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t1", ]$RP60M)
-arg.5dg.t2 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t2", ]$RP60M)
+arg.5dg.t0 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t0", ]$CP60M)
+arg.5dg.t1 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t1", ]$CP60M)
+arg.5dg.t2 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t2", ]$CP60M)
 
 arg.5dg.diff.t0.t1 = round(arg.5dg.t1 - arg.5dg.t0, 2)
 arg.5dg.diff.t0.t2 = round(arg.5dg.t2 - arg.5dg.t1, 2)
 
-arg.ssg.t0 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t0", ]$RP60M)
-arg.ssg.t1 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t1", ]$RP60M)
-arg.ssg.t2 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t2", ]$RP60M)
+arg.ssg.t0 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t0", ]$CP60M)
+arg.ssg.t1 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t1", ]$CP60M)
+arg.ssg.t2 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t2", ]$CP60M)
 
 arg.ssg.diff.t0.t1 = round(arg.ssg.t1 - arg.ssg.t0, 2)
 arg.ssg.diff.t0.t2 = round(arg.ssg.t2 - arg.ssg.t1, 2)
@@ -1219,7 +1252,7 @@ entero.ssg.diff.t1.t2 = round(entero.ssg.t2 - entero.ssg.t1, 2)
 # [9] Visualizing ARG abundance per family
 
 # Prepare input data
-kreport = read.csv("output/06_amr/abricate/kraken2.tab", header = TRUE, sep = "\t", row.names = 1)
+kreport = read.csv("output/06_amr/abricate/amr/kraken2.summary", header = TRUE, sep = "\t", row.names = 1)
 taxids <- sub("X", "", colnames(kreport))
 colnames(kreport) <- taxids
 
@@ -1273,16 +1306,6 @@ taxa.g3.t1 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "SWITCHED" &
 taxa.g3.t2 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "SWITCHED" & taxa.matrix.filtered$TIMEPOINT == "t2",]
 
 # Bubbleplots (Absolute)
-seqreport = read.csv("output/01_preprocessing/seqfu/stats.tsv", header = TRUE, sep = "\t", row.names = 1)
-tmp1 <- do.call(rbind, strsplit(rownames(seqreport), "/"))
-tmp2 <- do.call(rbind, strsplit(data.frame(tmp1)$X3, "_"))
-tmp3 <- data.frame(tmp2)$X1
-tmp4 <- do.call(rbind, strsplit(data.frame(tmp2)$X2, ".fastq"))
-tmp5 <- do.call(rbind, strsplit(data.frame(tmp4)$X1, "_"))
-tmp6 <- data.frame(tmp5)$tmp5
-seqreport$SAMPLE <- tmp3
-seqreport$READ <- tmp6
-
 taxa.g1.t0.nom <- taxa.g1.t0
 taxa.g1.t1.nom <- taxa.g1.t1
 taxa.g1.t2.nom <- taxa.g1.t2
@@ -1357,7 +1380,7 @@ ggplot(taxa.g1.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
               axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60MR)")
+        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
 png("output/07_visualization/amr_bubble_families_abs_5dg.png", width = 20, height = 10, units = "cm", res = 500)
@@ -1370,7 +1393,7 @@ ggplot(taxa.g2.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
               axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60MR)")
+        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
 png("output/07_visualization/amr_bubble_families_abs_switched.png", width = 20, height = 10, units = "cm", res = 500)
@@ -1383,7 +1406,7 @@ ggplot(taxa.g3.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
               axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60MR)")
+        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
 # Bubbleplots (Percentage)
@@ -1451,7 +1474,7 @@ dev.off()
 
 # [10] Run MicrobiomeExplorer (16s/WGS)
 
-converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken2/kraken2.biom", type = "BIOM")
+converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken_biom/kraken2.biom", type = "BIOM")
 saveRDS(converted_biom, "output/07_visualization/kraken2.rds")
 
 #runMicrobiomeExplorer()
