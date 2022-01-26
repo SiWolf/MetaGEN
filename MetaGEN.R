@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Tue, 25.01.2022
-# Version: 0.4.6
+# Last Modified: Wed, 26.01.2022
+# Version: 0.4.7
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -54,6 +54,7 @@ seqreport$READ <- tmp6
 
 # CoverM Results
 rawCountTable <- read.table("output/06_amr/coverm/coverm.summary", header = TRUE, sep = "\t", row.names = 1)
+colnames(rawCountTable) <- sub("output.06_amr.coverm.", "", colnames(rawCountTable))
 
 # BIOM File
 data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/kraken2.biom", parseFunction = parse_taxonomy_default)
@@ -988,12 +989,13 @@ amr.class.df$TIME_GROUP <- data.pcoa$TIME_GROUP
 
 # SSG
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "SSG", ]
-amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:42]), each = 15),
-                               AMR_TMM = unlist(amr.class.df.filtered[1:42]),
-                               AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, 42),
-                               HORSE = rep(amr.class.df.filtered$HORSE, 42),
-                               TIMEPOINT = rep(amr.class.df.filtered$TIMEPOINT, 42),
-                               TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, 42)
+amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
+amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = 15),
+                               AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
+                               AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
+                               HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
+                               TIMEPOINT = rep(amr.class.df.filtered$TIMEPOINT, amr.class.length),
+                               TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, amr.class.length)
                                )
 
 png("output/07_visualization/amr_box_group_ssg.png", width = 40, height = 30, units = "cm", res = 500)
@@ -1013,12 +1015,13 @@ dev.off()
 
 # 5DG
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "5DG", ]
-amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:42]), each = 15),
-                               AMR_TMM = unlist(amr.class.df.filtered[1:42]),
-                               AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, 42),
-                               HORSE = rep(amr.class.df.filtered$HORSE, 42),
-                               TIMEPOINT = rep(amr.class.df.filtered$TIMEPOINT, 42),
-                               TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, 42)
+amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
+amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = 15),
+                               AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
+                               AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
+                               HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
+                               TIMEPOINT = rep(amr.class.df.filtered$TIMEPOINT, amr.class.length),
+                               TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, amr.class.length)
                                )
 
 png("output/07_visualization/amr_box_group_5dg.png", width = 40, height = 30, units = "cm", res = 500)
@@ -1038,12 +1041,13 @@ dev.off()
 
 # SWITCHED
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "SWITCHED", ]
-amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:42]), each = 6),
-                                    AMR_TMM = unlist(amr.class.df.filtered[1:42]),
-                                    AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, 42),
-                                    HORSE = rep(amr.class.df.filtered$HORSE, 42),
-                                    TIMEPOINT = rep(amr.class.df.filtered$TIMEPOINT, 42),
-                                    TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, 42)
+amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
+amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = 6),
+                                    AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
+                                    AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
+                                    HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
+                                    TIMEPOINT = rep(amr.class.df.filtered$TIMEPOINT, amr.class.length),
+                                    TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, amr.class.length)
                                     )
 
 png("output/07_visualization/amr_box_group_switched.png", width = 40, height = 30, units = "cm", res = 500)
