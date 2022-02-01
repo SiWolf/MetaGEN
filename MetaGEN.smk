@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 19.01.2022
-# Version: 0.4.6
+# Last Modified: Tue, 01.02.2022
+# Version: 0.4.7
 # -------------------------------
 
 # How to run MetaGEN
@@ -277,9 +277,11 @@ rule metaquast:
 		128
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
+	params:
+		max_refs = config["metaquast_max_refs"]
 	shell:
 		"""
-		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent --max-ref-number 10
+		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent --max-ref-number {params.max_refs}
 		"""
 
 #PlasClass
@@ -313,10 +315,11 @@ rule kraken2_assembly:
 	message:
 		"[kraken2] assessing taxonomic content of assembly for {wildcards.sample}."
 	params:
-		db = config["kraken_db"]
+		db = config["kraken_db"],
+		confidence = config["kraken_confidence_score"]
 	shell:
 		"""
-		kraken2 --db {params.db} --threads {threads} --report {output.a_report} --output {output.a_stdout} {input.renamed}
+		kraken2 --db {params.db} --threads {threads} --confidence {params.confidence} --report {output.a_report} --output {output.a_stdout} {input.renamed}
 		"""
 
 # bbmap reformat
@@ -485,10 +488,11 @@ rule kraken2_reads:
 	message:
 		"[kraken2] assessing taxonomic profile for {wildcards.sample}."
 	params:
-		db = config["kraken_db"]
+		db = config["kraken_db"],
+		confidence = config["kraken_confidence_score"]
 	shell:
 		"""
-		kraken2 --db {params.db} --threads {threads} --report {output.k_report} --output {output.k_stdout} --paired {input.b1} {input.b2}
+		kraken2 --db {params.db} --threads {threads} --confidence {params.confidence} --report {output.k_report} --output {output.k_stdout} --paired {input.b1} {input.b2}
 		"""
 
 # -------------------------------
