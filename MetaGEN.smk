@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Tue, 01.02.2022
-# Version: 0.4.7
+# Last Modified: Wed, 02.02.2022
+# Version: 0.4.8
 # -------------------------------
 
 # How to run MetaGEN
@@ -36,6 +36,7 @@ rule all:
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
+		"output/04_assemblies/metaspades/merged/merged.fa.gz",
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		expand("output/05_genomic_bins/checkm/{sample}/checkm.log", sample = SAMPLES),
 		"output/06_amr/abricate/amr/kraken2.summary",
@@ -264,6 +265,31 @@ rule metabat:
 # -------------------------------
 # IV: Assemblies
 # -------------------------------
+
+# metaspades
+rule metaspades_merged:
+	input:
+		b1 = expand("output/01_preprocessing/bbmap/{sample}_R1.fastq.gz", sample = SAMPLES),
+		b2 = expand("output/01_preprocessing/bbmap/{sample}_R2.fastq.gz", sample = SAMPLES),
+		b3 = expand("output/01_preprocessing/bbmap/{sample}_R3.fastq.gz", sample = SAMPLES)
+	output:
+		merged = "output/04_assemblies/metaspades/merged/merged.fa.gz"
+	conda:
+		"envs/metaspades.yml"
+	threads:
+		128
+	message:
+		"[metaSPAdes] Performing merged assembly."
+	shell:
+		"""
+		cat output/01_preprocessing/bbmap/*_R1.fastq.gz > tmp/R1.fastq.gz
+		cat output/01_preprocessing/bbmap/*_R2.fastq.gz > tmp/R2.fastq.gz
+		cat output/01_preprocessing/bbmap/*_R3.fastq.gz > tmp/R3.fastq.gz
+		spades.py -o output/04_assemblies/metaspades/merged/tmp/ --meta -1 tmp/R1.fastq.gz -2 tmp/R2.fastq.gz -s tmp/R3.fastq.gz -t {threads}
+		mv output/04_assemblies/metaspades/merged/tmp/scaffolds.fasta output/04_assemblies/metaspades/merged/merged.fa
+		rm -r output/04_assemblies/metaspades/merged/tmp/
+		gzip output/04_assemblies/metaspades/merged/merged.fa
+		"""
 
 # MetaQUAST
 rule metaquast:
