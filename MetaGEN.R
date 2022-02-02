@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Wed, 26.01.2022
-# Version: 0.4.7
+# Last Modified: Wed, 02.02.2022
+# Version: 0.4.8
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -57,14 +57,14 @@ rawCountTable <- read.table("output/06_amr/coverm/coverm.summary", header = TRUE
 colnames(rawCountTable) <- sub("output.06_amr.coverm.", "", colnames(rawCountTable))
 
 # BIOM File
-data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/kraken2.biom", parseFunction = parse_taxonomy_default)
+data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/bracken.biom", parseFunction = parse_taxonomy_default)
 
 # Metadata
-meta <- read.csv("metadata/16s_Horses_Overview_Reordered.csv", sep = "\t")
-meta.filtered <- meta[meta$Microbiome == "Gut" & meta$Type == "WGS",]
+meta.raw <- read.csv("metadata/Horses_Overview.csv", sep = "\t", na.strings = "XXX")
 
 # Group order
-groups.order <- c("SSG", "5DG", "SWITCHED")
+groups.order <- c("SSG", "5DG", "SWITCHED", "REF")
+timepoints.order <- c("t0", "t1", "t2", "REF")
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -77,7 +77,7 @@ sample_depth <- sort(sample_sums(data.biom))
 data.alpha <- microbiome::alpha(data.biom)
 
 # Alpha diversity (Rarefy)
-data.rarefy <- rarefy_even_depth(data.biom, rngseed = 1, sample.size = 0.9*min(sample_sums(data.biom)), replace = FALSE, trimOTUs = FALSE)
+data.rarefy <- rarefy_even_depth(data.biom, rngseed = 1, sample.size = min(sample_sums(data.biom)), replace = FALSE, trimOTUs = FALSE)
 data.alpha.rarefy <- microbiome::alpha(data.rarefy)
 #data.rarefy <- aggregate_top_taxa(data.rarefy, 22, "Rank2")
 
@@ -90,18 +90,19 @@ braycurtis.pcoa <- ordinate(physeq = data.rarefy, method = "PCoA", distance = "b
 data.pcoa <- as.data.frame(braycurtis.pcoa$vectors, row.names = NULL, optional = FALSE, cut.names = FALSE, col.names = names(braycurtis.pcoa$vectors), fix.empty.names = TRUE, stringsAsFactors = default.stringsAsFactors())
 
 # Add Metadata
-meta.sorted = meta.filtered[match(rownames(data.alpha), meta.filtered$SampleID),]
+meta.sorted = meta.raw[match(rownames(data.alpha), meta.raw$SampleID),]
 data.alpha$HORSE = meta.sorted$HorseID
 data.alpha$AB_GROUP = factor(meta.sorted$AB_Group, levels = groups.order)
-data.alpha$TIMEPOINT = meta.sorted$Timepoint
+data.alpha$TIMEPOINT = factor(meta.sorted$Timepoint, levels = timepoints.order)
 data.alpha.rarefy$HORSE = meta.sorted$HorseID
 data.alpha.rarefy$AB_GROUP = factor(meta.sorted$AB_Group, levels = groups.order)
-data.alpha.rarefy$TIMEPOINT = meta.sorted$Timepoint
+data.alpha.rarefy$TIMEPOINT = factor(meta.sorted$Timepoint, levels = timepoints.order)
+data.alpha.filtered <- data.alpha.rarefy[data.alpha.rarefy$AB_GROUP != "REF", ]
 data.pcoa$HORSE = meta.sorted$HorseID
 data.pcoa$AB_GROUP = factor(meta.sorted$AB_Group, levels = groups.order)
-data.pcoa$TIMEPOINT = meta.sorted$Timepoint
-data.pcoa$TIME_GROUP = paste(meta.sorted$Timepoint, meta.sorted$AB_Group, sep = )
-data.pcoa.filtered <- data.pcoa[data.pcoa$AB_GROUP != "SWITCHED", ]
+data.pcoa$TIMEPOINT = factor(meta.sorted$Timepoint, levels = timepoints.order)
+data.pcoa$TIME_GROUP = paste(meta.sorted$Timepoint, meta.sorted$AB_Group, sep = " ")
+data.pcoa.filtered <- data.pcoa[data.pcoa$AB_GROUP != "SWITCHED" & data.pcoa$AB_GROUP != "REF", ]
 
 # Export Diversities
 write.csv(data.alpha, file = "output/07_visualization/tab_div_alpha_raw.csv", quote = FALSE)
@@ -116,12 +117,14 @@ write.csv(data.otu, file = "output/07_visualization/tab_otu.csv", row.names = FA
 # PCA
 colours.days = c("t0" = "#00BA38",
                  "t1" = "#F8766D",
-                 "t2" = "#619CFF"
+                 "t2" = "#619CFF",
+                 "REF" = "#606060"
                  )
 
 colours.groups = c("SSG" = "#00ff7f",
                    "5DG" = "#ffa500",
-                   "SWITCHED" = "#00bfff"
+                   "SWITCHED" = "#00bfff",
+                   "REF" = "#606060"
                    )
 
 eigenvalue_pc1 = round(braycurtis.pcoa$values$Relative_eig[1]*100, 1)
@@ -134,8 +137,8 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -157,8 +160,8 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "SSG", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -167,7 +170,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "SSG", ],
           ellipse.alpha = 0.3,
           ellipse.border.remove = TRUE,
           ellipse.type = "convex",
-          palette = colours.days,
+          palette = colours.days[1:3],
           title = "SSG - Beta Diversity PCA (Bray–Curtis Dissimilarity)"
           ) +
         theme(plot.title = element_text(hjust = 0.5))
@@ -180,8 +183,8 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "5DG", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -190,7 +193,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "5DG", ],
           ellipse.alpha = 0.3,
           ellipse.border.remove = TRUE,
           ellipse.type = "convex",
-          palette = colours.days,
+          palette = colours.days[1:3],
           title = "5DG - Beta Diversity PCA (Bray–Curtis Dissimilarity)",
           ) +
         theme(plot.title = element_text(hjust = 0.5))
@@ -203,8 +206,8 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           ellipse = TRUE,
@@ -224,8 +227,8 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t0", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -247,8 +250,8 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t1", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -270,8 +273,8 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t2", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -293,8 +296,8 @@ ggscatter(data.pcoa.filtered,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.15, 0.7),
-          ylim = c(-0.35, 0.6),
+          xlim = c(-0.2, 0.6),
+          ylim = c(-0.4, 0.5),
           color = "TIME_GROUP",
           #shape = "TIME_GROUP",
           #star.plot = TRUE,
@@ -312,13 +315,13 @@ dev.off()
 boxplot.comparisions <- list(c("t0", "t1"), c("t1", "t2"), c("t0","t2"))
 
 png("output/07_visualization/div_box.png", width = 20, height = 10, units = "cm", res = 500)
-ggplot(data.alpha.rarefy, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIMEPOINT)) +
+ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIMEPOINT)) +
         geom_boxplot() +
         facet_wrap(~AB_GROUP, scale = "free") +
         coord_cartesian(ylim = c(2, 9)) +
         scale_y_continuous(breaks = c(3, 5, 7)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
-        scale_fill_manual(values = colours.days) +
+        scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
                            method = "wilcox.test",
                            label.y = c(7.5, 8.1, 8.7),
@@ -327,16 +330,16 @@ ggplot(data.alpha.rarefy, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIMEP
 dev.off()
 
 png("output/07_visualization/div_box_even.png", width = 20, height = 10, units = "cm", res = 500)
-ggplot(data.alpha.rarefy, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIMEPOINT)) +
+ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIMEPOINT)) +
         geom_boxplot() +
         facet_wrap(~AB_GROUP, scale = "free") +
-        coord_cartesian(ylim = c(0.0007, 0.03)) +
-        scale_y_continuous(breaks = c(0.005, 0.015, 0.025)) +
+        coord_cartesian(ylim = c(0.0007, 0.06)) +
+        scale_y_continuous(breaks = c(0.01, 0.03, 0.05)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
-        scale_fill_manual(values = colours.days) +
+        scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
                            method = "wilcox.test",
-                           label.y = c(0.023, 0.0255, 0.028),
+                           label.y = c(0.042, 0.047, 0.052),
                            size = 3,
                            paired = TRUE)
 dev.off()
@@ -356,7 +359,7 @@ for(e in bar_data_melted$Sample){
         current_line = data.alpha.rarefy[rownames(data.alpha.rarefy) == e,]
         bar_ext_horse[i] <- current_line$HORSE
         bar_ext_group[i] <- as.character(current_line$AB_GROUP)
-        bar_ext_time[i] <- current_line$TIMEPOINT
+        bar_ext_time[i] <- as.character(current_line$TIMEPOINT)
         i = i + 1
         }
 
@@ -435,9 +438,28 @@ ggplot(bar_data_switched, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) +
               )
 dev.off()
 
+# Individual Horses - Reference
+bar_data_ref <- bar_data_melted[bar_data_melted$AB_GROUP == "REF",]
+
+png("output/07_visualization/tax_bar_horses_ref.png", width = 15, height = 15, units = "cm", res = 500)
+ggplot(bar_data_ref, aes(fill = OTU, y = Abundance, x = HORSE)) + 
+        geom_bar(position = "fill", stat = "identity") +
+        scale_fill_manual(values = palette) +
+        labs(title = "Relative Abundance (Ref)",
+             x = "Horses",
+             y = "Relative Abundance (%)",
+             fill = "Top 10 Phyla"
+        ) +
+        facet_grid(~ TIMEPOINT) +
+        theme(plot.title = element_text(hjust = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank()
+        )
+dev.off()
+
 # Summarized groups
-png("output/07_visualization/tax_bar_sum.png", width = 15, height = 15, units = "cm", res = 500)
-ggplot(bar_data_melted, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
+png("output/07_visualization/tax_bar_sum_groups.png", width = 15, height = 15, units = "cm", res = 500)
+ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
         labs(title = "Mean Abundance (Groups)",
@@ -453,22 +475,57 @@ ggplot(bar_data_melted, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) +
               )
 dev.off()
 
-# Percentages of individual taxa
-per_taxa_total = sum(bar_data_melted$Abundance)/36
+png("output/07_visualization/tax_bar_sum_timepoints.png", width = 17, height = 15, units = "cm", res = 500)
+ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
+        geom_bar(position = "fill", stat = "identity") +
+        scale_fill_manual(values = palette) +
+        labs(title = "Mean Abundance (Groups)",
+             x = "AB Groups",
+             y = "Relative Abundance (%)",
+             fill = "Top 10 Phyla"
+        ) +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        facet_grid(~ TIMEPOINT) +
+        theme(plot.title = element_text(hjust = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank()
+        )
+dev.off()
 
-per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidetes", ]$Abundance)/36
+png("output/07_visualization/tax_bar_sum_refs.png", width = 15, height = 15, units = "cm", res = 500)
+ggplot(bar_data_melted[bar_data_melted$AB_GROUP == "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
+        geom_bar(position = "fill", stat = "identity") +
+        scale_fill_manual(values = palette) +
+        labs(title = "Mean Abundance (Groups)",
+             x = "AB Groups",
+             y = "Relative Abundance (%)",
+             fill = "Top 10 Phyla"
+        ) +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        facet_grid(~ TIMEPOINT) +
+        theme(plot.title = element_text(hjust = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank()
+        )
+dev.off()
+
+# Percentages of individual taxa
+nsamples <- length(meta.sorted$HorseID)
+per_taxa_total = sum(bar_data_melted$Abundance)/nsamples
+
+per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidetes", ]$Abundance)/nsamples
 per_bact_norm = (per_bact_total/per_taxa_total) * 100
 
-per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Firmicutes", ]$Abundance)/36
+per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Firmicutes", ]$Abundance)/nsamples
 per_firm_norm = (per_firm_total/per_taxa_total) * 100
 
-per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Proteobacteria", ]$Abundance)/36
+per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Proteobacteria", ]$Abundance)/nsamples
 per_prot_norm = (per_prot_total/per_taxa_total) * 100
 
-per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetes", ]$Abundance)/36
+per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetes", ]$Abundance)/nsamples
 per_spir_norm = (per_spir_total/per_taxa_total) * 100
 
-per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobia", ]$Abundance)/36
+per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobia", ]$Abundance)/nsamples
 per_verr_norm = (per_verr_total/per_taxa_total) * 100
 
 per_bact_norm
@@ -478,34 +535,53 @@ per_spir_norm
 per_verr_norm
 
 # Abundance heatmap
-abundance_matrix <- matrix(0, 9, length(unique(bar_data_melted$OTU)))
 abundance_columns <- unique(bar_data_melted$OTU)
-abundance_rows <- c("SSG_t0", "5DG_t0", "SWITCHED_t0", "SSG_t1", "5DG_t1", "SWITCHED_t1", "SSG_t2", "5DG_t2", "SWITCHED_t2")
+abundance_rows <- c("SSG_t0", "5DG_t0", "SWITCHED_t0", "SSG_t1", "5DG_t1", "SWITCHED_t1", "SSG_t2", "5DG_t2", "SWITCHED_t2", "REF")
+abundance_matrix <- matrix(0, length(abundance_rows), length(unique(bar_data_melted$OTU)))
 
 j = 1
 
 for (c in abundance_columns){
         i = 1
         for (r in abundance_rows){
-                group <- strsplit(r, "_")[[1]][1]
-                timepoint <- strsplit(r, "_")[[1]][2]
-                abundance_matrix[i, j] <- mean(bar_data_melted[bar_data_melted$TIMEPOINT == timepoint & bar_data_melted$AB_GROUP == group & bar_data_melted$OTU == c,]$Abundance)
-                i = i + 1
+                if (r != "REF"){
+                        group <- strsplit(r, "_")[[1]][1]
+                        timepoint <- strsplit(r, "_")[[1]][2]
+                        abundance_matrix[i, j] <- mean(bar_data_melted[bar_data_melted$TIMEPOINT == timepoint & bar_data_melted$AB_GROUP == group & bar_data_melted$OTU == c,]$Abundance)
+                        i = i + 1 
+                } else {
+                        abundance_matrix[i, j] <- mean(bar_data_melted[bar_data_melted$AB_GROUP == r & bar_data_melted$OTU == c,]$Abundance)
+                        i = i + 1 
+                        }
                 }
         j = j + 1
         }
 
 abundance_matrix <- t(abundance_matrix)
-
 rownames(abundance_matrix) <- abundance_columns
-colnames(abundance_matrix) <- c("SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED")
 
-png("output/07_visualization/tax_heat.png", width = 20, height = 15, units = "cm", res = 500)
+colnames(abundance_matrix) <- c("SSG (t0)", "5DG (t0)", "SWITCHED (t0)", "SSG (t1)", "5DG (t1)", "SWITCHED (t1)", "SSG (t2)", "5DG (t2)", "SWITCHED (t2)", "REF")
+
+png("output/07_visualization/tax_heat_sim.png", width = 20, height = 15, units = "cm", res = 500)
+Heatmap(log2(abundance_matrix),
+        cluster_rows = TRUE,
+        cluster_columns = TRUE,
+        col = c("black", "darkred", "red", "orange", "yellow"),
+        row_title = "Top 10 Phyla",
+        name = "log2(Abundance)",
+        row_names_gp = gpar(fontsize = 10),
+        column_names_gp = gpar(fontsize = 10)
+        )
+dev.off()
+
+colnames(abundance_matrix) <- c("SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED", "REF")
+
+png("output/07_visualization/tax_heat_time.png", width = 20, height = 15, units = "cm", res = 500)
 Heatmap(log2(abundance_matrix),
         cluster_rows = TRUE,
         cluster_columns = FALSE,
         col = c("black", "darkred", "red", "orange", "yellow"),
-        column_split = c(rep("t0", 3), rep("t1", 3), rep("t2", 3)),
+        column_split = c(rep("t0", 3), rep("t1", 3), rep("t2", 3), "REF"),
         row_title = "Top 10 Phyla",
         name = "log2(Abundance)",
         row_names_gp = gpar(fontsize = 10),
@@ -519,7 +595,7 @@ dev.off()
 
 # Count individual resistance genes
 abricate.count <- abricate
-for (i in 1:36){
+for (i in 1:nsamples){
         for (j in 3:ncol(abricate)){
                 d = abricate[i,j]
                 if (d == "."){
@@ -535,7 +611,7 @@ abricate.filtered <- abricate.count[,-c(1,2)]
 rownames(abricate.filtered) <- abricate[,1]
 abricate.matrix <- data.matrix(abricate.filtered) - 1
 amr.counts <- rowSums(abricate.matrix)
-abricate.meta <- meta.filtered[match(rownames(abricate.matrix), meta.filtered$SampleID),]
+abricate.meta <- meta.raw[match(rownames(abricate.matrix), meta.raw$SampleID),]
 abricate.meta$AMR_FOUND <- amr.counts
 abricate.meta$DIV = data.alpha.rarefy$diversity_shannon
 
@@ -713,25 +789,25 @@ stat.res
 # Diversity - SSG vs. 5DG
 
 # Significant Differences at t0-t2 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$AB_GROUP != "SWITCHED",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t0 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t0" & data.alpha.rarefy$AB_GROUP != "SWITCHED",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t0" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t1 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t1" & data.alpha.rarefy$AB_GROUP != "SWITCHED",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t1" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t2 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t2" & data.alpha.rarefy$AB_GROUP != "SWITCHED",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t2" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
@@ -779,25 +855,25 @@ stat.res
 # AMR - SSG vs. 5DG
 
 # Significant Differences at t0-t2 -> no
-stat.data <- amr.norm.reads[amr.norm.reads$AB_GROUP != "SWITCHED",]
+stat.data <- amr.norm.reads[amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t0 -> no
-stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t0" & amr.norm.reads$AB_GROUP != "SWITCHED",]
+stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t0" & amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t1 -> no
-stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t1" & amr.norm.reads$AB_GROUP != "SWITCHED",]
+stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t1" & amr.norm.reads$AB_GROUP != "SWITCHED"  & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t2 -> no
-stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & amr.norm.reads$AB_GROUP != "SWITCHED",]
+stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
 stat.res
@@ -958,7 +1034,7 @@ for (i in rownames(data.alpha.rarefy)) {
 Class_AMR_SUM <- data.frame(SAMPLE = f, AMR = e, TIMEPOINT = data.alpha.rarefy$TIMEPOINT, AB_GROUP = data.alpha.rarefy$AB_GROUP, HORSE = data.alpha.rarefy$HORSE)
 
 png("output/07_visualization/amr_sum_scatter.png", width = 30, height = 20, units = "cm", res = 500)
-ggplot(Class_AMR_SUM, aes(x = TIMEPOINT, y = log2(AMR))) +
+ggplot(Class_AMR_SUM[Class_AMR_SUM$AB_GROUP != "REF",], aes(x = TIMEPOINT, y = log2(AMR))) +
         coord_cartesian(ylim = c(17, 24)) +
         geom_line(aes(group = HORSE)) +
         geom_point() +
@@ -990,7 +1066,8 @@ amr.class.df$TIME_GROUP <- data.pcoa$TIME_GROUP
 # SSG
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "SSG", ]
 amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
-amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = 15),
+nssg <- length(meta.raw[meta.raw$AB_Group == "SSG",]$SampleID)
+amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = nssg),
                                AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
                                AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
                                HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
@@ -1004,7 +1081,7 @@ ggplot(amr.class.df.ssg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPO
         geom_boxplot() +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
-        scale_fill_manual(values = colours.days) +
+        scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
@@ -1016,7 +1093,8 @@ dev.off()
 # 5DG
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "5DG", ]
 amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
-amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = 15),
+n5dg <- length(meta.raw[meta.raw$AB_Group == "5DG",]$SampleID)
+amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = n5dg),
                                AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
                                AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
                                HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
@@ -1030,7 +1108,7 @@ ggplot(amr.class.df.5dg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPO
         geom_boxplot() +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
-        scale_fill_manual(values = colours.days) +
+        scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
@@ -1042,7 +1120,8 @@ dev.off()
 # SWITCHED
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "SWITCHED", ]
 amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
-amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = 6),
+nswitched <- length(meta.raw[meta.raw$AB_Group == "SWITCHED",]$SampleID)
+amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = nswitched),
                                     AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
                                     AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
                                     HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
@@ -1056,7 +1135,7 @@ ggplot(amr.class.df.switched, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = T
         geom_boxplot() +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
-        scale_fill_manual(values = colours.days) +
+        scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
@@ -1175,7 +1254,7 @@ for(f in boxplot.families.melted$Sample){
         current.line = data.alpha.rarefy[rownames(data.alpha.rarefy) == f,]
         box.ext.horse[j] <- current.line$HORSE
         box.ext.group[j] <- as.character(current.line$AB_GROUP)
-        box.ext.time[j] <- current.line$TIMEPOINT
+        box.ext.time[j] <- as.character(current.line$TIMEPOINT)
         j = j + 1
 }
 
@@ -1184,6 +1263,8 @@ boxplot.families.melted$AB_GROUP <- factor(box.ext.group, levels = groups.order)
 boxplot.families.melted$TIMEPOINT <- box.ext.time
 
 G2 <- boxplot.families.melted[boxplot.families.melted$Rank5 == "f__Enterobacteriaceae", ]
+G2 <- G2[G2$AB_GROUP != "REF",]
+
 png("output/07_visualization/tax_box_f_enterobacteriaceae.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(G2, aes(x = TIMEPOINT, y = log2(Abundance + 1), fill = TIMEPOINT)) +
         geom_boxplot() +
@@ -1478,7 +1559,7 @@ dev.off()
 
 # [10] Run MicrobiomeExplorer (16s/WGS)
 
-converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken_biom/kraken2.biom", type = "BIOM")
-saveRDS(converted_biom, "output/07_visualization/kraken2.rds")
+converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken_biom/bracken.biom", type = "BIOM")
+saveRDS(converted_biom, "output/07_visualization/bracken.rds")
 
 #runMicrobiomeExplorer()
