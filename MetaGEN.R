@@ -347,8 +347,8 @@ dev.off()
 # Barplots
 bar_data_aggregated <- aggregate_top_taxa(data.rarefy, 9, "Rank2")
 bar_data_melted <- psmelt(bar_data_aggregated)
-num_taxa <- length(unique(bar_data_melted$OTU))
-palette <- distinctColorPalette(num_taxa)
+num.taxa <- length(unique(bar_data_melted$OTU))
+palette <- distinctColorPalette(num.taxa)
 
 bar_ext_horse = c()
 bar_ext_group = c()
@@ -510,22 +510,22 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP == "REF",], aes(fill = OTU, y = 
 dev.off()
 
 # Percentages of individual taxa
-nsamples <- length(meta.sorted$HorseID)
-per_taxa_total = sum(bar_data_melted$Abundance)/nsamples
+num.samples <- length(meta.sorted$HorseID)
+per_taxa_total = sum(bar_data_melted$Abundance)/num.samples
 
-per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidetes", ]$Abundance)/nsamples
+per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidetes", ]$Abundance)/num.samples
 per_bact_norm = (per_bact_total/per_taxa_total) * 100
 
-per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Firmicutes", ]$Abundance)/nsamples
+per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Firmicutes", ]$Abundance)/num.samples
 per_firm_norm = (per_firm_total/per_taxa_total) * 100
 
-per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Proteobacteria", ]$Abundance)/nsamples
+per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Proteobacteria", ]$Abundance)/num.samples
 per_prot_norm = (per_prot_total/per_taxa_total) * 100
 
-per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetes", ]$Abundance)/nsamples
+per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetes", ]$Abundance)/num.samples
 per_spir_norm = (per_spir_total/per_taxa_total) * 100
 
-per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobia", ]$Abundance)/nsamples
+per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobia", ]$Abundance)/num.samples
 per_verr_norm = (per_verr_total/per_taxa_total) * 100
 
 per_bact_norm
@@ -595,7 +595,7 @@ dev.off()
 
 # Count individual resistance genes
 abricate.count <- abricate
-for (i in 1:nsamples){
+for (i in 1:num.samples){
         for (j in 3:ncol(abricate)){
                 d = abricate[i,j]
                 if (d == "."){
@@ -1066,8 +1066,8 @@ amr.class.df$TIME_GROUP <- data.pcoa$TIME_GROUP
 # SSG
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "SSG", ]
 amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
-nssg <- length(meta.raw[meta.raw$AB_Group == "SSG",]$SampleID)
-amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = nssg),
+num.ssg <- length(meta.raw[meta.raw$AB_Group == "SSG",]$SampleID)
+amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = num.ssg),
                                AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
                                AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
                                HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
@@ -1093,8 +1093,8 @@ dev.off()
 # 5DG
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "5DG", ]
 amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
-n5dg <- length(meta.raw[meta.raw$AB_Group == "5DG",]$SampleID)
-amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = n5dg),
+num.5dg <- length(meta.raw[meta.raw$AB_Group == "5DG",]$SampleID)
+amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = num.5dg),
                                AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
                                AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
                                HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
@@ -1120,8 +1120,8 @@ dev.off()
 # SWITCHED
 amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "SWITCHED", ]
 amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
-nswitched <- length(meta.raw[meta.raw$AB_Group == "SWITCHED",]$SampleID)
-amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = nswitched),
+num.switched <- length(meta.raw[meta.raw$AB_Group == "SWITCHED",]$SampleID)
+amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = num.switched),
                                     AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
                                     AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
                                     HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
