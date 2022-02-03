@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 02.02.2022
-# Version: 0.4.8
+# Last Modified: Thu, 03.02.2022
+# Version: 0.4.9
 # -------------------------------
 
 # How to run MetaGEN
@@ -266,29 +266,36 @@ rule metabat:
 # IV: Assemblies
 # -------------------------------
 
-# metaspades
-rule metaspades_merged:
+# MEGAHIT
+rule megahit:
 	input:
 		b1 = expand("output/01_preprocessing/bbmap/{sample}_R1.fastq.gz", sample = SAMPLES),
 		b2 = expand("output/01_preprocessing/bbmap/{sample}_R2.fastq.gz", sample = SAMPLES),
 		b3 = expand("output/01_preprocessing/bbmap/{sample}_R3.fastq.gz", sample = SAMPLES)
 	output:
-		merged = "output/04_assemblies/metaspades/merged/merged.fa.gz"
+		merged = "output/04_assemblies/megahit/merged/merged.fa.gz"
 	conda:
-		"envs/metaspades.yml"
+		"envs/megahit.yml"
 	threads:
 		128
 	message:
-		"[metaSPAdes] Performing merged assembly."
+		"[MEGAHIT] Performing co-assembly."
 	shell:
 		"""
-		cat output/01_preprocessing/bbmap/*_R1.fastq.gz > tmp/R1.fastq.gz
-		cat output/01_preprocessing/bbmap/*_R2.fastq.gz > tmp/R2.fastq.gz
-		cat output/01_preprocessing/bbmap/*_R3.fastq.gz > tmp/R3.fastq.gz
-		spades.py -o output/04_assemblies/metaspades/merged/tmp/ --meta -1 tmp/R1.fastq.gz -2 tmp/R2.fastq.gz -s tmp/R3.fastq.gz -t {threads}
-		mv output/04_assemblies/metaspades/merged/tmp/scaffolds.fasta output/04_assemblies/metaspades/merged/merged.fa
-		rm -r output/04_assemblies/metaspades/merged/tmp/
-		gzip output/04_assemblies/metaspades/merged/merged.fa
+		echo {input.b1} > tmp/b1.txt
+		echo {input.b2} > tmp/b2.txt
+		echo {input.b3} > tmp/b3.txt
+		xb1=`cat tmp/b1.txt`
+		xb2=`cat tmp/b2.txt`
+		xnb3=`cat tmp/b3.txt`
+		yb1=${{xb1// /,}}
+		yb2=${{xb2// /,}}
+		yb3=${{xnb3// /,}}
+		rm -r tmp/merged/
+		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len 300 -t {threads} -o tmp/merged/
+		mkdir -p output/04_assemblies/megahit/merged/
+		mv tmp/merged/final.contigs.fa output/04_assemblies/megahit/merged/merged.fa
+		gzip output/04_assemblies/megahit/merged/merged.fa
 		"""
 
 # MetaQUAST
