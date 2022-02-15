@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Thu, 03.02.2022
-# Version: 0.4.9
+# Last Modified: Thu, 15.02.2022
+# Version: 0.5.0
 # -------------------------------
 
 # How to run MetaGEN
@@ -30,13 +30,12 @@ rule all:
 		"output/01_preprocessing/seqfu/stats.tsv",
 		"output/01_preprocessing/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
-		"output/02_taxonomic_profiling/kraken_biom/kraken2.biom",
-		"output/02_taxonomic_profiling/bracken/species.summary",
+		"output/02_taxonomic_profiling/kraken_biom/bracken.biom",
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
-		"output/04_assemblies/metaspades/merged/merged.fa.gz",
+		"output/04_assemblies/megahit/co_assembly/co_assembly.fa.gz",
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		expand("output/05_genomic_bins/checkm/{sample}/checkm.log", sample = SAMPLES),
 		"output/06_amr/abricate/amr/kraken2.summary",
@@ -267,13 +266,13 @@ rule metabat:
 # -------------------------------
 
 # MEGAHIT
-rule megahit:
+rule megahit_co_assembly:
 	input:
 		b1 = expand("output/01_preprocessing/bbmap/{sample}_R1.fastq.gz", sample = SAMPLES),
 		b2 = expand("output/01_preprocessing/bbmap/{sample}_R2.fastq.gz", sample = SAMPLES),
 		b3 = expand("output/01_preprocessing/bbmap/{sample}_R3.fastq.gz", sample = SAMPLES)
 	output:
-		merged = "output/04_assemblies/megahit/merged/merged.fa.gz"
+		co_assembly = "output/04_assemblies/megahit/co_assembly/co_assembly.fa.gz"
 	conda:
 		"envs/megahit.yml"
 	threads:
@@ -291,11 +290,11 @@ rule megahit:
 		yb1=${{xb1// /,}}
 		yb2=${{xb2// /,}}
 		yb3=${{xnb3// /,}}
-		rm -r tmp/merged/
-		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len 300 -t {threads} -o tmp/merged/
-		mkdir -p output/04_assemblies/megahit/merged/
-		mv tmp/merged/final.contigs.fa output/04_assemblies/megahit/merged/merged.fa
-		gzip output/04_assemblies/megahit/merged/merged.fa
+		rm -r tmp/co_assembly/
+		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len 300 -t {threads} -o tmp/co_assembly/
+		mkdir -p output/04_assemblies/megahit/co_assembly/
+		mv tmp/co_assembly/final.contigs.fa output/04_assemblies/megahit/co_assembly/co_assembly.fa
+		gzip output/04_assemblies/megahit/co_assembly/co_assembly.fa
 		"""
 
 # MetaQUAST
@@ -358,7 +357,7 @@ rule kraken2_assembly:
 # bbmap reformat
 rule bbmap_reformat:
 	input:
-		assembly = "output/04_assemblies/metaspades/{sample}.fa.gz"
+		assembly = "output/04_assemblies/megahit/{sample}.fa.gz"
 	output:
 		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa",
 		renamed = "output/04_assemblies/bbmap/{sample}.fa"
@@ -376,26 +375,26 @@ rule bbmap_reformat:
 		reformat.sh in={output.renamed} out={output.filtered} minlength={params.min_length} -Xmx{threads}g
 		"""
 
-# metaspades
-rule metaspades:
+# MEGAHIT
+rule megahit:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
 	output:
-		assembly = "output/04_assemblies/metaspades/{sample}.fa.gz"
+		assembly = "output/04_assemblies/megahit/{sample}.fa.gz"
 	conda:
-		"envs/metaspades.yml"
+		"envs/megahit.yml"
 	threads:
 		64
 	message:
-		"[metaSPAdes] assembling {wildcards.sample}."
+		"[MEGAHIT] assembling {wildcards.sample}."
 	shell:
 		"""
-		spades.py -o output/04_assemblies/metaspades/{wildcards.sample}/ --meta -1 {input.b1} -2 {input.b2} -s {input.b3} -t {threads}
-		mv output/04_assemblies/metaspades/{wildcards.sample}/scaffolds.fasta output/04_assemblies/metaspades/{wildcards.sample}.fa
-		rm -r output/04_assemblies/metaspades/{wildcards.sample}/
-		gzip output/04_assemblies/metaspades/{wildcards.sample}.fa
+		megahit -1 {input.b1} -2 {input.b2} -r {input.b3} -t {threads} -o output/04_assemblies/megahit/{wildcards.sample}/
+		mv output/04_assemblies/megahit/{wildcards.sample}/final.contigs.fa output/04_assemblies/megahit/{wildcards.sample}.fa
+		rm -r output/04_assemblies/megahit/{wildcards.sample}/
+		gzip output/04_assemblies/megahit/{wildcards.sample}.fa
 		"""
 
 # -------------------------------
@@ -450,39 +449,19 @@ rule krona:
 # kraken-biom
 rule kraken_biom:
 	input:
-		b_report = expand("output/02_taxonomic_profiling/bracken/{sample}.report", sample = SAMPLES),
-		k_report = expand("output/02_taxonomic_profiling/kraken2/{sample}.report", sample = SAMPLES)
+		b_report = expand("output/02_taxonomic_profiling/bracken/{sample}.report", sample = SAMPLES)
 	output:
 		b_summary = "output/02_taxonomic_profiling/kraken_biom/bracken.biom",
-		k_summary = "output/02_taxonomic_profiling/kraken_biom/kraken2.biom",
-		k_taxids = "output/02_taxonomic_profiling/kraken_biom/taxids.txt"
+		b_taxids = "output/02_taxonomic_profiling/kraken_biom/taxids.txt"
 	conda:
 		"envs/kraken_biom.yml"
 	threads:
 		1
 	message:
-		"[kraken-biom] converting kraken and bracken reports to biom format."
+		"[kraken-biom] converting bracken reports to biom format."
 	shell:
 		"""
-		kraken-biom output/02_taxonomic_profiling/bracken/*.report -o {output.b_summary} --fmt json --max D --min S
-		kraken-biom output/02_taxonomic_profiling/kraken2/*.report -o {output.k_summary} --fmt json --max D --min S --otu_fp {output.k_taxids}
-		"""
-
-# bracken summary
-rule bracken_summary:
-	input:
-		b_report = expand("output/02_taxonomic_profiling/bracken/{sample}.bracken", sample = SAMPLES)
-	output:
-		b_merged = "output/02_taxonomic_profiling/bracken/species.summary"
-	conda:
-		"envs/bracken.yml"
-	threads:
-		1
-	message:
-		"[bracken] merging bracken reports."
-	shell:
-		"""
-		combine_bracken_outputs.py --files output/02_taxonomic_profiling/bracken/*.bracken -o {output.b_merged}
+		kraken-biom output/02_taxonomic_profiling/braken/*.report -o {output.b_summary} --fmt json --max D --min S --otu_fp {output.b_taxids}
 		"""
 
 # bracken abundancies
