@@ -461,7 +461,7 @@ rule kraken_biom:
 		"[kraken-biom] converting bracken reports to biom format."
 	shell:
 		"""
-		kraken-biom output/02_taxonomic_profiling/braken/*.report -o {output.b_summary} --fmt json --max D --min S --otu_fp {output.b_taxids}
+		kraken-biom output/02_taxonomic_profiling/bracken/*.report -o {output.b_summary} --fmt json --max D --min S --otu_fp {output.b_taxids}
 		"""
 
 # bracken abundancies
