@@ -35,22 +35,22 @@ rule all:
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
-		"output/04_assemblies/megahit/co_assembly/co_assembly.fa.gz",
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
-		expand("output/05_genomic_bins/checkm/{sample}/checkm.log", sample = SAMPLES),
-		"output/06_amr/abricate/amr/kraken2.summary",
-		"output/06_amr/coverm/coverm.summary"
+		expand("output/05_genomic_bins/checkm/{sample}.txt", sample = SAMPLES),
+		"output/06_co_assembly/metabat/saved.tnf",
+		"output/07_amr/abricate/amr/kraken2.summary",
+		"output/07_amr/coverm/coverm.summary"
 
 # -------------------------------
-# VI: AMR & Virulence Profiling
+# VII: AMR & Virulence Profiling
 # -------------------------------
 
 # CoverM Summary
 rule coverm_summary:
 	input:
-		coverm_profile = expand("output/06_amr/coverm/{sample}.txt", sample = SAMPLES)
+		coverm_profile = expand("output/07_amr/coverm/{sample}.txt", sample = SAMPLES)
 	output:
-		coverm_sum = "output/06_amr/coverm/coverm.summary"
+		coverm_sum = "output/07_amr/coverm/coverm.summary"
 	threads:
 		1
 	message:
@@ -89,7 +89,7 @@ rule coverm:
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
 	output:
-		coverm_profile = "output/06_amr/coverm/{sample}.txt"
+		coverm_profile = "output/07_amr/coverm/{sample}.txt"
 	conda:
 		"envs/coverm.yml"
 	threads:
@@ -112,10 +112,10 @@ rule coverm:
 rule abricate_taxcaller:
 	input:
 		a_stdout = expand("output/04_assemblies/kraken2/{sample}.stdout", sample = SAMPLES),
-		abricate_profile = expand("output/06_amr/abricate/amr/{sample}.tab", sample = SAMPLES),
-		abricate_sum = "output/06_amr/abricate/amr/abricate.summary"
+		abricate_profile = expand("output/07_amr/abricate/amr/{sample}.tab", sample = SAMPLES),
+		abricate_sum = "output/07_amr/abricate/amr/abricate.summary"
 	output:
-		kraken2_sum = "output/06_amr/abricate/amr/kraken2.summary"
+		kraken2_sum = "output/07_amr/abricate/amr/kraken2.summary"
 	threads:
 		1
 	message:
@@ -132,7 +132,7 @@ rule abricate_taxcaller:
 		for k in kraken_reports:
 			sample_name = k.split(".stdout")[0].split("/")[-1]
 			contigs = []
-			with open("output/06_amr/abricate/amr/" + sample_name + ".tab") as kreport:
+			with open("output/07_amr/abricate/amr/" + sample_name + ".tab") as kreport:
 				for line in kreport:
 					if line[0] != "#":
 						c = line.split("\t")[1]
@@ -151,7 +151,7 @@ rule abricate_taxcaller:
 			contigs = []
 			tax_ids = []
 			tmpstr = ""
-			with open("output/06_amr/abricate/amr/" + sample_name + ".tab") as kreport:
+			with open("output/07_amr/abricate/amr/" + sample_name + ".tab") as kreport:
 				for line in kreport:
 					if line[0] != "#":
 						c = line.split("\t")[1]
@@ -171,11 +171,11 @@ rule abricate_taxcaller:
 # ABRicate Summary
 rule abricate_summary:
 	input:
-		amr_profile = expand("output/06_amr/abricate/amr/{sample}.tab", sample = SAMPLES),
-		vir_profile = expand("output/06_amr/abricate/vir/{sample}.tab", sample = SAMPLES)
+		amr_profile = expand("output/07_amr/abricate/amr/{sample}.tab", sample = SAMPLES),
+		vir_profile = expand("output/07_amr/abricate/vir/{sample}.tab", sample = SAMPLES)
 	output:
-		amr_sum = "output/06_amr/abricate/amr/abricate.summary",
-		vir_sum = "output/06_amr/abricate/vir/abricate.summary"
+		amr_sum = "output/07_amr/abricate/amr/abricate.summary",
+		vir_sum = "output/07_amr/abricate/vir/abricate.summary"
 	conda:
 		"envs/abricate.yml"
 	threads:
@@ -184,8 +184,8 @@ rule abricate_summary:
 		"[ABRicate] summarizing results."
 	shell:
 		"""
-		abricate --summary --nopath output/06_amr/abricate/amr/*.tab > {output.amr_sum}
-		abricate --summary --nopath output/06_amr/abricate/vir/*.tab > {output.vir_sum}
+		abricate --summary --nopath output/07_amr/abricate/amr/*.tab > {output.amr_sum}
+		abricate --summary --nopath output/07_amr/abricate/vir/*.tab > {output.vir_sum}
 		"""
 
 # ABRicate
@@ -193,8 +193,8 @@ rule abricate:
 	input:
 		renamed = "output/04_assemblies/bbmap/{sample}.fa"
 	output:
-		amr_profile = "output/06_amr/abricate/amr/{sample}.tab",
-		vir_profile = "output/06_amr/abricate/vir/{sample}.tab"
+		amr_profile = "output/07_amr/abricate/amr/{sample}.tab",
+		vir_profile = "output/07_amr/abricate/vir/{sample}.tab"
 	conda:
 		"envs/abricate.yml"
 	threads:
@@ -211,6 +211,126 @@ rule abricate:
 		"""
 
 # -------------------------------
+# VI: Co-Assembly
+# -------------------------------
+
+# MetaBAT
+rule co_assembly_metabat:
+	input:
+		bam = expand("output/06_co_assembly/bowtie2/{sample}.bam", sample = SAMPLES),
+		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+	output:
+		depth = "output/06_co_assembly/metabat/depth.txt",
+		dist = "output/06_co_assembly/metabat/saved.dist",
+		paired = "output/06_co_assembly/metabat/paired.txt",
+		tnf = "output/06_co_assembly/metabat/saved.tnf"
+	conda:
+		"envs/metabat.yml"
+	threads:
+		64
+	message:
+		"[MetaBAT] binning assembly of co-assembly."
+	params:
+		min_depth = config["assembly_depth"],
+		min_length = config["assembly_min"]
+	shell:
+		"""
+		jgi_summarize_bam_contig_depths --outputDepth {output.depth} --pairedContigs {output.paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/metabat/*.bam
+		runMetaBat.sh -m 1500 -a {output.depth} -o output/06_co_assembly/metabat/bin/ -t {threads} --saveTNF {output.tnf} --saveDistance {output.dist}
+		"""
+
+# Bowtie 2
+rule co_assembly_bowtie2:
+	input:
+		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
+		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
+		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
+		index = "tmp/co_assembly.1.bt2",
+		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+	output:
+		bam = "output/06_co_assembly/bowtie2/{sample}.bam"
+	conda:
+		"envs/metabat.yml"
+	threads:
+		32
+	message:
+		"[Bowtie 2] Mapping reads of {wildcards.sample} to co-assembly."
+	shell:
+		"""
+		bowtie2 --quiet --no-unal -p {threads} -x tmp/co_assembly -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/co-{wildcards.sample}.sam
+		samtools view -bS -o tmp/co-{wildcards.sample}.bam tmp/co-{wildcards.sample}_unsorted.sam
+		samtools sort tmp/co-{wildcards.sample}_unsorted.bam -o 06_co_assembly/bowtie2/{wildcards.sample}.bam
+		samtools index 06_co_assembly/bowtie2/{wildcards.sample}.bam
+		"""
+
+# Bowtie 2
+rule co_assembly_bowtie2_index:
+	input:
+		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+	output:
+		index = "tmp/co_assembly.1.bt2"
+	conda:
+		"envs/metabat.yml"
+	threads:
+		64
+	message:
+		"[Bowtie 2] Generating index for co-assembly."
+	shell:
+		"""
+		bowtie2-build --quiet --threads {threads} {input.renamed} tmp/co_assembly
+		"""
+
+# bbmap reformat
+rule co_assembly_bbmap:
+	input:
+		co_assembly = "output/06_co_assembly/megahit/co_assembly.fa.gz"
+	output:
+		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+	conda:
+		"envs/bbmap.yml"
+	threads:
+		16
+	message:
+		"[bbmap] renaming contigs of the co-assembly."
+	shell:
+		"""
+		rename.sh in={input.co_assembly} out={output.renamed} prefix=MEGA -Xmx{threads}g
+		"""
+
+# MEGAHIT
+rule co_assembly_megahit:
+	input:
+		b1 = expand("output/01_preprocessing/bbmap/{sample}_R1.fastq.gz", sample = SAMPLES),
+		b2 = expand("output/01_preprocessing/bbmap/{sample}_R2.fastq.gz", sample = SAMPLES),
+		b3 = expand("output/01_preprocessing/bbmap/{sample}_R3.fastq.gz", sample = SAMPLES)
+	output:
+		co_assembly = "output/06_co_assembly/megahit/co_assembly.fa.gz"
+	conda:
+		"envs/megahit.yml"
+	threads:
+		128
+	message:
+		"[MEGAHIT] Performing co-assembly."
+	params:
+		min_length = config["assembly_min"]
+	shell:
+		"""
+		echo {input.b1} > tmp/b1.txt
+		echo {input.b2} > tmp/b2.txt
+		echo {input.b3} > tmp/b3.txt
+		xb1=`cat tmp/b1.txt`
+		xb2=`cat tmp/b2.txt`
+		xb3=`cat tmp/b3.txt`
+		yb1=${{xb1// /,}}
+		yb2=${{xb2// /,}}
+		yb3=${{xb3// /,}}
+		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len {params.min_length} -t {threads} -o tmp/co_assembly/
+		mv tmp/co_assembly/final.contigs.fa output/06_co_assembly/megahit/co_assembly.fa
+		gzip output/06_co_assembly/megahit/co_assembly.fa
+		rm -r tmp/co_assembly/
+		"""
+
+# -------------------------------
 # V: Genomic Binning
 # -------------------------------
 
@@ -221,7 +341,7 @@ rule checkm:
 		stats_depth = "output/05_genomic_bins/metabat/{sample}.fa.depth.txt",
 		stats_paired = "output/05_genomic_bins/metabat/{sample}.fa.paired.txt"
 	output:
-		checkm_log = "output/05_genomic_bins/checkm/{sample}/checkm.log"
+		checkm = "output/05_genomic_bins/checkm/{sample}.txt"
 	conda:
 		"envs/checkm.yml"
 	threads:
@@ -230,7 +350,7 @@ rule checkm:
 		"[CheckM] Assessing genomic bin quality of {wildcards.sample}."
 	shell:
 		"""
-		checkm lineage_wf -t {threads} -x fa output/05_genomic_bins/metabat/{wildcards.sample}.fa.metabat-bins32/ output/05_genomic_bins/checkm/{wildcards.sample}/
+		checkm lineage_wf -t {threads} -f {output.checkm} -x fa output/05_genomic_bins/metabat/{wildcards.sample}.fa.metabat-bins32/ output/05_genomic_bins/checkm/{wildcards.sample}/
 		"""
 
 # MetaBAT
@@ -253,7 +373,7 @@ rule metabat:
 	shell:
 		"""
 		bowtie2-build --quiet --threads {threads} {input.filtered} tmp/{wildcards.sample}
-		bowtie2 --quiet -p {threads} -x tmp/{wildcards.sample} -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/{wildcards.sample}.sam
+		bowtie2 --quiet --no-unal -p {threads} -x tmp/{wildcards.sample} -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/{wildcards.sample}.sam
 		samtools view -bS -o tmp/{wildcards.sample}.bam tmp/{wildcards.sample}.sam
 		samtools sort tmp/{wildcards.sample}.bam -o tmp/{wildcards.sample}_sorted.bam
 		samtools index tmp/{wildcards.sample}_sorted.bam
@@ -264,38 +384,6 @@ rule metabat:
 # -------------------------------
 # IV: Assemblies
 # -------------------------------
-
-# MEGAHIT
-rule megahit_co_assembly:
-	input:
-		b1 = expand("output/01_preprocessing/bbmap/{sample}_R1.fastq.gz", sample = SAMPLES),
-		b2 = expand("output/01_preprocessing/bbmap/{sample}_R2.fastq.gz", sample = SAMPLES),
-		b3 = expand("output/01_preprocessing/bbmap/{sample}_R3.fastq.gz", sample = SAMPLES)
-	output:
-		co_assembly = "output/04_assemblies/megahit/co_assembly/co_assembly.fa.gz"
-	conda:
-		"envs/megahit.yml"
-	threads:
-		128
-	message:
-		"[MEGAHIT] Performing co-assembly."
-	shell:
-		"""
-		echo {input.b1} > tmp/b1.txt
-		echo {input.b2} > tmp/b2.txt
-		echo {input.b3} > tmp/b3.txt
-		xb1=`cat tmp/b1.txt`
-		xb2=`cat tmp/b2.txt`
-		xb3=`cat tmp/b3.txt`
-		yb1=${{xb1// /,}}
-		yb2=${{xb2// /,}}
-		yb3=${{xb3// /,}}
-		rm -r tmp/co_assembly/
-		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len 300 -t {threads} -o tmp/co_assembly/
-		mkdir -p output/04_assemblies/megahit/co_assembly/
-		mv tmp/co_assembly/final.contigs.fa output/04_assemblies/megahit/co_assembly/co_assembly.fa
-		gzip output/04_assemblies/megahit/co_assembly/co_assembly.fa
-		"""
 
 # MetaQUAST
 rule metaquast:

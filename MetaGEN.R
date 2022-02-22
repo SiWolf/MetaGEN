@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Mon, 21.02.2022
-# Version: 0.4.9
+# Last Modified: Tue, 22.02.2022
+# Version: 0.5.0
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -28,7 +28,7 @@ library("vegan")
 # [1] Import and preprocess analysis data
 
 # Abricate Results
-abricate <- read.csv("output/06_amr/abricate/amr/abricate.summary", sep = "\t")
+abricate <- read.csv("output/07_amr/abricate/amr/abricate.summary", sep = "\t")
 abricate$X.FILE <- gsub(".tab", "", abricate$X.FILE)
 
 # MegaRes database
@@ -54,8 +54,8 @@ seqreport$SAMPLE <- tmp3
 seqreport$READ <- tmp6
 
 # CoverM Results
-rawCountTable <- read.table("output/06_amr/coverm/coverm.summary", header = TRUE, sep = "\t", row.names = 1)
-colnames(rawCountTable) <- sub("output.06_amr.coverm.", "", colnames(rawCountTable))
+rawCountTable <- read.table("output/07_amr/coverm/coverm.summary", header = TRUE, sep = "\t", row.names = 1)
+colnames(rawCountTable) <- sub("output.07_amr.coverm.", "", colnames(rawCountTable))
 
 # BIOM File
 data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/bracken.biom", parseFunction = parse_taxonomy_default)
@@ -111,14 +111,14 @@ data.pcoa$TIME_GROUP = paste(meta.sorted$Timepoint, meta.sorted$AB_Group, sep = 
 data.pcoa.filtered <- data.pcoa[data.pcoa$AB_GROUP != "SWITCHED" & data.pcoa$AB_GROUP != "REF", ]
 
 # Export Diversities
-write.csv(data.alpha, file = "output/07_visualization/tab_div_alpha_raw.csv", quote = FALSE)
-write.csv(data.alpha.rarefy, file = "output/07_visualization/tab_div_alpha_rarefy.csv", quote = FALSE)
-write.csv(data.bray, file = "output/07_visualization/tab_div_beta_distance.csv", quote = FALSE)
-write.csv(data.pcoa, file = "output/07_visualization/tab_div_beta_pcoa.csv", quote = FALSE)
+write.csv(data.alpha, file = "output/08_visualization/tab_div_alpha_raw.csv", quote = FALSE)
+write.csv(data.alpha.rarefy, file = "output/08_visualization/tab_div_alpha_rarefy.csv", quote = FALSE)
+write.csv(data.bray, file = "output/08_visualization/tab_div_beta_distance.csv", quote = FALSE)
+write.csv(data.pcoa, file = "output/08_visualization/tab_div_beta_pcoa.csv", quote = FALSE)
 
 # Export human-readable OTU table
 data.otu <- phyloseq_to_df(data.rarefy)
-write.csv(data.otu, file = "output/07_visualization/tab_otu.csv", row.names = FALSE, quote = FALSE)
+write.csv(data.otu, file = "output/08_visualization/tab_otu.csv", row.names = FALSE, quote = FALSE)
 
 # PCA
 colours.days = c("t0" = "#00BA38",
@@ -137,7 +137,7 @@ eigenvalue_pc1 = round(braycurtis.pcoa$values$Relative_eig[1]*100, 1)
 eigenvalue_pc2 = round(braycurtis.pcoa$values$Relative_eig[2]*100, 1)
 
 # Timepoints - All Samples
-png("output/07_visualization/div_pca_time_all.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_time_all.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa,
           x = "Axis.1",
           y = "Axis.2",
@@ -160,7 +160,7 @@ ggscatter(data.pcoa,
 dev.off()
 
 # Timepoints - SSG
-png("output/07_visualization/div_pca_time_ssg.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_time_ssg.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "SSG", ],
           x = "Axis.1",
           y = "Axis.2",
@@ -183,7 +183,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "SSG", ],
 dev.off()
 
 # Timepoints - 5DG
-png("output/07_visualization/div_pca_time_5dg.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_time_5dg.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "5DG", ],
           x = "Axis.1",
           y = "Axis.2",
@@ -206,7 +206,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "5DG", ],
 dev.off()
 
 # Groups - All Samples
-png("output/07_visualization/div_pca_group_all.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_group_all.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa,
           x = "Axis.1",
           y = "Axis.2",
@@ -227,7 +227,7 @@ ggscatter(data.pcoa,
 dev.off()
 
 # Groups - t0
-png("output/07_visualization/div_pca_group_t0.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_group_t0.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t0", ],
           x = "Axis.1",
           y = "Axis.2",
@@ -250,7 +250,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t0", ],
 dev.off()
 
 # Groups - t1
-png("output/07_visualization/div_pca_group_t1.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_group_t1.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t1", ],
           x = "Axis.1",
           y = "Axis.2",
@@ -273,7 +273,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t1", ],
 dev.off()
 
 # Groups - t2
-png("output/07_visualization/div_pca_group_t2.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_group_t2.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t2", ],
           x = "Axis.1",
           y = "Axis.2",
@@ -296,7 +296,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t2", ],
 dev.off()
 
 # Timepoints-Groups - All Samples
-png("output/07_visualization/div_pca_group_time_all.png", width = 16, height = 16, units = "cm", res = 500)
+png("output/08_visualization/div_pca_group_time_all.png", width = 16, height = 16, units = "cm", res = 500)
 ggscatter(data.pcoa.filtered,
           x = "Axis.1",
           y = "Axis.2",
@@ -320,7 +320,7 @@ dev.off()
 # Boxplots
 boxplot.comparisions <- list(c("t0", "t1"), c("t1", "t2"), c("t0","t2"))
 
-png("output/07_visualization/div_box.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/div_box.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIMEPOINT)) +
         geom_boxplot() +
         facet_wrap(~AB_GROUP, scale = "free") +
@@ -335,7 +335,7 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIM
                            paired = TRUE)
 dev.off()
 
-png("output/07_visualization/div_box_even.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/div_box_even.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIMEPOINT)) +
         geom_boxplot() +
         facet_wrap(~AB_GROUP, scale = "free") +
@@ -390,7 +390,7 @@ bar_data_melted$OTU <- bar_data_melted$OTU
 # Individual Horses - 5DG
 bar_data_5dg <- bar_data_melted[bar_data_melted$AB_GROUP == "5DG",]
 
-png("output/07_visualization/tax_bar_horses_5dg.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_5dg.png", width = 15, height = 15, units = "cm", res = 500)
 ggplot(bar_data_5dg, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -409,7 +409,7 @@ dev.off()
 # Individual Horses - SSG
 bar_data_ssg <- bar_data_melted[bar_data_melted$AB_GROUP == "SSG",]
 
-png("output/07_visualization/tax_bar_horses_ssg.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_ssg.png", width = 15, height = 15, units = "cm", res = 500)
 ggplot(bar_data_ssg, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -428,7 +428,7 @@ dev.off()
 # Individual Horses - Switched
 bar_data_switched <- bar_data_melted[bar_data_melted$AB_GROUP == "SWITCHED",]
 
-png("output/07_visualization/tax_bar_horses_switched.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_switched.png", width = 15, height = 15, units = "cm", res = 500)
 ggplot(bar_data_switched, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -447,7 +447,7 @@ dev.off()
 # Individual Horses - Reference
 bar_data_ref <- bar_data_melted[bar_data_melted$AB_GROUP == "REF",]
 
-png("output/07_visualization/tax_bar_horses_ref.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_ref.png", width = 15, height = 15, units = "cm", res = 500)
 ggplot(bar_data_ref, aes(fill = OTU, y = Abundance, x = HORSE)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -464,7 +464,7 @@ ggplot(bar_data_ref, aes(fill = OTU, y = Abundance, x = HORSE)) +
 dev.off()
 
 # Summarized groups
-png("output/07_visualization/tax_bar_sum_groups.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_groups.png", width = 15, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -481,7 +481,7 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = 
               )
 dev.off()
 
-png("output/07_visualization/tax_bar_sum_timepoints.png", width = 17, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_timepoints.png", width = 17, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -498,7 +498,7 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = 
         )
 dev.off()
 
-png("output/07_visualization/tax_bar_sum_refs.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_refs.png", width = 15, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP == "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -567,7 +567,7 @@ rownames(abundance_matrix) <- abundance_columns
 
 colnames(abundance_matrix) <- c("SSG (t0)", "5DG (t0)", "SWITCHED (t0)", "SSG (t1)", "5DG (t1)", "SWITCHED (t1)", "SSG (t2)", "5DG (t2)", "SWITCHED (t2)", "REF")
 
-png("output/07_visualization/tax_heat_sim.png", width = 20, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_heat_sim.png", width = 20, height = 15, units = "cm", res = 500)
 Heatmap(log2(abundance_matrix),
         cluster_rows = TRUE,
         cluster_columns = TRUE,
@@ -581,7 +581,7 @@ dev.off()
 
 colnames(abundance_matrix) <- c("SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED", "REF")
 
-png("output/07_visualization/tax_heat_time.png", width = 20, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_heat_time.png", width = 20, height = 15, units = "cm", res = 500)
 Heatmap(log2(abundance_matrix),
         cluster_rows = TRUE,
         cluster_columns = FALSE,
@@ -633,7 +633,7 @@ amr.df.stats$Norm <- amr.df.stats$counts/amr.df.stats$X.Seq
 amr.df.stats$CPM <- amr.df.stats$counts/(amr.df.stats$X.Seq/1000000)
 amr.df.stats$CP60M <- amr.df.stats$CPM*60
 colnames(amr.df.stats) <- c("SAMPLE", "#PE_READS", "AMR_COUNTS", "NORM_COUNT", "CPM", "CP60M")
-write.csv(amr.df.stats, file = "output/07_visualization/tab_amr_counts.csv", quote = FALSE)
+write.csv(amr.df.stats, file = "output/08_visualization/tab_amr_counts.csv", quote = FALSE)
 
 # Prepare dataframe for heatmap
 amr.norm.reads <- subset(amr.df.stats, select = c("SAMPLE", "CPM", "CP60M"))
@@ -692,7 +692,7 @@ re.order.rows <- abricate.meta[with(abricate.meta, order(Day, AB_Group, HorseID)
 abricate.matrix[abricate.matrix >= 2] = 2
 
 # Plot Heatmap
-png("output/07_visualization/amr_heat_abricate.png", width = 40, height = 20, units = "cm", res = 500)
+png("output/08_visualization/amr_heat_abricate.png", width = 40, height = 20, units = "cm", res = 500)
 Heatmap(abricate.matrix,
         cluster_columns = FALSE,
         cluster_rows = FALSE,
@@ -725,7 +725,7 @@ dev.off()
 # Correlation - AMR and Diversity
 cor.test(amr.norm.reads$CP60M, amr.norm.reads$DIV, method = "spearman")
 
-png("output/07_visualization/amr_div_cor.png", width = 17, height = 16, units = "cm", res = 500)
+png("output/08_visualization/amr_div_cor.png", width = 17, height = 16, units = "cm", res = 500)
 ggscatter(amr.norm.reads,
           x = "CP60M",
           y = "DIV",
@@ -905,7 +905,7 @@ Gene_dgeFullFilter <- edgeR::calcNormFactors(Gene_dgeFullFilter, method = "TMM")
 
 # Output TMM values
 Gene_normCounts <- cpm(Gene_dgeFullFilter)
-write.csv(Gene_normCounts, file = "output/07_visualization/tab_amr_tmm.csv", quote = FALSE)
+write.csv(Gene_normCounts, file = "output/08_visualization/tab_amr_tmm.csv", quote = FALSE)
 
 # Bin TMM values by counts
 Gene_groupedCounts = Gene_normCounts
@@ -933,7 +933,7 @@ Gene_AMR_DF = data.frame(AMR_Gene = h, AMR_Class = tolower(g))
 re.order.cols.reads = Gene_AMR_DF[order(Gene_AMR_DF$AMR_Class),]
 
 # Plot AMR Read Heatmap
-png("output/07_visualization/amr_heat_coverm_genes.png", width = 40, height = 20, units = "cm", res = 500)
+png("output/08_visualization/amr_heat_coverm_genes.png", width = 40, height = 20, units = "cm", res = 500)
 Heatmap(Gene_groupedCounts,
         cluster_columns = TRUE,
         cluster_rows = FALSE,
@@ -983,7 +983,7 @@ Class_dgeFullFilter <- edgeR::calcNormFactors(Class_dgeFullFilter, method = "TMM
 
 # Output TMM values
 Class_normCounts <- cpm(Class_dgeFullFilter)
-write.csv(Class_normCounts, file = "output/07_visualization/tab_amr_tmm_classes.csv", quote = FALSE)
+write.csv(Class_normCounts, file = "output/08_visualization/tab_amr_tmm_classes.csv", quote = FALSE)
 
 # Bin TMM values by counts
 Class_groupedCounts = Class_normCounts
@@ -995,7 +995,7 @@ Class_groupedCounts <- t(Class_groupedCounts)
 colnames(Class_groupedCounts) <- tolower(colnames(Class_groupedCounts))
 
 # Plot AMR Class Heatmap
-png("output/07_visualization/amr_heat_coverm_classes.png", width = 30, height = 20, units = "cm", res = 500)
+png("output/08_visualization/amr_heat_coverm_classes.png", width = 30, height = 20, units = "cm", res = 500)
 Heatmap(Class_groupedCounts,
         cluster_columns = TRUE,
         cluster_rows = FALSE,
@@ -1038,7 +1038,7 @@ for (i in rownames(data.alpha.rarefy)) {
 
 Class_AMR_SUM <- data.frame(SAMPLE = f, AMR = e, TIMEPOINT = data.alpha.rarefy$TIMEPOINT, AB_GROUP = data.alpha.rarefy$AB_GROUP, HORSE = data.alpha.rarefy$HORSE)
 
-png("output/07_visualization/amr_sum_scatter.png", width = 30, height = 20, units = "cm", res = 500)
+png("output/08_visualization/amr_sum_scatter.png", width = 30, height = 20, units = "cm", res = 500)
 ggplot(Class_AMR_SUM[Class_AMR_SUM$AB_GROUP != "REF",], aes(x = TIMEPOINT, y = log2(AMR))) +
         coord_cartesian(ylim = c(17, 24)) +
         geom_line(aes(group = HORSE)) +
@@ -1048,7 +1048,7 @@ ggplot(Class_AMR_SUM[Class_AMR_SUM$AB_GROUP != "REF",], aes(x = TIMEPOINT, y = l
 dev.off()
 
 # Total AMR Sum
-png("output/07_visualization/amr_sum_box.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_sum_box.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(Class_AMR_SUM, aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(17, 25)) +
         geom_boxplot() +
@@ -1080,7 +1080,7 @@ amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:
                                TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, amr.class.length)
                                )
 
-png("output/07_visualization/amr_box_group_ssg.png", width = 40, height = 30, units = "cm", res = 500)
+png("output/08_visualization/amr_box_group_ssg.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.ssg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
         geom_boxplot() +
@@ -1107,7 +1107,7 @@ amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:
                                TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, amr.class.length)
                                )
 
-png("output/07_visualization/amr_box_group_5dg.png", width = 40, height = 30, units = "cm", res = 500)
+png("output/08_visualization/amr_box_group_5dg.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.5dg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
         geom_boxplot() +
@@ -1134,7 +1134,7 @@ amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filter
                                     TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, amr.class.length)
                                     )
 
-png("output/07_visualization/amr_box_group_switched.png", width = 40, height = 30, units = "cm", res = 500)
+png("output/08_visualization/amr_box_group_switched.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.switched, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
         geom_boxplot() +
@@ -1155,7 +1155,7 @@ Class_AMR_SUM$DIV = amr.norm.reads$DIV
 
 cor.test(Class_AMR_SUM$AMR, Class_AMR_SUM$DIV, method = "spearman")
 
-png("output/07_visualization/amr_div_cor_reads.png", width = 17, height = 16, units = "cm", res = 500)
+png("output/08_visualization/amr_div_cor_reads.png", width = 17, height = 16, units = "cm", res = 500)
 ggscatter(Class_AMR_SUM,
           x = "AMR_LOG2",
           y = "DIV",
@@ -1193,55 +1193,55 @@ edger.dge <- phyloseq_to_edgeR(edger.aggretated, group = edger.groups)
 edger.res.c1 <- exactTest(edger.dge, pair = c("t0 SSG", "t1 SSG"))
 edger.top.c1 <- topTags(edger.res.c1, n = nrow(edger.res.c1$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c1 <- edger.top.c1$table[edger.top.c1$table$FDR < 0.05 & abs(edger.top.c1$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t0_t1.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_ssg_t0_t1.csv", quote = FALSE)
 
 # C2 - SSG: t1 vs. t2
 edger.res.c2 <- exactTest(edger.dge, pair = c("t1 SSG", "t2 SSG"))
 edger.top.c2 <- topTags(edger.res.c2, n = nrow(edger.res.c2$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c2 <- edger.top.c2$table[edger.top.c2$table$FDR < 0.05 & abs(edger.top.c2$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t1_t2.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_ssg_t1_t2.csv", quote = FALSE)
 
 # C3 - SSG: t0 vs. t2
 edger.res.c3 <- exactTest(edger.dge, pair = c("t0 SSG", "t2 SSG"))
 edger.top.c3 <- topTags(edger.res.c3, n = nrow(edger.res.c3$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c3 <- edger.top.c3$table[edger.top.c3$table$FDR < 0.05 & abs(edger.top.c3$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_ssg_t0_t2.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_ssg_t0_t2.csv", quote = FALSE)
 
 # C4 - 5DG: t0 vs. t1
 edger.res.c4 <- exactTest(edger.dge, pair = c("t0 5DG", "t1 5DG"))
 edger.top.c4 <- topTags(edger.res.c4, n = nrow(edger.res.c4$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c4 <- edger.top.c4$table[edger.top.c4$table$FDR < 0.05 & abs(edger.top.c4$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t0_t1.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_5dg_t0_t1.csv", quote = FALSE)
 
 # C5 - 5DG: t1 vs. t2
 edger.res.c5 <- exactTest(edger.dge, pair = c("t1 5DG", "t2 5DG"))
 edger.top.c5 <- topTags(edger.res.c5, n = nrow(edger.res.c5$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c5 <- edger.top.c5$table[edger.top.c5$table$FDR < 0.05 & abs(edger.top.c5$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t1_t2.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_5dg_t1_t2.csv", quote = FALSE)
 
 # C6 - 5DG: t0 vs. t2
 edger.res.c6 <- exactTest(edger.dge, pair = c("t0 5DG", "t2 5DG"))
 edger.top.c6 <- topTags(edger.res.c6, n = nrow(edger.res.c6$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c6 <- edger.top.c6$table[edger.top.c6$table$FDR < 0.05 & abs(edger.top.c6$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_5dg_t0_t2.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_5dg_t0_t2.csv", quote = FALSE)
 
 # C7 - t0: SSG vs. 5DG
 edger.res.c7 <- exactTest(edger.dge, pair = c("t0 SSG", "t0 5DG"))
 edger.top.c7 <- topTags(edger.res.c7, n = nrow(edger.res.c7$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c7 <- edger.top.c7$table[edger.top.c7$table$FDR < 0.05 & abs(edger.top.c7$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t0_ssg_5dg.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_t0_ssg_5dg.csv", quote = FALSE)
 
 # C8 - t1: SSG vs. 5DG
 edger.res.c8 <- exactTest(edger.dge, pair = c("t1 SSG", "t1 5DG"))
 edger.top.c8 <- topTags(edger.res.c8, n = nrow(edger.res.c8$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c8 <- edger.top.c8$table[edger.top.c8$table$FDR < 0.05 & abs(edger.top.c8$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t1_ssg_5dg.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_t1_ssg_5dg.csv", quote = FALSE)
 
 # C9 - t2: SSG vs. 5DG
 edger.res.c9 <- exactTest(edger.dge, pair = c("t2 SSG", "t2 5DG"))
 edger.top.c9 <- topTags(edger.res.c9, n = nrow(edger.res.c9$table), adjust.method = "BH", sort.by = "logFC")
 edger.sel.c9 <- edger.top.c9$table[edger.top.c9$table$FDR < 0.05 & abs(edger.top.c9$table$logFC) > 1, ]
-write.csv(edger.top.c1$table, file = "output/07_visualization/tab_edger_t2_ssg_5dg.csv", quote = FALSE)
+write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_t2_ssg_5dg.csv", quote = FALSE)
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -1270,7 +1270,7 @@ boxplot.families.melted$TIMEPOINT <- box.ext.time
 G2 <- boxplot.families.melted[boxplot.families.melted$Rank5 == "f__Enterobacteriaceae", ]
 G2 <- G2[G2$AB_GROUP != "REF",]
 
-png("output/07_visualization/tax_box_f_enterobacteriaceae.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/tax_box_f_enterobacteriaceae.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(G2, aes(x = TIMEPOINT, y = log2(Abundance + 1), fill = TIMEPOINT)) +
         geom_boxplot() +
         facet_wrap(~AB_GROUP, scale = "free") +
@@ -1342,7 +1342,7 @@ entero.ssg.diff.t1.t2 = round(entero.ssg.t2 - entero.ssg.t1, 2)
 # [9] Visualizing ARG abundance per family
 
 # Prepare input data
-kreport = read.csv("output/06_amr/abricate/amr/kraken2.summary", header = TRUE, sep = "\t", row.names = 1)
+kreport = read.csv("output/07_amr/abricate/amr/kraken2.summary", header = TRUE, sep = "\t", row.names = 1)
 taxids <- sub("X", "", colnames(kreport))
 colnames(kreport) <- taxids
 
@@ -1460,7 +1460,7 @@ taxa.g3.abs.df <- data.frame(SIZE = c(colSums(taxa.g3.t0.nom[1:10]),
                              SPECIES = factor(rep(colnames(taxa.g3.t0.nom)[1:10], 3), levels = sort(colnames(taxa.g3.t0.nom), decreasing = TRUE))
                              )
 
-png("output/07_visualization/amr_bubble_families_abs_ssg.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_bubble_families_abs_ssg.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(taxa.g1.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         geom_point(alpha = 0.9, color = "red") +
         xlab("TIMEPOINT") +
@@ -1473,7 +1473,7 @@ ggplot(taxa.g1.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
-png("output/07_visualization/amr_bubble_families_abs_5dg.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_bubble_families_abs_5dg.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(taxa.g2.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         geom_point(alpha = 0.9, color = "red") +
         xlab("TIMEPOINT") +
@@ -1486,7 +1486,7 @@ ggplot(taxa.g2.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
-png("output/07_visualization/amr_bubble_families_abs_switched.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_bubble_families_abs_switched.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(taxa.g3.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         geom_point(alpha = 0.9, color = "red") +
         xlab("TIMEPOINT") +
@@ -1521,7 +1521,7 @@ taxa.g3.per.df <- data.frame(SIZE = c((colSums(taxa.g3.t0[1:10])/sum(colSums(tax
                              SPECIES = factor(rep(colnames(taxa.g3.t0)[1:10], 3), levels = sort(colnames(taxa.g3.t0), decreasing = TRUE))
                              )
 
-png("output/07_visualization/amr_bubble_families_rel_ssg.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_bubble_families_rel_ssg.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(taxa.g1.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         geom_point(alpha = 0.9, color = "red") +
         xlab("TIMEPOINT") +
@@ -1534,7 +1534,7 @@ ggplot(taxa.g1.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         scale_size_continuous(limits = c(0, 100), range = c(1, 12), breaks = c(10, 40, 80), name = "ARG Abundance (%)")
 dev.off()
 
-png("output/07_visualization/amr_bubble_families_rel_5dg.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_bubble_families_rel_5dg.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(taxa.g2.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         geom_point(alpha = 0.9, color = "red") +
         xlab("TIMEPOINT") +
@@ -1547,7 +1547,7 @@ ggplot(taxa.g2.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         scale_size_continuous(limits = c(0, 100), range = c(1, 12), breaks = c(10, 40, 80), name = "ARG Abundance (%)")
 dev.off()
 
-png("output/07_visualization/amr_bubble_families_rel_switched.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_bubble_families_rel_switched.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(taxa.g3.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         geom_point(alpha = 0.9, color = "red") +
         xlab("TIMEPOINT") +
@@ -1565,6 +1565,6 @@ dev.off()
 # [10] Run MicrobiomeExplorer (16s/WGS)
 
 converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken_biom/bracken.biom", type = "BIOM")
-saveRDS(converted_biom, "output/07_visualization/bracken.rds")
+saveRDS(converted_biom, "output/08_visualization/bracken.rds")
 
 #runMicrobiomeExplorer()
