@@ -345,7 +345,7 @@ rule checkm:
 	conda:
 		"envs/checkm.yml"
 	threads:
-		64
+		16
 	message:
 		"[CheckM] Assessing genomic bin quality of {wildcards.sample}."
 	shell:
