@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Thu, 15.02.2022
-# Version: 0.5.0
+# Last Modified: Wed, 16.02.2022
+# Version: 0.5.1
 # -------------------------------
 
 # How to run MetaGEN
@@ -31,6 +31,7 @@ rule all:
 		"output/01_preprocessing/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/kraken_biom/bracken.biom",
+		"output/02_taxonomic_profiling/ete3/newick.tree",
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
@@ -286,10 +287,10 @@ rule megahit_co_assembly:
 		echo {input.b3} > tmp/b3.txt
 		xb1=`cat tmp/b1.txt`
 		xb2=`cat tmp/b2.txt`
-		xnb3=`cat tmp/b3.txt`
+		xb3=`cat tmp/b3.txt`
 		yb1=${{xb1// /,}}
 		yb2=${{xb2// /,}}
-		yb3=${{xnb3// /,}}
+		yb3=${{xb3// /,}}
 		rm -r tmp/co_assembly/
 		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len 300 -t {threads} -o tmp/co_assembly/
 		mkdir -p output/04_assemblies/megahit/co_assembly/
@@ -439,11 +440,28 @@ rule krona:
 	threads:
 		1
 	message:
-		"[Krona] visualizing taxonomic compositions."
+		"[Krona] visualizing taxonomic composition."
 	shell:
 		"""
 		ktUpdateTaxonomy.sh
 		ktImportTaxonomy -q 2 -t 3 {input.k_stdout} -o {output.krona_html}
+		"""
+
+# ete3
+rule ete3:
+	input:
+		b_taxids = "output/02_taxonomic_profiling/kraken_biom/taxids.txt"
+	output:
+		ete3_taxonomy = "output/02_taxonomic_profiling/ete3/newick.tree"
+	conda:
+		"envs/ete3.yml"
+	threads:
+		1
+	message:
+		"[ete3] visualizing taxonomic composition."
+	shell:
+		"""
+		cut -f1 {input.b_taxids} | ete3 ncbiquery --tree > {output.ete3_taxonomy}
 		"""
 
 # kraken-biom

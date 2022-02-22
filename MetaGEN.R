@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Wed, 02.02.2022
-# Version: 0.4.8
+# Last Modified: Mon, 21.02.2022
+# Version: 0.4.9
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -21,6 +21,7 @@ library("phyloseq")
 library("stringr")
 library("taxonomizr")
 library("tidyr")
+library("vegan")
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -75,6 +76,11 @@ sample_depth <- sort(sample_sums(data.biom))
 
 # Alpha Diversity (Raw)
 data.alpha <- microbiome::alpha(data.biom)
+
+# Plot Rarefaction Curve
+png("results/div_rarefaction_curve.png", width = 16, height = 16, units = "cm", res = 500)
+rarecurve(t(otu_table(data.biom)), step = 50, cex = 0.5)
+dev.off()
 
 # Alpha diversity (Rarefy)
 data.rarefy <- rarefy_even_depth(data.biom, rngseed = 1, sample.size = min(sample_sums(data.biom)), replace = FALSE, trimOTUs = FALSE)
@@ -510,22 +516,21 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP == "REF",], aes(fill = OTU, y = 
 dev.off()
 
 # Percentages of individual taxa
-num.samples <- length(meta.sorted$HorseID)
-per_taxa_total = sum(bar_data_melted$Abundance)/num.samples
+per_taxa_total = sum(bar_data_melted$Abundance)/length(sample_depth)
 
-per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidetes", ]$Abundance)/num.samples
+per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidetes", ]$Abundance)/length(sample_depth)
 per_bact_norm = (per_bact_total/per_taxa_total) * 100
 
-per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Firmicutes", ]$Abundance)/num.samples
+per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Firmicutes", ]$Abundance)/length(sample_depth)
 per_firm_norm = (per_firm_total/per_taxa_total) * 100
 
-per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Proteobacteria", ]$Abundance)/num.samples
+per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Proteobacteria", ]$Abundance)/length(sample_depth)
 per_prot_norm = (per_prot_total/per_taxa_total) * 100
 
-per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetes", ]$Abundance)/num.samples
+per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetes", ]$Abundance)/length(sample_depth)
 per_spir_norm = (per_spir_total/per_taxa_total) * 100
 
-per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobia", ]$Abundance)/num.samples
+per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobia", ]$Abundance)/length(sample_depth)
 per_verr_norm = (per_verr_total/per_taxa_total) * 100
 
 per_bact_norm
@@ -595,7 +600,7 @@ dev.off()
 
 # Count individual resistance genes
 abricate.count <- abricate
-for (i in 1:num.samples){
+for (i in 1:length(sample_depth)){
         for (j in 3:ncol(abricate)){
                 d = abricate[i,j]
                 if (d == "."){
