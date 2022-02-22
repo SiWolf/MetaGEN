@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 16.02.2022
-# Version: 0.5.1
+# Last Modified: Tue, 22.02.2022
+# Version: 0.5.2
 # -------------------------------
 
 # How to run MetaGEN
@@ -31,7 +31,6 @@ rule all:
 		"output/01_preprocessing/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/kraken_biom/bracken.biom",
-		"output/02_taxonomic_profiling/ete3/newick.tree",
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
@@ -445,23 +444,6 @@ rule krona:
 		"""
 		ktUpdateTaxonomy.sh
 		ktImportTaxonomy -q 2 -t 3 {input.k_stdout} -o {output.krona_html}
-		"""
-
-# ete3
-rule ete3:
-	input:
-		b_taxids = "output/02_taxonomic_profiling/kraken_biom/taxids.txt"
-	output:
-		ete3_taxonomy = "output/02_taxonomic_profiling/ete3/newick.tree"
-	conda:
-		"envs/ete3.yml"
-	threads:
-		1
-	message:
-		"[ete3] visualizing taxonomic composition."
-	shell:
-		"""
-		cut -f1 {input.b_taxids} | ete3 ncbiquery --tree > {output.ete3_taxonomy}
 		"""
 
 # kraken-biom
