@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Tue, 22.02.2022
-# Version: 0.5.2
+# Last Modified: Wed, 23.02.2022
+# Version: 0.5.3
 # -------------------------------
 
 # How to run MetaGEN
@@ -245,7 +245,7 @@ rule co_assembly_bowtie2:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
-		index = "tmp/co_assembly.1.bt2",
+		index = "tmp/co_assembly.1.bt2l",
 		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
 	output:
 		bam = "output/06_co_assembly/bowtie2/{sample}.bam"
@@ -258,8 +258,8 @@ rule co_assembly_bowtie2:
 	shell:
 		"""
 		bowtie2 --quiet --no-unal -p {threads} -x tmp/co_assembly -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/co-{wildcards.sample}.sam
-		samtools view -bS -o tmp/co-{wildcards.sample}.bam tmp/co-{wildcards.sample}_unsorted.sam
-		samtools sort tmp/co-{wildcards.sample}_unsorted.bam -o 06_co_assembly/bowtie2/{wildcards.sample}.bam
+		samtools view -bS -o tmp/co-{wildcards.sample}.bam tmp/co-{wildcards.sample}.sam
+		samtools sort tmp/co-{wildcards.sample}.bam -o 06_co_assembly/bowtie2/{wildcards.sample}.bam
 		samtools index 06_co_assembly/bowtie2/{wildcards.sample}.bam
 		"""
 
@@ -268,7 +268,7 @@ rule co_assembly_bowtie2_index:
 	input:
 		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
 	output:
-		index = "tmp/co_assembly.1.bt2"
+		index = "tmp/co_assembly.1.bt2l"
 	conda:
 		"envs/metabat.yml"
 	threads:
