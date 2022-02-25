@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Tue, 22.02.2022
-# Version: 0.5.0
+# Last Modified: Fri, 25.02.2022
+# Version: 0.5.1
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -329,6 +329,7 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIM
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
+                           alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(7.5, 8.1, 8.7),
                            size = 3,
@@ -344,6 +345,7 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIME
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
+                           alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(0.042, 0.047, 0.052),
                            size = 3,
@@ -756,19 +758,19 @@ dev.off()
 # Significant Differences between t0 and t1 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t2" & data.alpha.rarefy$AB_GROUP == "SSG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t1 and t2 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t0" & data.alpha.rarefy$AB_GROUP == "SSG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t0 and t2 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t1" & data.alpha.rarefy$AB_GROUP == "SSG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Diversity - 5DG
@@ -776,19 +778,19 @@ stat.res
 # Significant Differences between t0 and t1 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t2" & data.alpha.rarefy$AB_GROUP == "5DG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t1 and t2 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t0" & data.alpha.rarefy$AB_GROUP == "5DG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t0 and t2 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t1" & data.alpha.rarefy$AB_GROUP == "5DG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Diversity - SSG vs. 5DG
@@ -796,25 +798,25 @@ stat.res
 # Significant Differences at t0-t2 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t0 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t0" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t1 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t1" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t2 -> no
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t2" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # AMR - SSG
@@ -822,19 +824,19 @@ stat.res
 # Significant Differences between t0 and t1 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t2" & amr.norm.reads$AB_GROUP == "SSG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t1 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t0" & amr.norm.reads$AB_GROUP == "SSG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t0 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t1" & amr.norm.reads$AB_GROUP == "SSG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # AMR - 5DG
@@ -842,19 +844,19 @@ stat.res
 # Significant Differences between t0 and t1 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t2" & amr.norm.reads$AB_GROUP == "5DG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t1 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t0" & amr.norm.reads$AB_GROUP == "5DG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # Significant Differences between t0 and t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t1" & amr.norm.reads$AB_GROUP == "5DG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH", paired = TRUE)
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
 # AMR - SSG vs. 5DG
@@ -862,25 +864,25 @@ stat.res
 # Significant Differences at t0-t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t0 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t0" & amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t1 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t1" & amr.norm.reads$AB_GROUP != "SWITCHED"  & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
-stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, p.adjust.method = "BH")
+stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # --------------------------------------------------------------------------------------------------------
@@ -1056,6 +1058,7 @@ ggplot(Class_AMR_SUM, aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days) +
         stat_compare_means(comparisons = boxplot.comparisions,
+                           alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(22.5, 23.5, 24.5),
                            size = 3,
@@ -1088,6 +1091,7 @@ ggplot(amr.class.df.ssg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPO
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
+                           alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
                            size = 2,
@@ -1115,6 +1119,7 @@ ggplot(amr.class.df.5dg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPO
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
+                           alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
                            size = 2,
@@ -1142,6 +1147,7 @@ ggplot(amr.class.df.switched, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = T
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.comparisions,
+                           alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
                            size = 2,
@@ -1279,6 +1285,7 @@ ggplot(G2, aes(x = TIMEPOINT, y = log2(Abundance + 1), fill = TIMEPOINT)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days) +
         stat_compare_means(comparisons = boxplot.comparisions,
+                           alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(17, 18, 19),
                            size = 3,

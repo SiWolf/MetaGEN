@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 23.02.2022
-# Version: 0.5.3
+# Last Modified: Fri, 25.02.2022
+# Version: 0.5.4
 # -------------------------------
 
 # How to run MetaGEN
@@ -235,8 +235,8 @@ rule co_assembly_metabat:
 		min_length = config["assembly_min"]
 	shell:
 		"""
-		jgi_summarize_bam_contig_depths --outputDepth {output.depth} --pairedContigs {output.paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/metabat/*.bam
-		runMetaBat.sh -m 1500 -a {output.depth} -o output/06_co_assembly/metabat/bin/ -t {threads} --saveTNF {output.tnf} --saveDistance {output.dist}
+		jgi_summarize_bam_contig_depths --outputDepth {output.depth} --pairedContigs {output.paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
+		metabat2 -m 1500 -a {output.depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/ -t {threads} --saveTNF {output.tnf} --saveDistance {output.dist}
 		"""
 
 # Bowtie 2
@@ -245,8 +245,7 @@ rule co_assembly_bowtie2:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
-		index = "tmp/co_assembly.1.bt2l",
-		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+		index = "tmp/co_assembly.1.bt2l"
 	output:
 		bam = "output/06_co_assembly/bowtie2/{sample}.bam"
 	conda:
@@ -259,8 +258,8 @@ rule co_assembly_bowtie2:
 		"""
 		bowtie2 --quiet --no-unal -p {threads} -x tmp/co_assembly -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/co-{wildcards.sample}.sam
 		samtools view -bS -o tmp/co-{wildcards.sample}.bam tmp/co-{wildcards.sample}.sam
-		samtools sort tmp/co-{wildcards.sample}.bam -o 06_co_assembly/bowtie2/{wildcards.sample}.bam
-		samtools index 06_co_assembly/bowtie2/{wildcards.sample}.bam
+		samtools sort tmp/co-{wildcards.sample}.bam -o output/06_co_assembly/bowtie2/{wildcards.sample}.bam
+		samtools index output/06_co_assembly/bowtie2/{wildcards.sample}.bam
 		"""
 
 # Bowtie 2
