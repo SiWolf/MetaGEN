@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Fri, 25.02.2022
-# Version: 0.5.1
+# Last Modified: Mon, 07.03.2022
+# Version: 0.5.2
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -73,17 +73,21 @@ timepoints.order <- c("t0", "t1", "t2", "REF")
 
 # Sample Depth
 sample_depth <- sort(sample_sums(data.biom))
+min(sample_depth)
+max(sample_depth)
+median(sample_depth)
+sum(sample_depth)
 
 # Alpha Diversity (Raw)
 data.alpha <- microbiome::alpha(data.biom)
 
 # Plot Rarefaction Curve
-png("results/div_rarefaction_curve.png", width = 16, height = 16, units = "cm", res = 500)
-rarecurve(t(otu_table(data.biom)), step = 50, cex = 0.5)
-dev.off()
+#png("output/08_visualization/div_rarefaction_curve.png", width = 16, height = 16, units = "cm", res = 500)
+#rarecurve(t(otu_table(data.biom)), step = 50, cex = 0.5)
+#dev.off()
 
 # Alpha diversity (Rarefy)
-data.rarefy <- rarefy_even_depth(data.biom, rngseed = 1, sample.size = min(sample_sums(data.biom)), replace = FALSE, trimOTUs = FALSE)
+data.rarefy <- rarefy_even_depth(data.biom, rngseed = 1, sample.size = min(sample_depth), replace = FALSE, trimOTUs = FALSE)
 data.alpha.rarefy <- microbiome::alpha(data.rarefy)
 #data.rarefy <- aggregate_top_taxa(data.rarefy, 22, "Rank2")
 
@@ -117,8 +121,13 @@ write.csv(data.bray, file = "output/08_visualization/tab_div_beta_distance.csv",
 write.csv(data.pcoa, file = "output/08_visualization/tab_div_beta_pcoa.csv", quote = FALSE)
 
 # Export human-readable OTU table
-data.otu <- phyloseq_to_df(data.rarefy)
+data.otu <- phyloseq_to_df(data.biom)
 write.csv(data.otu, file = "output/08_visualization/tab_otu.csv", row.names = FALSE, quote = FALSE)
+data.otu.rarefy <- phyloseq_to_df(data.rarefy)
+write.csv(data.otu.rarefy, file = "output/08_visualization/tab_otu_rarefy.csv", row.names = FALSE, quote = FALSE)
+
+# Specific taxa level counts
+length(unique(data.otu$Rank6))
 
 # PCA
 colours.days = c("t0" = "#00BA38",
@@ -317,18 +326,18 @@ ggscatter(data.pcoa.filtered,
         theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
-# Boxplots
-boxplot.comparisions <- list(c("t0", "t1"), c("t1", "t2"), c("t0","t2"))
+# Boxplots (Timewise)
+boxplot.timepoints <- list(c("t0", "t1"), c("t1", "t2"), c("t0","t2"))
 
-png("output/08_visualization/div_box.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/div_box_shan_time.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIMEPOINT)) +
-        geom_boxplot() +
+        geom_boxplot(alpha = 0.9) +
         facet_wrap(~AB_GROUP, scale = "free") +
         coord_cartesian(ylim = c(2, 9)) +
         scale_y_continuous(breaks = c(3, 5, 7)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
-        stat_compare_means(comparisons = boxplot.comparisions,
+        stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(7.5, 8.1, 8.7),
@@ -336,15 +345,15 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIM
                            paired = TRUE)
 dev.off()
 
-png("output/08_visualization/div_box_even.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/div_box_even_time.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIMEPOINT)) +
-        geom_boxplot() +
+        geom_boxplot(alpha = 0.9) +
         facet_wrap(~AB_GROUP, scale = "free") +
         coord_cartesian(ylim = c(0.0007, 0.06)) +
         scale_y_continuous(breaks = c(0.01, 0.03, 0.05)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
-        stat_compare_means(comparisons = boxplot.comparisions,
+        stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(0.042, 0.047, 0.052),
@@ -894,6 +903,7 @@ stat.res
 # Read raw data
 Gene_sumCountTable <- aggregate(. ~ Resistance_Symbol, rawCountTable[,-c(1:3)], sum)
 rownames(Gene_sumCountTable) <- Gene_sumCountTable$Resistance_Symbol
+colnames(Gene_sumCountTable) <- gsub("output.06_amr.coverm.", "", colnames(Gene_sumCountTable))
 Gene_filterCountTable <- Gene_sumCountTable[, -c(1)]
 
 # Perform edgeR TMM normalization
@@ -972,6 +982,7 @@ dev.off()
 # Read raw data
 Class_sumCountTable <- aggregate(. ~ Resistance_Class, rawCountTable[,-c(1,3,4)], sum)
 rownames(Class_sumCountTable) <- Class_sumCountTable$Resistance_Class
+colnames(Class_sumCountTable) <- gsub("output.06_amr.coverm.", "", colnames(Class_sumCountTable))
 Class_filterCountTable <- Class_sumCountTable[, -c(1)]
 
 # Perform edgeR TMM normalization
@@ -1053,11 +1064,11 @@ dev.off()
 png("output/08_visualization/amr_sum_box.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(Class_AMR_SUM, aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(17, 25)) +
-        geom_boxplot() +
+        geom_boxplot(alpha = 0.9) +
         facet_wrap(~AB_GROUP, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days) +
-        stat_compare_means(comparisons = boxplot.comparisions,
+        stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(22.5, 23.5, 24.5),
@@ -1086,11 +1097,11 @@ amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:
 png("output/08_visualization/amr_box_group_ssg.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.ssg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
-        geom_boxplot() +
+        geom_boxplot(alpha = 0.9) +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
-        stat_compare_means(comparisons = boxplot.comparisions,
+        stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
@@ -1114,11 +1125,11 @@ amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:
 png("output/08_visualization/amr_box_group_5dg.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.5dg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
-        geom_boxplot() +
+        geom_boxplot(alpha = 0.9) +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
-        stat_compare_means(comparisons = boxplot.comparisions,
+        stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
@@ -1142,11 +1153,11 @@ amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filter
 png("output/08_visualization/amr_box_group_switched.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.switched, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
-        geom_boxplot() +
+        geom_boxplot(alpha = 0.9) +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
-        stat_compare_means(comparisons = boxplot.comparisions,
+        stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(21, 22.5, 24),
@@ -1276,15 +1287,15 @@ boxplot.families.melted$TIMEPOINT <- box.ext.time
 G2 <- boxplot.families.melted[boxplot.families.melted$Rank5 == "f__Enterobacteriaceae", ]
 G2 <- G2[G2$AB_GROUP != "REF",]
 
-png("output/08_visualization/tax_box_f_enterobacteriaceae.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/tax_box_f_enterobacteriaceae_time.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(G2, aes(x = TIMEPOINT, y = log2(Abundance + 1), fill = TIMEPOINT)) +
-        geom_boxplot() +
+        geom_boxplot(alpha = 0.9) +
         facet_wrap(~AB_GROUP, scale = "free") +
         coord_cartesian(ylim = c(9, 19.5)) +
         scale_y_continuous(breaks = c(9, 12, 15, 18)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
-        scale_fill_manual(values = colours.days) +
-        stat_compare_means(comparisons = boxplot.comparisions,
+        scale_fill_manual(values = colours.days[1:3]) +
+        stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
                            label.y = c(17, 18, 19),
@@ -1575,3 +1586,131 @@ converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken_biom
 saveRDS(converted_biom, "output/08_visualization/bracken.rds")
 
 #runMicrobiomeExplorer()
+
+# --------------------------------------------------------------------------------------------------------
+
+# [11] Calculation of specific taxa abundances
+
+samples.ssg.t0 <- meta.sorted[meta.sorted$AB_Group == "SSG" & meta.sorted$Timepoint == "t0", ]$SampleID
+samples.ssg.t1 <- meta.sorted[meta.sorted$AB_Group == "SSG" & meta.sorted$Timepoint == "t1", ]$SampleID
+samples.ssg.t2 <- meta.sorted[meta.sorted$AB_Group == "SSG" & meta.sorted$Timepoint == "t2", ]$SampleID
+
+samples.5dg.t0 <- meta.sorted[meta.sorted$AB_Group == "5DG" & meta.sorted$Timepoint == "t0", ]$SampleID
+samples.5dg.t1 <- meta.sorted[meta.sorted$AB_Group == "5DG" & meta.sorted$Timepoint == "t1", ]$SampleID
+samples.5dg.t2 <- meta.sorted[meta.sorted$AB_Group == "5DG" & meta.sorted$Timepoint == "t2", ]$SampleID
+
+samples.switched.t0 <- meta.sorted[meta.sorted$AB_Group == "SWITCHED" & meta.sorted$Timepoint == "t0", ]$SampleID
+samples.switched.t1 <- meta.sorted[meta.sorted$AB_Group == "SWITCHED" & meta.sorted$Timepoint == "t1", ]$SampleID
+samples.switched.t2 <- meta.sorted[meta.sorted$AB_Group == "SWITCHED" & meta.sorted$Timepoint == "t2", ]$SampleID
+
+samples.ref <- meta.sorted[meta.sorted$AB_Group == "REF", ]$SampleID
+
+samples.taxa <- c("g__Escherichia",
+                  "g__Salmonella",
+                  "g__Staphylococcus",
+                  "g__Streptococcus",
+                  "g__Lactobacillus",
+                  "f__Veillonellaceae",
+                  "g__Allisonella",
+                  "g__Phascolarctobacterium",
+                  "g__Roseburia",
+                  "g__Ruminococcus",
+                  "g__Fusobacterium",
+                  "g__Rhodococcus"
+)
+c1 = c()
+c2 = c()
+c3 = c()
+c4 = c()
+c5 = c()
+c6 = c()
+c7 = c()
+c8 = c()
+c9 = c()
+c10 = c()
+x = 1
+
+for (t in samples.taxa){
+        t1 <- data.otu.rarefy[data.otu.rarefy$Rank5 == t | data.otu.rarefy$Rank6 == t, ]
+        
+        t2 <- t1[samples.ssg.t0]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.ssg.t0)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c1[x] <- t6
+        
+        t2 <- t1[samples.ssg.t1]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.ssg.t1)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c2[x] <- t6
+        
+        t2 <- t1[samples.ssg.t2]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.ssg.t2)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c3[x] <- t6
+        
+        t2 <- t1[samples.5dg.t0]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.5dg.t0)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c4[x] <- t6
+        
+        t2 <- t1[samples.5dg.t1]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.5dg.t1)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c5[x] <- t6
+        
+        t2 <- t1[samples.5dg.t2]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.5dg.t2)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c6[x] <- t6
+        
+        t2 <- t1[samples.switched.t0]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.switched.t0)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c7[x] <- t6
+        
+        t2 <- t1[samples.switched.t1]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.switched.t1)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c8[x] <- t6
+        
+        t2 <- t1[samples.switched.t2]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.switched.t2)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c9[x] <- t6
+        
+        t2 <- t1[samples.ref]
+        t3 <- colSums(t2)
+        t4 <- sum(t3)/length(samples.ref)
+        t5 <- (t4/min(sample_depth))*100
+        t6 <- round(t5, 2)
+        c10[x] <- t6
+        
+        x = x + 1
+}
+
+taxa.abundancies <- data.frame(TAXA = samples.taxa,
+                               SSG_t0 = c1, SSG_t1 = c2, SSG_t2 = c3,
+                               FDG_t0 = c4, FDG_t1 = c5, FDG_t2 = c6,
+                               SWI_t0 = c7, SWI_t1 = c8, SWI_t2 = c9,
+                               REF = c10
+                               )
+
+write.csv(taxa.abundancies, file = "output/08_visualization/tab_otu_species_mean.csv", quote = FALSE, row.names = FALSE)
