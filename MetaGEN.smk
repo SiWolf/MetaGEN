@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 25.02.2022
-# Version: 0.5.4
+# Last Modified: Thu, 17.03.2022
+# Version: 0.5.5
 # -------------------------------
 
 # How to run MetaGEN
@@ -37,7 +37,7 @@ rule all:
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		expand("output/05_genomic_bins/checkm/{sample}.txt", sample = SAMPLES),
-		"output/06_co_assembly/metabat/saved.tnf",
+		"output/06_co_assembly/checkm/co_assembly.txt",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary"
 
@@ -214,20 +214,38 @@ rule abricate:
 # VI: Co-Assembly
 # -------------------------------
 
+# CheckM
+rule co_assembly_checkm:
+	input:
+		bins = "output/06_co_assembly/metabat/bin/bin.1.fa",
+		co_depth = "output/06_co_assembly/metabat/depth.txt",
+		co_paired = "output/06_co_assembly/metabat/paired.txt"
+	output:
+		co_checkm = "output/06_co_assembly/checkm/co_assembly.txt"
+	conda:
+		"envs/checkm.yml"
+	threads:
+		32
+	message:
+		"[CheckM] Assessing genomic bin quality of co-assembly."
+	shell:
+		"""
+		checkm lineage_wf -t {threads} -f {output.co_checkm} -x fa output/06_co_assembly/metabat/bin/ output/06_co_assembly/checkm/
+		"""
+
 # MetaBAT
 rule co_assembly_metabat:
 	input:
 		bam = expand("output/06_co_assembly/bowtie2/{sample}.bam", sample = SAMPLES),
 		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
 	output:
-		depth = "output/06_co_assembly/metabat/depth.txt",
-		dist = "output/06_co_assembly/metabat/saved.dist",
-		paired = "output/06_co_assembly/metabat/paired.txt",
-		tnf = "output/06_co_assembly/metabat/saved.tnf"
+		bins = "output/06_co_assembly/metabat/bin/bin.1.fa",
+		co_depth = "output/06_co_assembly/metabat/depth.txt",
+		co_paired = "output/06_co_assembly/metabat/paired.txt"
 	conda:
 		"envs/metabat.yml"
 	threads:
-		64
+		128
 	message:
 		"[MetaBAT] binning assembly of co-assembly."
 	params:
@@ -236,7 +254,7 @@ rule co_assembly_metabat:
 	shell:
 		"""
 		jgi_summarize_bam_contig_depths --outputDepth {output.depth} --pairedContigs {output.paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
-		metabat2 -m 1500 -a {output.depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/ -t {threads} --saveTNF {output.tnf} --saveDistance {output.dist}
+		metabat2 -m 1500 -a {output.depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/bin -t {threads}
 		"""
 
 # Bowtie 2
