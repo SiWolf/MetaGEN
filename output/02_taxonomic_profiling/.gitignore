@@ -4,7 +4,8 @@
 *
 # Add an exception for this file
 !.gitignore
-!bbmap
-!fastp
+!bracken
+!kraken2
+!kraken_biom
+!krona
 !multiqc
-!seqfu

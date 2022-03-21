@@ -5,6 +5,7 @@
 # Add an exception for this file
 !.gitignore
 !bbmap
-!fastp
-!multiqc
-!seqfu
+!bowtie2
+!checkm
+!megahit
+!metabat
