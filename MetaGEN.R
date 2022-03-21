@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 17.03.2022
-# Version: 0.5.3
+# Last Modified: So, 20.03.2022
+# Version: 0.5.4
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -1577,6 +1577,11 @@ ggplot(taxa.g3.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
               axis.text = element_text(size = 10)) +
         scale_size_continuous(limits = c(0, 100), range = c(1, 12), breaks = c(10, 40, 80), name = "ARG Abundance (%)")
 dev.off()
+
+# AMR table per taxa
+taxnames.all <- as.data.frame(getTaxonomy(taxids, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = c("superkingdom", "phylum", "class", "order", "family", "genus", "species")))
+taxnames.amr <- data.frame(taxnames.all, t(kreport))
+write.csv(taxnames.amr, file = "output/08_visualization/tab_amr_taxa.csv", quote = FALSE, row.names = TRUE)
 
 # --------------------------------------------------------------------------------------------------------
 

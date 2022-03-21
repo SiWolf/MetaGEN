@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Thu, 17.03.2022
-# Version: 0.5.5
+# Last Modified: Fri, 18.03.2022
+# Version: 0.5.6
 # -------------------------------
 
 # How to run MetaGEN
@@ -213,6 +213,25 @@ rule abricate:
 # -------------------------------
 # VI: Co-Assembly
 # -------------------------------
+
+# Bakta
+rule co_assembly_bakta:
+	input:
+		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+	output:
+		annotation = "output/06_co_assembly/bakta/co_assembly.gff3"
+	conda:
+		"envs/checkm.yml"
+	threads:
+		64
+	message:
+		"[Bakta] Annotating co-assembly."
+	params:
+		bakta_db = config["kraken_db"]
+	shell:
+		"""
+		bakta --db {params.bakta_db} -o output/06_co_assembly/bakta/ -p co_assembly --threads {threads} {input.renamed}
+		"""
 
 # CheckM
 rule co_assembly_checkm:

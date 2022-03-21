@@ -2,6 +2,7 @@ amr_identity: 90
 amr_coverage: 90
 assembly_depth: 2
 assembly_min: 1000
+bakta_db: /scratch1/databases/bakta/db/
 kraken_db: /scratch1/databases/kraken/20210810_kraken2_standard/
 kraken_confidence_score: 0.0
 kraken_read_length: 150
