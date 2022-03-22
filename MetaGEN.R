@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: So, 20.03.2022
-# Version: 0.5.4
+# Last Modified: Mon, 21.03.2022
+# Version: 0.5.5
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -25,11 +25,15 @@ library("vegan")
 
 # --------------------------------------------------------------------------------------------------------
 
-# [1] Import and preprocess analysis data
+# [01] Import and preprocess analysis data
 
-# Abricate Results
+# AMR Results
 abricate <- read.csv("output/07_amr/abricate/amr/abricate.summary", sep = "\t")
 abricate$X.FILE <- gsub(".tab", "", abricate$X.FILE)
+
+# Virulence Results
+vir.table <- read.csv("output/07_amr/abricate/vir/abricate.summary", sep = "\t")
+vir.table$X.FILE <- gsub(".tab", "", vir.table$X.FILE)
 
 # MegaRes database
 megares.db <- read.csv("db/megares_drugs_annotations_v2.00.csv")
@@ -69,7 +73,7 @@ timepoints.order <- c("t0", "t1", "t2", "REF")
 
 # --------------------------------------------------------------------------------------------------------
 
-# [2] Diversity Estimations
+# [02] Diversity Estimations
 
 # Sample Depth
 sample_depth <- sort(sample_sums(data.biom))
@@ -607,7 +611,7 @@ dev.off()
 
 # --------------------------------------------------------------------------------------------------------
 
-# [3] AMR Heatmap (Assembly)
+# [03] AMR Heatmap (Assembly)
 
 # Count individual resistance genes
 abricate.count <- abricate
@@ -731,7 +735,7 @@ dev.off()
 
 # --------------------------------------------------------------------------------------------------------
 
-# [4] Statistical Correlation (Assembly)
+# [04] Statistical Correlation (Assembly)
 
 # Correlation - AMR and Diversity
 cor.test(amr.norm.reads$CP60M, amr.norm.reads$DIV, method = "spearman")
@@ -896,9 +900,9 @@ stat.res
 
 # --------------------------------------------------------------------------------------------------------
 
-# [5] AMR Normalization (Reads)
+# [05] AMR Normalization (Reads)
 
-# [5.1] AMR Gene Heatmap
+# [05.01] AMR Gene Heatmap
 
 # Read raw data
 Gene_sumCountTable <- aggregate(. ~ Resistance_Symbol, rawCountTable[,-c(1:3)], sum)
@@ -977,7 +981,7 @@ Heatmap(Gene_groupedCounts,
         )
 dev.off()
 
-# [5.2] AMR Class Heatmap
+# [05.02] AMR Class Heatmap
 
 # Read raw data
 Class_sumCountTable <- aggregate(. ~ Resistance_Class, rawCountTable[,-c(1,3,4)], sum)
@@ -1038,7 +1042,7 @@ Heatmap(Class_groupedCounts,
         )
 dev.off()
 
-# [5.3] Scatterplots / Boxplots of AMR Classes
+# [05.03] Scatterplots / Boxplots of AMR Classes
 e = c()
 f = c()
 j = 1
@@ -1166,7 +1170,7 @@ ggplot(amr.class.df.switched, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = T
                            method.args = list(exact = FALSE))
 dev.off()
 
-# [5.4] Statistical Correlation (Reads)
+# [05.04] Statistical Correlation (Reads)
 Class_AMR_SUM$AMR_LOG2 <- log2(Class_AMR_SUM$AMR)
 Class_AMR_SUM$DIV = amr.norm.reads$DIV
 
@@ -1197,7 +1201,7 @@ dev.off()
 
 # --------------------------------------------------------------------------------------------------------
 
-# [6] Differential Taxa Analysis
+# [06] Differential Taxa Analysis
 
 # Family Level
 edger.aggretated <- aggregate_top_taxa(data.biom, 10^5, "Rank5")
@@ -1262,7 +1266,7 @@ write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_t2_ssg_5
 
 # --------------------------------------------------------------------------------------------------------
 
-# [7] Boxplots for abundance of specific families
+# [07] Boxplots for abundance of specific families
 
 boxplot.families.biom <- aggregate_top_taxa(data.rarefy, 22, "Rank5")
 boxplot.families.melted <- psmelt(boxplot.families.biom)
@@ -1308,7 +1312,7 @@ dev.off()
 
 # --------------------------------------------------------------------------------------------------------
 
-# [8] Calculate differences between timepoints
+# [08] Calculate differences between timepoints
 
 # Alpha diversity
 alpha.5dg.t0 = mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t0", ]$diversity_shannon)
@@ -1357,7 +1361,7 @@ entero.ssg.diff.t1.t2 = round(entero.ssg.t2 - entero.ssg.t1, 2)
 
 # --------------------------------------------------------------------------------------------------------
 
-# [9] Visualizing ARG abundance per family
+# [09] Visualizing ARG abundance per family
 
 # Prepare input data
 kreport = read.csv("output/07_amr/abricate/amr/kraken2.summary", header = TRUE, sep = "\t", row.names = 1)
@@ -1737,7 +1741,7 @@ write.csv(taxa.abundancies, file = "output/08_visualization/tab_otu_species_mean
 
 # --------------------------------------------------------------------------------------------------------
 
-# [06] Assessing differences in beta diversities
+# [12] Assessing differences in beta diversities
 
 beta.horses <- unique(meta.sorted[!(meta.sorted$AB_Group %in% c("REF")),]$HorseID)
 beta.excluded <- unique(meta.sorted[meta.sorted$AB_Group %in% c("REF"),]$SampleID)
@@ -1756,3 +1760,121 @@ for (h in beta.horses){
 beta.intra <- beta.intra[!(beta.intra %in% c(0))]
 beta.df <- data.frame(GROUP = c(rep("Intra", length(beta.intra)), rep("Inter", length(beta.inter))), VAL = c(beta.intra, beta.inter))
 beta.res <- pairwise.wilcox.test(beta.df$VAL, beta.df$GROUP, paired = FALSE, alternative = "greater", p.adjust.method = "BH")
+
+# --------------------------------------------------------------------------------------------------------
+
+# [13] Virulence Heatmap (Assembly)
+
+# Count individual virulence genes
+vir.count <- vir.table
+for (i in 1:length(sample_depth)){
+        for (j in 3:ncol(vir.table)){
+                d = vir.table[i,j]
+                if (d == "."){
+                        k = 0
+                } else{
+                        k = str_count(d,"\\.")
+                }
+                vir.count[i,j] <- k
+        }
+}
+
+vir.filtered <- vir.count[,-c(1,2)]
+rownames(vir.filtered) <- vir.table[,1]
+vir.matrix <- data.matrix(vir.filtered) - 1
+vir.counts <- rowSums(vir.matrix)
+vir.meta <- meta.raw[match(rownames(vir.matrix), meta.raw$SampleID),]
+vir.meta$AMR_FOUND <- vir.counts
+vir.meta$DIV = data.alpha.rarefy$diversity_shannon
+
+# Update virulence counts
+vir.df.counts <- data.frame(ids = rownames(vir.table), counts = vir.counts)
+vir.df.stats <- merge(x = seqreport.filtered, y = vir.df.counts, by = "row.names")
+vir.df.stats <- subset(vir.df.stats, select = c("SAMPLE", "X.Seq", "counts"))
+
+# Read virulence Normalization by #Reads
+vir.df.stats$X.Seq <- vir.df.stats$X.Seq*2
+vir.df.stats$Norm <- vir.df.stats$counts/vir.df.stats$X.Seq
+vir.df.stats$CPM <- vir.df.stats$counts/(vir.df.stats$X.Seq/1000000)
+vir.df.stats$CP60M <- vir.df.stats$CPM*60
+colnames(vir.df.stats) <- c("SAMPLE", "#PE_READS", "VIR_COUNTS", "NORM_COUNT", "CPM", "CP60M")
+write.csv(vir.df.stats, file = "output/08_visualization/tab_vir_counts.csv", quote = FALSE)
+
+# Prepare dataframe for heatmap
+vir.norm.reads <- subset(vir.df.stats, select = c("SAMPLE", "CPM", "CP60M"))
+vir.norm.reads$DIV = data.alpha.rarefy$diversity_shannon
+vir.norm.reads$TIMEPOINT = data.alpha.rarefy$TIMEPOINT
+vir.norm.reads$AB_GROUP = data.alpha.rarefy$AB_GROUP
+vir.norm.reads.filtered <- vir.norm.reads[vir.norm.reads$AB_GROUP != "SWITCHED",]
+
+# Set Annotations for Heatmap
+annot.row.left = rowAnnotation(timepoint = vir.meta$Timepoint,
+                               ab_group = vir.meta$AB_Group,
+                               "#vir_genes" = vir.counts,
+                               col = list(ab_group = colours.groups,
+                                          timepoint = colours.days,
+                                          "#vir_genes" = colours.genes
+                                          )
+                               )
+
+annot.row.right = rowAnnotation(horse = anno_text(vir.meta$HorseID,
+                                                  gp = gpar(fontsize = 8)
+                                                  )
+                                )
+
+re.order.rows <- abricate.meta[with(abricate.meta, order(Day, AB_Group, HorseID)), ]
+
+# Group all counts > 1 into a single class
+vir.matrix[vir.matrix >= 2] = 2
+
+# Plot Heatmap
+png("output/08_visualization/vir_heat_abricate.png", width = 40, height = 20, units = "cm", res = 500)
+Heatmap(vir.matrix,
+        cluster_columns = FALSE,
+        cluster_rows = FALSE,
+        #col = c("black", "red4", "firebrick3", "firebrick2", "red1"),
+        col = c("black", "gold", "red"),
+        
+        column_names_gp = gpar(fontsize = 5),
+        column_title = "Virulence Genes",
+        
+        row_order = re.order.rows$SampleID,
+        row_split = abricate.meta$Timepoint,
+        row_title = "Metagenome Samples",
+        show_row_names = FALSE,
+        
+        heatmap_legend_param = list(
+                title = "#copies", at = c(0, 1, 2),
+                labels = c("0", "1", "\u2265 2")),
+        
+        left_annotation = annot.row.left,
+        right_annotation = annot.row.right
+        )
+dev.off()
+
+# Correlation - Virulence and Diversity
+cor.test(vir.norm.reads$CP60M, vir.norm.reads$DIV, method = "spearman")
+
+png("output/08_visualization/vir_div_cor.png", width = 17, height = 16, units = "cm", res = 500)
+ggscatter(vir.norm.reads,
+          x = "CP60M",
+          y = "DIV",
+          color = "TIMEPOINT",
+          shape = "AB_GROUP",
+          xlab = "VIR PER 60M READS",
+          ylab = "SHANNON INDEX",
+          add = "reg.line",
+          add.params = list(color = "black",
+                            fill = "lightgray"),
+          conf.int = TRUE,
+          cor.coef = TRUE,
+          cor.coeff.args = list(method = "spearman",
+                                label.x = 100,
+                                label.sep = "\n"),
+          title = "CORRELATION - VIR / DIVERSITY - ASSEMBLY",
+          palette = colours.days,
+          size = 2.5
+          ) +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        labs(shape = "AB GROUP")
+dev.off()

@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 18.03.2022
-# Version: 0.5.6
+# Last Modified: Tue, 22.03.2022
+# Version: 0.5.7
 # -------------------------------
 
 # How to run MetaGEN
@@ -223,11 +223,11 @@ rule co_assembly_bakta:
 	conda:
 		"envs/checkm.yml"
 	threads:
-		64
+		128
 	message:
 		"[Bakta] Annotating co-assembly."
 	params:
-		bakta_db = config["kraken_db"]
+		bakta_db = config["db_bakta"]
 	shell:
 		"""
 		bakta --db {params.bakta_db} -o output/06_co_assembly/bakta/ -p co_assembly --threads {threads} {input.renamed}
@@ -602,11 +602,12 @@ rule bracken_abundancies:
 	message:
 		"[bracken] re-estimating species abundancies for {wildcards.sample}."
 	params:
-		db = config["kraken_db"],
-		length = config["kraken_read_length"]
+		db = config["db_kraken"],
+		length = config["kraken_read_length"],
+		threshold = config["bracken_min_reads"]
 	shell:
 		"""
-		bracken -d {params.db} -i {input.k_report} -o {output.b_output} -w {output.b_report} -r {params.length} -l S
+		bracken -d {params.db} -i {input.k_report} -o {output.b_output} -w {output.b_report} -r {params.length} -t {params.threshold} -l S
 		"""
 
 # kraken2
@@ -624,7 +625,7 @@ rule kraken2_reads:
 	message:
 		"[kraken2] assessing taxonomic profile for {wildcards.sample}."
 	params:
-		db = config["kraken_db"],
+		db = config["db_kraken"],
 		confidence = config["kraken_confidence_score"]
 	shell:
 		"""
