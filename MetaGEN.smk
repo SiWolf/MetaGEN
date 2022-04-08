@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Tue, 22.03.2022
-# Version: 0.5.7
+# Last Modified: Fri, 08.04.2022
+# Version: 0.5.9
 # -------------------------------
 
 # How to run MetaGEN
@@ -36,8 +36,8 @@ rule all:
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
-		expand("output/05_genomic_bins/checkm/{sample}.txt", sample = SAMPLES),
-		"output/06_co_assembly/checkm/co_assembly.txt",
+		expand("output/05_genomic_bins/checkm/{sample}/{sample}.tab", sample = SAMPLES),
+		"output/06_co_assembly/checkm/co_assembly.tab",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary"
 
@@ -214,33 +214,14 @@ rule abricate:
 # VI: Co-Assembly
 # -------------------------------
 
-# Bakta
-rule co_assembly_bakta:
-	input:
-		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
-	output:
-		annotation = "output/06_co_assembly/bakta/co_assembly.gff3"
-	conda:
-		"envs/checkm.yml"
-	threads:
-		128
-	message:
-		"[Bakta] Annotating co-assembly."
-	params:
-		bakta_db = config["db_bakta"]
-	shell:
-		"""
-		bakta --db {params.bakta_db} -o output/06_co_assembly/bakta/ -p co_assembly --threads {threads} {input.renamed}
-		"""
-
 # CheckM
 rule co_assembly_checkm:
 	input:
-		bins = "output/06_co_assembly/metabat/bin/bin.1.fa",
+		bins = "output/06_co_assembly/metabat/bin/COASSEMBLY.1.fa",
 		co_depth = "output/06_co_assembly/metabat/depth.txt",
 		co_paired = "output/06_co_assembly/metabat/paired.txt"
 	output:
-		co_checkm = "output/06_co_assembly/checkm/co_assembly.txt"
+		co_tab = "output/06_co_assembly/checkm/co_assembly.tab"
 	conda:
 		"envs/checkm.yml"
 	threads:
@@ -249,16 +230,17 @@ rule co_assembly_checkm:
 		"[CheckM] Assessing genomic bin quality of co-assembly."
 	shell:
 		"""
-		checkm lineage_wf -t {threads} -f {output.co_checkm} -x fa output/06_co_assembly/metabat/bin/ output/06_co_assembly/checkm/
+		checkm lineage_wf -t {threads} -f {output.co_tab} -x fa --tab_table --pplacer_threads 2 output/06_co_assembly/metabat/bin/ output/06_co_assembly/checkm/
 		"""
 
 # MetaBAT
 rule co_assembly_metabat:
 	input:
 		bam = expand("output/06_co_assembly/bowtie2/{sample}.bam", sample = SAMPLES),
+		bai = expand("output/06_co_assembly/bowtie2/{sample}.bam.bai", sample = SAMPLES),
 		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
 	output:
-		bins = "output/06_co_assembly/metabat/bin/bin.1.fa",
+		bins = "output/06_co_assembly/metabat/bin/COASSEMBLY.1.fa",
 		co_depth = "output/06_co_assembly/metabat/depth.txt",
 		co_paired = "output/06_co_assembly/metabat/paired.txt"
 	conda:
@@ -272,8 +254,8 @@ rule co_assembly_metabat:
 		min_length = config["assembly_min"]
 	shell:
 		"""
-		jgi_summarize_bam_contig_depths --outputDepth {output.depth} --pairedContigs {output.paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
-		metabat2 -m 1500 -a {output.depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/bin -t {threads}
+		jgi_summarize_bam_contig_depths --outputDepth {output.co_depth} --pairedContigs {output.co_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
+		metabat2 -m 1500 -a {output.co_depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/COASSEMBLY -t {threads}
 		"""
 
 # Bowtie 2
@@ -284,7 +266,8 @@ rule co_assembly_bowtie2:
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
 		index = "tmp/co_assembly.1.bt2l"
 	output:
-		bam = "output/06_co_assembly/bowtie2/{sample}.bam"
+		bam = "output/06_co_assembly/bowtie2/{sample}.bam",
+		bai = "output/06_co_assembly/bowtie2/{sample}.bam.bai"
 	conda:
 		"envs/metabat.yml"
 	threads:
@@ -295,8 +278,10 @@ rule co_assembly_bowtie2:
 		"""
 		bowtie2 --quiet --no-unal -p {threads} -x tmp/co_assembly -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/co-{wildcards.sample}.sam
 		samtools view -bS -o tmp/co-{wildcards.sample}.bam tmp/co-{wildcards.sample}.sam
-		samtools sort tmp/co-{wildcards.sample}.bam -o output/06_co_assembly/bowtie2/{wildcards.sample}.bam
-		samtools index output/06_co_assembly/bowtie2/{wildcards.sample}.bam
+		samtools sort tmp/co-{wildcards.sample}.bam -o {output.bam}
+		samtools index {output.bam}
+		rm tmp/co-{wildcards.sample}.sam
+		rm tmp/co-{wildcards.sample}.bam
 		"""
 
 # Bowtie 2
@@ -373,11 +358,11 @@ rule co_assembly_megahit:
 # CheckM
 rule checkm:
 	input:
-		fasta_bins = "output/05_genomic_bins/metabat/{sample}.fa.metabat-bins32/bin.1.fa",
-		stats_depth = "output/05_genomic_bins/metabat/{sample}.fa.depth.txt",
-		stats_paired = "output/05_genomic_bins/metabat/{sample}.fa.paired.txt"
+		fasta_bins = "output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa",
+		stats_depth = "output/05_genomic_bins/metabat/{sample}/depth.txt",
+		stats_paired = "output/05_genomic_bins/metabat/{sample}/paired.txt"
 	output:
-		checkm = "output/05_genomic_bins/checkm/{sample}.txt"
+		checkm_tab = "output/05_genomic_bins/checkm/{sample}/{sample}.tab"
 	conda:
 		"envs/checkm.yml"
 	threads:
@@ -386,7 +371,7 @@ rule checkm:
 		"[CheckM] Assessing genomic bin quality of {wildcards.sample}."
 	shell:
 		"""
-		checkm lineage_wf -t {threads} -f {output.checkm} -x fa output/05_genomic_bins/metabat/{wildcards.sample}.fa.metabat-bins32/ output/05_genomic_bins/checkm/{wildcards.sample}/
+		checkm lineage_wf -t {threads} -f {output.checkm_tab} -x fa --tab_table --pplacer_threads 2 output/05_genomic_bins/metabat/{wildcards.sample}/bin/ output/05_genomic_bins/checkm/{wildcards.sample}/
 		"""
 
 # MetaBAT
@@ -397,15 +382,18 @@ rule metabat:
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
 		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa"
 	output:
-		fasta_bins = "output/05_genomic_bins/metabat/{sample}.fa.metabat-bins32/bin.1.fa",
-		stats_depth = "output/05_genomic_bins/metabat/{sample}.fa.depth.txt",
-		stats_paired = "output/05_genomic_bins/metabat/{sample}.fa.paired.txt"
+		fasta_bins = "output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa",
+		stats_depth = "output/05_genomic_bins/metabat/{sample}/depth.txt",
+		stats_paired = "output/05_genomic_bins/metabat/{sample}/paired.txt"
 	conda:
 		"envs/metabat.yml"
 	threads:
 		32
 	message:
 		"[MetaBAT] binning assembly of {wildcards.sample}."
+	params:
+		min_depth = config["assembly_depth"],
+		min_length = config["assembly_min"]
 	shell:
 		"""
 		bowtie2-build --quiet --threads {threads} {input.filtered} tmp/{wildcards.sample}
@@ -413,8 +401,8 @@ rule metabat:
 		samtools view -bS -o tmp/{wildcards.sample}.bam tmp/{wildcards.sample}.sam
 		samtools sort tmp/{wildcards.sample}.bam -o tmp/{wildcards.sample}_sorted.bam
 		samtools index tmp/{wildcards.sample}_sorted.bam
-		runMetaBat.sh -m 1500 -t {threads} {input.filtered} tmp/{wildcards.sample}_sorted.bam
-		mv -f {wildcards.sample}* output/05_genomic_bins/metabat/
+		jgi_summarize_bam_contig_depths --outputDepth {output.stats_depth} --pairedContigs {output.stats_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} tmp/{wildcards.sample}_sorted.bam
+		metabat2 -m 1500 -a {output.stats_depth} -i {input.filtered} -o output/05_genomic_bins/metabat/{wildcards.sample}/bin/{wildcards.sample} -t {threads}
 		"""
 
 # -------------------------------
@@ -471,7 +459,7 @@ rule kraken2_assembly:
 	message:
 		"[kraken2] assessing taxonomic content of assembly for {wildcards.sample}."
 	params:
-		db = config["kraken_db"],
+		db = config["db_kraken"],
 		confidence = config["kraken_confidence_score"]
 	shell:
 		"""

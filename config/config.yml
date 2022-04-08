@@ -2,7 +2,6 @@ amr_identity: 90
 amr_coverage: 90
 assembly_depth: 2
 assembly_min: 1000
-db_bakta: /scratch1/databases/bakta/db/
 db_kraken: /scratch1/databases/kraken/20210810_kraken2_standard/
 bracken_min_reads: 10
 kraken_confidence_score: 0.0

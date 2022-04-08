@@ -1,0 +1,8 @@
+name: entrezdirect
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+  - r
+dependencies:
+  - entrez-direct=16.2=he881be0_0
