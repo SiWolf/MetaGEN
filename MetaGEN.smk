@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 08.04.2022
-# Version: 0.5.9
+# Last Modified: Fri, 10.06.2022
+# Version: 0.6.0
 # -------------------------------
 
 # How to run MetaGEN
@@ -16,6 +16,7 @@
 # -------------------------------
 
 # Import packages
+import csv
 import os
 
 # Specifying config file
@@ -30,7 +31,7 @@ rule all:
 		"output/01_preprocessing/seqfu/stats.tsv",
 		"output/01_preprocessing/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
-		"output/02_taxonomic_profiling/kraken_biom/bracken.biom",
+		"output/02_taxonomic_profiling/kraken_biom/bracken_update.biom",
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
@@ -557,6 +558,33 @@ rule krona:
 		ktUpdateTaxonomy.sh
 		ktImportTaxonomy -q 2 -t 3 {input.k_stdout} -o {output.krona_html}
 		"""
+
+# Update phyla names
+rule biom_update_phyla:
+	input:
+		b_summary = "output/02_taxonomic_profiling/kraken_biom/bracken.biom"
+	output:
+		b_new_phyla = "output/02_taxonomic_profiling/kraken_biom/bracken_update.biom"
+	threads:
+		1
+	message:
+		"[kraken-biom] updating bacterial taxonomic classifications."
+	params:
+		renamed_taxa = config["custom_taxa"]
+	run:
+		os.system("cp " + input.b_summary + " " + output.b_new_phyla)
+		dict_tax = {}
+	
+		with open(params.renamed_taxa, mode = "r") as tax:
+			full_tax = csv.reader(tax)
+			dict_tax = {rows[0]:rows[1] for rows in full_tax}
+	
+		del dict_tax["Old"]
+	
+		for key in dict_tax:
+			old_name = "p__" + key
+			new_name = "p__" + dict_tax[key]
+			os.system("sed -i -- \'s/" + old_name + "/" + new_name + "/g\' " + output.b_new_phyla)
 
 # kraken-biom
 rule kraken_biom:

@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Wed, 23.03.2022
-# Version: 0.5.6
+# Last Modified: Fri, 10.06.2022
+# Version: 0.5.7
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -62,7 +62,7 @@ rawCountTable <- read.table("output/07_amr/coverm/coverm.summary", header = TRUE
 colnames(rawCountTable) <- sub("output.07_amr.coverm.", "", colnames(rawCountTable))
 
 # BIOM File
-data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/bracken.biom", parseFunction = parse_taxonomy_default)
+data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 
 # Metadata
 meta.raw <- read.csv("metadata/Horses_Overview.csv", sep = "\t", na.strings = "XXX")
@@ -533,19 +533,19 @@ dev.off()
 # Percentages of individual taxa
 per_taxa_total = sum(bar_data_melted$Abundance)/length(sample_depth)
 
-per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidetes", ]$Abundance)/length(sample_depth)
+per_bact_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacteroidota", ]$Abundance)/length(sample_depth)
 per_bact_norm = (per_bact_total/per_taxa_total) * 100
 
-per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Firmicutes", ]$Abundance)/length(sample_depth)
+per_firm_total = sum(bar_data_melted[bar_data_melted$OTU == "Bacillota", ]$Abundance)/length(sample_depth)
 per_firm_norm = (per_firm_total/per_taxa_total) * 100
 
-per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Proteobacteria", ]$Abundance)/length(sample_depth)
+per_prot_total = sum(bar_data_melted[bar_data_melted$OTU == "Pseudomonadota", ]$Abundance)/length(sample_depth)
 per_prot_norm = (per_prot_total/per_taxa_total) * 100
 
-per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetes", ]$Abundance)/length(sample_depth)
+per_spir_total = sum(bar_data_melted[bar_data_melted$OTU == "Spirochaetota", ]$Abundance)/length(sample_depth)
 per_spir_norm = (per_spir_total/per_taxa_total) * 100
 
-per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobia", ]$Abundance)/length(sample_depth)
+per_verr_total = sum(bar_data_melted[bar_data_melted$OTU == "Verrucomicrobiota", ]$Abundance)/length(sample_depth)
 per_verr_norm = (per_verr_total/per_taxa_total) * 100
 
 per_bact_norm
@@ -1591,7 +1591,7 @@ write.csv(taxnames.amr, file = "output/08_visualization/tab_amr_taxa.csv", quote
 
 # [10] Run MicrobiomeExplorer (16s/WGS)
 
-converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken_biom/bracken.biom", type = "BIOM")
+converted_biom <- readData(filepath = "output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", type = "BIOM")
 saveRDS(converted_biom, "output/08_visualization/bracken.rds")
 
 #runMicrobiomeExplorer()

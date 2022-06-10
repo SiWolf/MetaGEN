@@ -7,3 +7,4 @@ bracken_min_reads: 10
 kraken_confidence_score: 0.0
 kraken_read_length: 150
 metaquast_max_refs: 5
+custom_taxa: db/42_Bacterial_Phyla_2022.csv
