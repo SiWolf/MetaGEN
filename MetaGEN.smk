@@ -324,7 +324,7 @@ rule co_assembly_bowtie2_index:
 # bbmap reformat
 rule co_assembly_bbmap:
 	input:
-		co_assembly = "tmp/co_assembly/final.contigs.fa"
+		co_assembly = "tmp/co.assembly.final.contigs.fa"
 	output:
 		renamed = "output/06_co_assembly/megahit/co_assembly.fa"
 	conda:
@@ -336,7 +336,7 @@ rule co_assembly_bbmap:
 	shell:
 		"""
 		rename.sh in={input.co_assembly} out={output.renamed} prefix=MEGA -Xmx{threads}g
-		rm -r tmp/co_assembly/
+		rm {input.co_assembly}
 		"""
 
 # MEGAHIT
@@ -346,7 +346,7 @@ rule co_assembly_megahit:
 		b2 = expand("output/01_preprocessing/bbmap/{sample}_R2.fastq.gz", sample = SAMPLES),
 		b3 = expand("output/01_preprocessing/bbmap/{sample}_R3.fastq.gz", sample = SAMPLES)
 	output:
-		co_assembly = "tmp/co_assembly/final.contigs.fa"
+		co_assembly = "tmp/co.assembly.final.contigs.fa"
 	conda:
 		"envs/megahit.yml"
 	threads:
@@ -367,14 +367,17 @@ rule co_assembly_megahit:
 		yb1=${{xb1// /,}}
 		yb2=${{xb2// /,}}
 		yb3=${{xb3// /,}}
-		IFS=', ' read -r -a array <<< {params.exclude}
+		IFS=', ' read -r -a array <<< "{params.exclude}"
 		for element in "${{array[@]}}"
 		do
 		    yb1=${{yb1/"output/01_preprocessing/bbmap/"$element"_R1.fastq.gz,"/}}
-			yb1=${{yb1/"output/01_preprocessing/bbmap/"$element"_R2.fastq.gz,"/}}
-			yb1=${{yb1/"output/01_preprocessing/bbmap/"$element"_R3.fastq.gz,"/}}
+			yb2=${{yb2/"output/01_preprocessing/bbmap/"$element"_R2.fastq.gz,"/}}
+			yb3=${{yb3/"output/01_preprocessing/bbmap/"$element"_R3.fastq.gz,"/}}
 		done
+		echo $yb3
 		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len {params.min_length} -t {threads} -o tmp/co_assembly/
+		mv tmp/co_assembly_tmp/final.contigs.fa tmp/co.assembly.final.contigs.fa
+		rm -r tmp/co_assembly_tmp/
 		"""
 
 # -------------------------------
