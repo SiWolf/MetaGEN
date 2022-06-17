@@ -1,15 +1,15 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 10.06.2022
-# Version: 0.6.0
+# Last Modified: Fri, 17.06.2022
+# Version: 0.6.1
 # -------------------------------
 
 # How to run MetaGEN
-#snakemake -s MetaGEN.smk -c 128 --use-conda
-#snakemake -F -s MetaGEN.smk -c 128 --use-conda
-#snakemake -n -s MetaGEN.smk -c 128 --use-conda
-#snakemake --dag -s MetaGEN.smk -c 128 --use-conda | dot -Tsvg > MetaGEN.svg
+#snakemake -s MetaGEN.smk -c 232 --use-conda
+#snakemake -F -s MetaGEN.smk -c 232 --use-conda
+#snakemake -n -s MetaGEN.smk -c 232 --use-conda
+#snakemake --dag -s MetaGEN.smk -c 232 --use-conda | dot -Tsvg > MetaGEN.svg
 
 # -------------------------------
 # MetaGEN Settings
@@ -36,9 +36,11 @@ rule all:
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
+		expand("output/04_assemblies/prodigal/{sample}.cds", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		expand("output/05_genomic_bins/checkm/{sample}/{sample}.tab", sample = SAMPLES),
 		"output/06_co_assembly/checkm/co_assembly.tab",
+		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary"
 
@@ -192,7 +194,7 @@ rule abricate_summary:
 # ABRicate
 rule abricate:
 	input:
-		renamed = "output/04_assemblies/bbmap/{sample}.fa"
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	output:
 		amr_profile = "output/07_amr/abricate/amr/{sample}.tab",
 		vir_profile = "output/07_amr/abricate/vir/{sample}.tab"
@@ -214,6 +216,23 @@ rule abricate:
 # -------------------------------
 # VI: Co-Assembly
 # -------------------------------
+
+# Prodigal
+rule co_assembly_prodigal:
+	input:
+		renamed = "output/06_co_assembly/megahit/co_assembly.fa"
+	output:
+		co_cds = "output/06_co_assembly/prodigal/{sample}.cds"
+	conda:
+		"envs/prodigal.yml"
+	threads:
+		1
+	message:
+		"[Prodigal] predicting CDS in the co-assembly."
+	shell:
+		"""
+		prodigal -d {output.co_cds} -p meta -q -i {input.renamed}
+		"""
 
 # CheckM
 rule co_assembly_checkm:
@@ -239,7 +258,7 @@ rule co_assembly_metabat:
 	input:
 		bam = expand("output/06_co_assembly/bowtie2/{sample}.bam", sample = SAMPLES),
 		bai = expand("output/06_co_assembly/bowtie2/{sample}.bam.bai", sample = SAMPLES),
-		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+		renamed = "output/06_co_assembly/megahit/co_assembly.fa"
 	output:
 		bins = "output/06_co_assembly/metabat/bin/COASSEMBLY.1.fa",
 		co_depth = "output/06_co_assembly/metabat/depth.txt",
@@ -247,7 +266,7 @@ rule co_assembly_metabat:
 	conda:
 		"envs/metabat.yml"
 	threads:
-		128
+		232
 	message:
 		"[MetaBAT] binning assembly of co-assembly."
 	params:
@@ -288,7 +307,7 @@ rule co_assembly_bowtie2:
 # Bowtie 2
 rule co_assembly_bowtie2_index:
 	input:
-		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+		renamed = "output/06_co_assembly/megahit/co_assembly.fa"
 	output:
 		index = "tmp/co_assembly.1.bt2l"
 	conda:
@@ -305,9 +324,9 @@ rule co_assembly_bowtie2_index:
 # bbmap reformat
 rule co_assembly_bbmap:
 	input:
-		co_assembly = "output/06_co_assembly/megahit/co_assembly.fa.gz"
+		co_assembly = "tmp/co_assembly/final.contigs.fa"
 	output:
-		renamed = "output/06_co_assembly/bbmap/co_assembly.fa"
+		renamed = "output/06_co_assembly/megahit/co_assembly.fa"
 	conda:
 		"envs/bbmap.yml"
 	threads:
@@ -317,6 +336,7 @@ rule co_assembly_bbmap:
 	shell:
 		"""
 		rename.sh in={input.co_assembly} out={output.renamed} prefix=MEGA -Xmx{threads}g
+		rm -r tmp/co_assembly/
 		"""
 
 # MEGAHIT
@@ -326,14 +346,15 @@ rule co_assembly_megahit:
 		b2 = expand("output/01_preprocessing/bbmap/{sample}_R2.fastq.gz", sample = SAMPLES),
 		b3 = expand("output/01_preprocessing/bbmap/{sample}_R3.fastq.gz", sample = SAMPLES)
 	output:
-		co_assembly = "output/06_co_assembly/megahit/co_assembly.fa.gz"
+		co_assembly = "tmp/co_assembly/final.contigs.fa"
 	conda:
 		"envs/megahit.yml"
 	threads:
-		128
+		232
 	message:
 		"[MEGAHIT] Performing co-assembly."
 	params:
+		exclude = config["co_assembly_exclude"],
 		min_length = config["assembly_min"]
 	shell:
 		"""
@@ -346,10 +367,14 @@ rule co_assembly_megahit:
 		yb1=${{xb1// /,}}
 		yb2=${{xb2// /,}}
 		yb3=${{xb3// /,}}
+		IFS=', ' read -r -a array <<< {params.exclude}
+		for element in "${{array[@]}}"
+		do
+		    yb1=${{yb1/"output/01_preprocessing/bbmap/"$element"_R1.fastq.gz,"/}}
+			yb1=${{yb1/"output/01_preprocessing/bbmap/"$element"_R2.fastq.gz,"/}}
+			yb1=${{yb1/"output/01_preprocessing/bbmap/"$element"_R3.fastq.gz,"/}}
+		done
 		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len {params.min_length} -t {threads} -o tmp/co_assembly/
-		mv tmp/co_assembly/final.contigs.fa output/06_co_assembly/megahit/co_assembly.fa
-		gzip output/06_co_assembly/megahit/co_assembly.fa
-		rm -r tmp/co_assembly/
 		"""
 
 # -------------------------------
@@ -381,7 +406,7 @@ rule metabat:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
-		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa"
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	output:
 		fasta_bins = "output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa",
 		stats_depth = "output/05_genomic_bins/metabat/{sample}/depth.txt",
@@ -397,29 +422,46 @@ rule metabat:
 		min_length = config["assembly_min"]
 	shell:
 		"""
-		bowtie2-build --quiet --threads {threads} {input.filtered} tmp/{wildcards.sample}
+		bowtie2-build --quiet --threads {threads} {input.renamed} tmp/{wildcards.sample}
 		bowtie2 --quiet --no-unal -p {threads} -x tmp/{wildcards.sample} -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/{wildcards.sample}.sam
 		samtools view -bS -o tmp/{wildcards.sample}.bam tmp/{wildcards.sample}.sam
 		samtools sort tmp/{wildcards.sample}.bam -o tmp/{wildcards.sample}_sorted.bam
 		samtools index tmp/{wildcards.sample}_sorted.bam
 		jgi_summarize_bam_contig_depths --outputDepth {output.stats_depth} --pairedContigs {output.stats_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} tmp/{wildcards.sample}_sorted.bam
-		metabat2 -m 1500 -a {output.stats_depth} -i {input.filtered} -o output/05_genomic_bins/metabat/{wildcards.sample}/bin/{wildcards.sample} -t {threads}
+		metabat2 -m 1500 -a {output.stats_depth} -i {input.renamed} -o output/05_genomic_bins/metabat/{wildcards.sample}/bin/{wildcards.sample} -t {threads}
 		"""
 
 # -------------------------------
 # IV: Assemblies
 # -------------------------------
 
+# Prodigal
+rule prodigal:
+	input:
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
+	output:
+		cds = "output/04_assemblies/prodigal/{sample}.cds"
+	conda:
+		"envs/prodigal.yml"
+	threads:
+		1
+	message:
+		"[Prodigal] predicting CDS in the assembly of {wildcards.sample}."
+	shell:
+		"""
+		prodigal -d {output.cds} -p meta -q -i {input.renamed}
+		"""
+
 # MetaQUAST
 rule metaquast:
 	input:
-		renamed = "output/04_assemblies/bbmap/filtered/{sample}.fa"
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	output:
 		qc_assembly = "output/04_assemblies/metaquast/{sample}/report.html"
 	conda:
 		"envs/metaquast.yml"
 	threads:
-		128
+		232
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
 	params:
@@ -432,7 +474,7 @@ rule metaquast:
 #PlasClass
 rule plasclass:
 	input:
-		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa"
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	output:
 		plasmids = "output/04_assemblies/plasclass/{sample}.txt"
 	conda:
@@ -443,13 +485,13 @@ rule plasclass:
 		"[PlasClass] detecting plasmid sequences in the assembly of {wildcards.sample}."
 	shell:
 		"""
-		classify_fasta.py -f {input.filtered} -o {output.plasmids} -p {threads}
+		classify_fasta.py -f {input.renamed} -o {output.plasmids} -p {threads}
 		"""
 
 # kraken2
 rule kraken2_assembly:
 	input:
-		renamed = "output/04_assemblies/bbmap/{sample}.fa"
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	output:
 		a_report = "output/04_assemblies/kraken2/{sample}.report",
 		a_stdout = "output/04_assemblies/kraken2/{sample}.stdout"
@@ -470,22 +512,20 @@ rule kraken2_assembly:
 # bbmap reformat
 rule bbmap_reformat:
 	input:
-		assembly = "output/04_assemblies/megahit/{sample}.fa.gz"
+		assembly = "tmp/assemblies/{sample}/final.contigs.fa"
 	output:
-		filtered = "output/04_assemblies/bbmap/filtered/{sample}.fa",
-		renamed = "output/04_assemblies/bbmap/{sample}.fa"
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	conda:
 		"envs/bbmap.yml"
 	threads:
 		16
 	message:
 		"[bbmap] renaming and filtering contigs of {wildcards.sample}."
-	params:
-		min_length = config["assembly_min"]
+
 	shell:
 		"""
 		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} -Xmx{threads}g
-		reformat.sh in={output.renamed} out={output.filtered} minlength={params.min_length} -Xmx{threads}g
+		rm -r tmp/assemblies/{wildcards.sample}/
 		"""
 
 # MEGAHIT
@@ -495,19 +535,18 @@ rule megahit:
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
 	output:
-		assembly = "output/04_assemblies/megahit/{sample}.fa.gz"
+		assembly = "tmp/assemblies/{sample}/final.contigs.fa"
 	conda:
 		"envs/megahit.yml"
 	threads:
 		64
 	message:
 		"[MEGAHIT] assembling {wildcards.sample}."
+	params:
+		min_length = config["assembly_min"]
 	shell:
 		"""
-		megahit -1 {input.b1} -2 {input.b2} -r {input.b3} -t {threads} -o output/04_assemblies/megahit/{wildcards.sample}/
-		mv output/04_assemblies/megahit/{wildcards.sample}/final.contigs.fa output/04_assemblies/megahit/{wildcards.sample}.fa
-		rm -r output/04_assemblies/megahit/{wildcards.sample}/
-		gzip output/04_assemblies/megahit/{wildcards.sample}.fa
+		megahit -1 {input.b1} -2 {input.b2} -r {input.b3} --min-contig-len {params.min_length} -t {threads} -o tmp/assemblies/{wildcards.sample}/
 		"""
 
 # -------------------------------
