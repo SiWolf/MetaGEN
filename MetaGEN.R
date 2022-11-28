@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 13.10.2022
-# Version: 0.5.9
+# Last Modified: Mon, 28.11.2022
+# Version: 0.6.0
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -37,7 +37,7 @@ vir.table <- read.csv("output/07_amr/abricate/vir/abricate.summary", sep = "\t")
 vir.table$X.FILE <- gsub(".tab", "", vir.table$X.FILE)
 
 # MegaRes database
-megares.db <- read.csv("db/megares_drugs_annotations_v2.00.csv")
+megares.db <- read.csv("db/megares_filtered.csv")
 megares.db.filtered <- megares.db %>% separate(header, into = c("ID", "C1", "C2", "C3", "SYMBOL"), sep = "\\|", extra = "drop")
 megares.db.filtered$group <- gsub("-", ".", megares.db.filtered$group)
 megares.db.filtered <- megares.db.filtered[megares.db.filtered$group %in% colnames(abricate)[-c(1,2)],][,-c(1)]

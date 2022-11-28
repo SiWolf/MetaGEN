@@ -2,7 +2,7 @@
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
 # Last Modified: Mon, 28.11.2022
-# Version: 0.6.2
+# Version: 0.6.3
 # -------------------------------
 
 # How to run MetaGEN
@@ -90,7 +90,8 @@ rule coverm:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
-		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
+		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
+		megares_db = "db/megares_clustered.fasta"
 	output:
 		coverm_profile = "output/07_amr/coverm/{sample}.txt"
 	conda:
@@ -104,11 +105,31 @@ rule coverm:
 		coverage = config["amr_coverage"]
 	shell:
 		"""
-		wget -N -P db/ https://megares.meglab.org/download/megares_v2.00/megares_full_database_v2.00.fasta
-		coverm contig -1 {input.b1} -2 {input.b2} --single {input.b3} -r db/megares_full_database_v2.00.fasta \
+		coverm contig -1 {input.b1} -2 {input.b2} --single {input.b3} -r {input.megares_db} \
 		-p bwa-mem -m mean trimmed_mean covered_fraction covered_bases variance length count reads_per_base rpkm tpm \
 		-o {output.coverm_profile} -t {threads} --bam-file-cache-directory tmp/ --discard-unmapped --exclude-supplementary \
 		--min-read-aligned-percent {params.coverage} --min-read-percent-identity {params.identity}
+		"""
+
+# MMSeqs2
+rule fetch_megares_db:
+	output:
+		megares_db = "db/megares_clustered.fasta"
+	conda:
+		"envs/mmseqs2.yml"
+	threads:
+		16
+	message:
+		"[MMSeqs2] Preprocessing MegaRES database."
+	params:
+		identity = config["amr_identity"],
+		coverage = config["amr_coverage"]
+	shell:
+		"""
+		wget -N -P db/ https://www.meglab.org/downloads/megares_v2.00/megares_drugs_annotations_v2.00.csv
+		wget -N -P db/ https://www.meglab.org/downloads/megares_v2.00/megares_full_database_v2.00.fasta
+		python3 scripts/format_db.py
+		mmseqs easy-cluster db/megares_filtered.fasta db/megares tmp/ --threads {threads} --min-seq-id {params.identity} -c {params.coverage}
 		"""
 
 # ABRicate TaxCaller
