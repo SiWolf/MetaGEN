@@ -1,17 +1,17 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN_Venn.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 23.06.2022
-# Version: 0.0.1
+# Last Modified: Mon, 28.11.2022
+# Version: 0.0.2
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
 library("eulerr")
 library("microbiome")
 
-data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
+data.biom <- import_biom("../output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 data.alpha <- microbiome::alpha(data.biom)
-meta.raw <- read.csv("metadata/Horses_Overview.csv", sep = "\t", na.strings = "XXX")
+meta.raw <- read.csv("../metadata/Horses_Overview.csv", sep = "\t", na.strings = "XXX")
 meta.sorted = meta.raw[match(rownames(data.alpha), meta.raw$SampleID),]
 rownames(meta.sorted) <- meta.sorted$SampleID
 data.biom@sam_data <- sample_data(meta.sorted)
@@ -35,7 +35,7 @@ for (n in disease_states){
   list_core[[n]] <- core_m
 }
 
-png("output/08_visualization/venn_taxa_groups.png", width = 10, height = 10, units = "cm", res = 500)
+png("../output/08_visualization/venn_taxa_groups.png", width = 10, height = 10, units = "cm", res = 500)
 plot(venn(list_core), fills = colours.groups, main = "Groups")
 dev.off()
 
@@ -55,7 +55,7 @@ for (n in disease_states){
   list_core[[n]] <- core_m
 }
 
-png("output/08_visualization/venn_taxa_ssg.png", width = 10, height = 10, units = "cm", res = 500)
+png("../output/08_visualization/venn_taxa_ssg.png", width = 10, height = 10, units = "cm", res = 500)
 plot(venn(list_core), fills = colours.groups, main = "SSG")
 dev.off()
 
@@ -75,7 +75,7 @@ for (n in disease_states){
   list_core[[n]] <- core_m
 }
 
-png("output/08_visualization/venn_taxa_5dg.png", width = 10, height = 10, units = "cm", res = 500)
+png("../output/08_visualization/venn_taxa_5dg.png", width = 10, height = 10, units = "cm", res = 500)
 plot(venn(list_core), fills = colours.groups, main = "5DG")
 dev.off()
 
@@ -95,7 +95,7 @@ for (n in disease_states){
   list_core[[n]] <- core_m
 }
 
-png("output/08_visualization/venn_taxa_time_t0.png", width = 10, height = 10, units = "cm", res = 500)
+png("../output/08_visualization/venn_taxa_time_t0.png", width = 10, height = 10, units = "cm", res = 500)
 plot(venn(list_core), fills = colours.groups, main = "t0")
 dev.off()
 
@@ -115,7 +115,7 @@ for (n in disease_states){
   list_core[[n]] <- core_m
 }
 
-png("output/08_visualization/venn_taxa_time_t1.png", width = 10, height = 10, units = "cm", res = 500)
+png("../output/08_visualization/venn_taxa_time_t1.png", width = 10, height = 10, units = "cm", res = 500)
 plot(venn(list_core), fills = colours.groups, main = "t1")
 dev.off()
 
@@ -135,6 +135,6 @@ for (n in disease_states){
   list_core[[n]] <- core_m
 }
 
-png("output/08_visualization/venn_taxa_time_t2.png", width = 10, height = 10, units = "cm", res = 500)
+png("../output/08_visualization/venn_taxa_time_t2.png", width = 10, height = 10, units = "cm", res = 500)
 plot(venn(list_core), fills = colours.groups, main = "t2")
 dev.off()

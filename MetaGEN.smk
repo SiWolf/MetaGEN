@@ -108,7 +108,7 @@ rule coverm:
 		coverm contig -1 {input.b1} -2 {input.b2} --single {input.b3} -r {input.megares_db} \
 		-p bwa-mem -m mean trimmed_mean covered_fraction covered_bases variance length count reads_per_base rpkm tpm \
 		-o {output.coverm_profile} -t {threads} --bam-file-cache-directory tmp/ --discard-unmapped --exclude-supplementary \
-		--min-read-aligned-percent {params.coverage} --min-read-percent-identity {params.identity}
+		--min-read-aligned-percent {params.coverage} --min-read-percent-identity {params.identity} --proper-pairs-only
 		"""
 
 # MMSeqs2
