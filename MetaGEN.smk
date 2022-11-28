@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 17.06.2022
-# Version: 0.6.1
+# Last Modified: Mon, 28.11.2022
+# Version: 0.6.2
 # -------------------------------
 
 # How to run MetaGEN
@@ -354,7 +354,6 @@ rule co_assembly_megahit:
 	message:
 		"[MEGAHIT] Performing co-assembly."
 	params:
-		exclude = config["co_assembly_exclude"],
 		min_length = config["assembly_min"]
 	shell:
 		"""
@@ -367,17 +366,9 @@ rule co_assembly_megahit:
 		yb1=${{xb1// /,}}
 		yb2=${{xb2// /,}}
 		yb3=${{xb3// /,}}
-		IFS=', ' read -r -a array <<< "{params.exclude}"
-		for element in "${{array[@]}}"
-		do
-		    yb1=${{yb1/"output/01_preprocessing/bbmap/"$element"_R1.fastq.gz,"/}}
-			yb2=${{yb2/"output/01_preprocessing/bbmap/"$element"_R2.fastq.gz,"/}}
-			yb3=${{yb3/"output/01_preprocessing/bbmap/"$element"_R3.fastq.gz,"/}}
-		done
-		echo $yb3
 		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len {params.min_length} -t {threads} -o tmp/co_assembly/
-		mv tmp/co_assembly_tmp/final.contigs.fa tmp/co.assembly.final.contigs.fa
-		rm -r tmp/co_assembly_tmp/
+		mv tmp/co_assembly/final.contigs.fa {output.co_assembly}
+		rm -r tmp/co_assembly/
 		"""
 
 # -------------------------------

@@ -2,7 +2,6 @@ amr_identity: 90
 amr_coverage: 90
 assembly_depth: 2
 assembly_min: 1000
-co_assembly_exclude: SRR10505693, SRR10505694, SRR10505695, SRR10505696, SRR10505697
 custom_taxa: db/42_Bacterial_Phyla_2022.csv
 db_kraken: /scratch1/databases/kraken/20210810_kraken2_standard/
 bracken_min_reads: 10

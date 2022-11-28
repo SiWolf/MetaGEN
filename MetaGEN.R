@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Fri, 10.06.2022
-# Version: 0.5.7
+# Last Modified: Thu, 13.10.2022
+# Version: 0.5.9
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -15,6 +15,7 @@ library("ggpubr")
 library("metagMisc")
 library("microbiome")
 library("microbiomeExplorer")
+library("microbiomeutilities")
 library("randomcoloR")
 library("PathoStat")
 library("phyloseq")
@@ -87,13 +88,13 @@ data.alpha <- microbiome::alpha(data.biom)
 
 # Plot Rarefaction Curve
 #png("output/08_visualization/div_rarefaction_curve.png", width = 16, height = 16, units = "cm", res = 500)
-#rarecurve(t(otu_table(data.biom)), step = 50, cex = 0.5)
+#rarecurve(as(t(otu_table(data.biom)), "matrix"), step = 50, cex = 0.5)
 #dev.off()
 
 # Alpha diversity (Rarefy)
 data.rarefy <- rarefy_even_depth(data.biom, rngseed = 1, sample.size = min(sample_depth), replace = FALSE, trimOTUs = FALSE)
 data.alpha.rarefy <- microbiome::alpha(data.rarefy)
-#data.rarefy <- aggregate_top_taxa(data.rarefy, 22, "Rank2")
+#data.rarefy <- aggregate_top_taxa2(data.rarefy, 22, "Rank2")
 
 # Beta Diversity (Bray-Curtis distance)
 braycurtis <- phyloseq::distance(data.rarefy, method = "bray")
@@ -117,6 +118,11 @@ data.pcoa$AB_GROUP = factor(meta.sorted$AB_Group, levels = groups.order)
 data.pcoa$TIMEPOINT = factor(meta.sorted$Timepoint, levels = timepoints.order)
 data.pcoa$TIME_GROUP = paste(meta.sorted$Timepoint, meta.sorted$AB_Group, sep = " ")
 data.pcoa.filtered <- data.pcoa[data.pcoa$AB_GROUP != "SWITCHED" & data.pcoa$AB_GROUP != "REF", ]
+
+# Experimental
+rownames(meta.sorted) <- meta.sorted$SampleID
+data.biom@sam_data <- sample_data(meta.sorted)
+data.rarefy@sam_data <- sample_data(meta.sorted)
 
 # Export Diversities
 write.csv(data.alpha, file = "output/08_visualization/tab_div_alpha_raw.csv", quote = FALSE)
@@ -336,6 +342,7 @@ boxplot.timepoints <- list(c("t0", "t1"), c("t1", "t2"), c("t0","t2"))
 png("output/08_visualization/div_box_shan_time.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIMEPOINT)) +
         geom_boxplot(alpha = 0.9) +
+        geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
         coord_cartesian(ylim = c(2, 9)) +
         scale_y_continuous(breaks = c(3, 5, 7)) +
@@ -352,6 +359,7 @@ dev.off()
 png("output/08_visualization/div_box_even_time.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIMEPOINT)) +
         geom_boxplot(alpha = 0.9) +
+        geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
         coord_cartesian(ylim = c(0.0007, 0.06)) +
         scale_y_continuous(breaks = c(0.01, 0.03, 0.05)) +
@@ -366,7 +374,7 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIME
 dev.off()
 
 # Barplots
-bar_data_aggregated <- aggregate_top_taxa(data.rarefy, 9, "Rank2")
+bar_data_aggregated <- aggregate_top_taxa2(data.rarefy, 9, "Rank2")
 bar_data_melted <- psmelt(bar_data_aggregated)
 num.taxa <- length(unique(bar_data_melted$OTU))
 palette <- distinctColorPalette(num.taxa)
@@ -1069,6 +1077,7 @@ png("output/08_visualization/amr_sum_box.png", width = 20, height = 10, units = 
 ggplot(Class_AMR_SUM, aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(17, 25)) +
         geom_boxplot(alpha = 0.9) +
+        geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days) +
@@ -1102,6 +1111,7 @@ png("output/08_visualization/amr_box_group_ssg.png", width = 40, height = 30, un
 ggplot(amr.class.df.ssg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
         geom_boxplot(alpha = 0.9) +
+        geom_jitter(alpha = 0.5) +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
@@ -1130,6 +1140,7 @@ png("output/08_visualization/amr_box_group_5dg.png", width = 40, height = 30, un
 ggplot(amr.class.df.5dg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
         geom_boxplot(alpha = 0.9) +
+        geom_jitter(alpha = 0.5) +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
@@ -1158,6 +1169,7 @@ png("output/08_visualization/amr_box_group_switched.png", width = 40, height = 3
 ggplot(amr.class.df.switched, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(0, 25)) +
         geom_boxplot(alpha = 0.9) +
+        geom_jitter(alpha = 0.5) +
         facet_wrap(~AMR_Class, scale = "free") +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
@@ -1204,7 +1216,7 @@ dev.off()
 # [06] Differential Taxa Analysis
 
 # Family Level
-edger.aggretated <- aggregate_top_taxa(data.biom, 10^5, "Rank5")
+edger.aggretated <- aggregate_top_taxa2(data.biom, 10^5, "Rank5")
 
 # Prepare data for edgeR analysis
 edger.groups <- data.pcoa[with(data.pcoa, order(rownames(data.pcoa))), ]$TIME_GROUP
@@ -1268,7 +1280,7 @@ write.csv(edger.top.c1$table, file = "output/08_visualization/tab_edger_t2_ssg_5
 
 # [07] Boxplots for abundance of specific families
 
-boxplot.families.biom <- aggregate_top_taxa(data.rarefy, 22, "Rank5")
+boxplot.families.biom <- aggregate_top_taxa2(data.rarefy, 22, "Rank5")
 boxplot.families.melted <- psmelt(boxplot.families.biom)
 
 box.ext.horse = c()
@@ -1294,6 +1306,7 @@ G2 <- G2[G2$AB_GROUP != "REF",]
 png("output/08_visualization/tax_box_f_enterobacteriaceae_time.png", width = 20, height = 10, units = "cm", res = 500)
 ggplot(G2, aes(x = TIMEPOINT, y = log2(Abundance + 1), fill = TIMEPOINT)) +
         geom_boxplot(alpha = 0.9) +
+        geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
         coord_cartesian(ylim = c(9, 19.5)) +
         scale_y_continuous(breaks = c(9, 12, 15, 18)) +
@@ -1853,7 +1866,7 @@ Heatmap(vir.matrix,
 dev.off()
 
 # Correlation - Virulence and Diversity
-cor.test(vir.norm.reads$CP60M, vir.norm.reads$DIV, method = "spearman")
+cor.test(vir.norm.reads$CP60M, vir.norm.reads$DIV, method = "spearman", exact = FALSE)
 
 png("output/08_visualization/vir_div_cor.png", width = 17, height = 16, units = "cm", res = 500)
 ggscatter(vir.norm.reads,
