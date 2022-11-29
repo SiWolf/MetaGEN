@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Mon, 28.11.2022
-# Version: 0.6.3
+# Last Modified: Tue, 29.11.2022
+# Version: 0.6.4
 # -------------------------------
 
 # How to run MetaGEN
@@ -24,6 +24,8 @@ configfile: "config/config.yml"
 
 # Global parameters
 (SAMPLES,) = glob_wildcards("input/{sample}_R1.fastq.gz")
+COV_FRAC = str(int(config["amr_coverage"])/100)
+ID_FRAC = str(int(config["amr_identity"]/100))
 
 # One rule to rule them all
 rule all:
@@ -36,17 +38,34 @@ rule all:
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
-		expand("output/04_assemblies/prodigal/{sample}.cds", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		expand("output/05_genomic_bins/checkm/{sample}/{sample}.tab", sample = SAMPLES),
 		"output/06_co_assembly/checkm/co_assembly.tab",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
-		"output/07_amr/coverm/coverm.summary"
+		"output/07_amr/coverm/coverm.summary",
+		expand("output/07_amr/deeparg/{sample}.mapping.ARG", sample = SAMPLES)
 
 # -------------------------------
 # VII: AMR & Virulence Profiling
 # -------------------------------
+
+# deepARG
+rule deeparg:
+	input:
+		cds = "output/04_assemblies/prodigal/{sample}.cds"
+	output:
+		deeparg_out = "output/07_amr/deeparg/{sample}.mapping.ARG"
+	threads:
+		1
+	message:
+		"[deepARG] identifying novel ARGs."
+	params:
+		db = config["db_deeparg"]
+	shell:
+		"""
+		deeparg predict --model LS -i {input.cds} -d {params.db} --type nucl -o output/07_amr/deeparg/{wildcards.sample}
+		"""
 
 # CoverM Summary
 rule coverm_summary:
@@ -91,7 +110,7 @@ rule coverm:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz",
-		megares_db = "db/megares_clustered.fasta"
+		megares_db = "db/megares_rep_seq.fasta"
 	output:
 		coverm_profile = "output/07_amr/coverm/{sample}.txt"
 	conda:
@@ -114,7 +133,7 @@ rule coverm:
 # MMSeqs2
 rule fetch_megares_db:
 	output:
-		megares_db = "db/megares_clustered.fasta"
+		megares_db = "db/megares_rep_seq.fasta"
 	conda:
 		"envs/mmseqs2.yml"
 	threads:
@@ -122,8 +141,8 @@ rule fetch_megares_db:
 	message:
 		"[MMSeqs2] Preprocessing MegaRES database."
 	params:
-		identity = config["amr_identity"],
-		coverage = config["amr_coverage"]
+		identity = ID_FRAC,
+		coverage = COV_FRAC
 	shell:
 		"""
 		wget -N -P db/ https://www.meglab.org/downloads/megares_v2.00/megares_drugs_annotations_v2.00.csv
@@ -287,7 +306,7 @@ rule co_assembly_metabat:
 	conda:
 		"envs/metabat.yml"
 	threads:
-		232
+		216
 	message:
 		"[MetaBAT] binning assembly of co-assembly."
 	params:
@@ -371,7 +390,7 @@ rule co_assembly_megahit:
 	conda:
 		"envs/megahit.yml"
 	threads:
-		232
+		216
 	message:
 		"[MEGAHIT] Performing co-assembly."
 	params:
@@ -387,7 +406,7 @@ rule co_assembly_megahit:
 		yb1=${{xb1// /,}}
 		yb2=${{xb2// /,}}
 		yb3=${{xb3// /,}}
-		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len {params.min_length} -t {threads} -o tmp/co_assembly/
+		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len {params.min_length} --force -t {threads} -o tmp/co_assembly/
 		mv tmp/co_assembly/final.contigs.fa {output.co_assembly}
 		rm -r tmp/co_assembly/
 		"""
@@ -468,6 +487,7 @@ rule prodigal:
 		"""
 
 # MetaQUAST
+# Due to issues with overwriting the metaquast tmp files, this rule should not run in parallel
 rule metaquast:
 	input:
 		renamed = "output/04_assemblies/megahit/{sample}.fa"
@@ -476,7 +496,7 @@ rule metaquast:
 	conda:
 		"envs/metaquast.yml"
 	threads:
-		232
+		128
 	message:
 		"[MetaQUAST] assessing quality of assemblies."
 	params:
@@ -561,7 +581,7 @@ rule megahit:
 		min_length = config["assembly_min"]
 	shell:
 		"""
-		megahit -1 {input.b1} -2 {input.b2} -r {input.b3} --min-contig-len {params.min_length} -t {threads} -o tmp/assemblies/{wildcards.sample}/
+		megahit -1 {input.b1} -2 {input.b2} -r {input.b3} --min-contig-len {params.min_length} --force -t {threads} -o tmp/assemblies/{wildcards.sample}/
 		"""
 
 # -------------------------------

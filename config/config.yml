@@ -4,6 +4,7 @@ assembly_depth: 2
 assembly_min: 1000
 custom_taxa: db/42_Bacterial_Phyla_2022.csv
 db_kraken: /scratch1/databases/kraken/20210810_kraken2_standard/
+db_deeparg: /scratch1/databases/deeparg/
 bracken_min_reads: 10
 kraken_confidence_score: 0.0
 kraken_read_length: 150
