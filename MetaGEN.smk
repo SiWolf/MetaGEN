@@ -35,8 +35,11 @@ rule all:
 		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/kraken_biom/bracken_update.biom",
 		"output/02_taxonomic_profiling/krona/krona.html",
-		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
-		expand("output/03_kmer_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
+		expand("output/03_functional_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
+		expand("output/03_functional_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
+		expand("output/03_functional_analysis/humann3/{sample}/{sample}_genefamilies.tsv", sample = SAMPLES),
+		expand("output/03_functional_analysis/humann3/{sample}/{sample}_pathabundance.tsv", sample = SAMPLES),
+		expand("output/03_functional_analysis/humann3/{sample}/{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		expand("output/05_genomic_bins/checkm/{sample}/{sample}.tab", sample = SAMPLES),
@@ -606,8 +609,34 @@ rule megahit:
 		"""
 
 # -------------------------------
-# III: K-mer Analysis
+# III: Functional Analysis
 # -------------------------------
+
+# HUMAnN3
+rule humann:
+	input:
+		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
+		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
+		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
+	output:
+		families = "output/03_functional_analysis/humann3/{sample}/{sample}_genefamilies.tsv",
+		pathways = "output/03_functional_analysis/humann3/{sample}/{sample}_pathabundance.tsv",
+		coverage = "output/03_functional_analysis/humann3/{sample}/{sample}_pathcoverage.tsv"
+	conda:
+		"envs/humann.yml"
+	threads:
+		64
+	params:
+		db_nt = config["db_chocophlan"],
+		db_prot = config["db_uniref"]
+	message:
+		"[HUMAnN3] Performing functional profiling of {wildcards.sample}."
+	shell:
+		"""
+		cat {input.b1} {input.b2} {input.b3} > tmp/humann_{wildcards.sample}.fastq.gz
+		humann -i tmp/humann_{wildcards.sample}.fastq.gz -o output/03_functional_analysis/humann3/{wildcards.sample}/ --threads {threads} --nucleotide-database {params.db_nt} --protein-database {params.db_prot}
+		rm tmp/humann_{wildcards.sample}.fastq.gz
+		"""
 
 # KMC3
 rule kmc3:
@@ -616,8 +645,8 @@ rule kmc3:
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
 	output:
-		kmc_pre = "output/03_kmer_analysis/kmc3/{sample}.kmc_pre",
-		kmc_suf = "output/03_kmer_analysis/kmc3/{sample}.kmc_suf"
+		kmc_pre = "output/03_functional_analysis/kmc3/{sample}.kmc_pre",
+		kmc_suf = "output/03_functional_analysis/kmc3/{sample}.kmc_suf"
 	conda:
 		"envs/kmc.yml"
 	threads:
@@ -629,7 +658,7 @@ rule kmc3:
 		echo {input.b1} > tmp/sample_list.txt
 		echo {input.b2} >> tmp/sample_list.txt
 		echo {input.b3} >> tmp/sample_list.txt
-		kmc @tmp/sample_list.txt output/03_kmer_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
+		kmc @tmp/sample_list.txt output/03_functional_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
 		rm tmp/sample_list.txt
 		"""
 
