@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Tue, 29.11.2022
-# Version: 0.6.4
+# Last Modified: Wed, 14.12.2022
+# Version: 0.6.5
 # -------------------------------
 
 # How to run MetaGEN
@@ -128,6 +128,8 @@ rule coverm:
 		-p bwa-mem -m mean trimmed_mean covered_fraction covered_bases variance length count reads_per_base rpkm tpm \
 		-o {output.coverm_profile} -t {threads} --bam-file-cache-directory tmp/ --discard-unmapped --exclude-supplementary \
 		--min-read-aligned-percent {params.coverage} --min-read-percent-identity {params.identity} --proper-pairs-only
+		rm tmp/megares_rep_seq.fasta.{wildcards.sample}_R1.fastq.gz.bam
+		rm tmp/megares_rep_seq.fasta.{wildcards.sample}_R3.fastq.gz.bam
 		"""
 
 # MMSeqs2
@@ -148,7 +150,7 @@ rule fetch_megares_db:
 		wget -N -P db/ https://www.meglab.org/downloads/megares_v2.00/megares_drugs_annotations_v2.00.csv
 		wget -N -P db/ https://www.meglab.org/downloads/megares_v2.00/megares_full_database_v2.00.fasta
 		python3 scripts/format_db.py
-		mmseqs easy-cluster db/megares_filtered.fasta db/megares tmp/ --threads {threads} --min-seq-id {params.identity} -c {params.coverage}
+		mmseqs easy-cluster db/megares_filtered.fasta db/megares tmp/ --threads {threads} --min-seq-id {params.identity} -c {params.coverage} --remove-tmp-files 1
 		"""
 
 # ABRicate TaxCaller
@@ -314,6 +316,12 @@ rule co_assembly_metabat:
 		min_length = config["assembly_min"]
 	shell:
 		"""
+		rm tmp/co-assembly.1.bt2l
+		rm tmp/co-assembly.2.bt2l
+		rm tmp/co-assembly.3.bt2l
+		rm tmp/co-assembly.4.bt2l
+		rm tmp/co-assembly.rev.1.bt2l
+		rm tmp/co-assembly.rev.2.bt2l
 		jgi_summarize_bam_contig_depths --outputDepth {output.co_depth} --pairedContigs {output.co_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
 		metabat2 -m 1500 -a {output.co_depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/COASSEMBLY -t {threads}
 		"""
@@ -409,6 +417,9 @@ rule co_assembly_megahit:
 		megahit -1 "$yb1" -2 "$yb2" -r "$yb3" --kmin-1pass --k-list 27,37,47,57,67,77,87 --min-contig-len {params.min_length} --force -t {threads} -o tmp/co_assembly/
 		mv tmp/co_assembly/final.contigs.fa {output.co_assembly}
 		rm -r tmp/co_assembly/
+		rm tmp/b1.txt
+		rm tmp/b2.txt
+		rm tmp/b3.txt
 		"""
 
 # -------------------------------
@@ -463,6 +474,16 @@ rule metabat:
 		samtools index tmp/{wildcards.sample}_sorted.bam
 		jgi_summarize_bam_contig_depths --outputDepth {output.stats_depth} --pairedContigs {output.stats_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} tmp/{wildcards.sample}_sorted.bam
 		metabat2 -m 1500 -a {output.stats_depth} -i {input.renamed} -o output/05_genomic_bins/metabat/{wildcards.sample}/bin/{wildcards.sample} -t {threads}
+		rm tmp/{wildcards.sample}.1.bt2
+		rm tmp/{wildcards.sample}.2.bt2
+		rm tmp/{wildcards.sample}.3.bt2
+		rm tmp/{wildcards.sample}.4.bt2
+		rm tmp/{wildcards.sample}.rev.1.bt2
+		rm tmp/{wildcards.sample}.rev.2.bt2
+		rm tmp/{wildcards.sample}.sam
+		rm tmp/{wildcards.sample}.bam
+		rm tmp/{wildcards.sample}_sorted.bam
+		rm tmp/{wildcards.sample}_sorted.bam.bai
 		"""
 
 # -------------------------------
@@ -547,7 +568,7 @@ rule kraken2_assembly:
 # bbmap reformat
 rule bbmap_reformat:
 	input:
-		assembly = "tmp/assemblies/{sample}/final.contigs.fa"
+		assembly = "tmp/assembly_{sample}/final.contigs.fa"
 	output:
 		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	conda:
@@ -560,7 +581,7 @@ rule bbmap_reformat:
 	shell:
 		"""
 		rename.sh in={input.assembly} out={output.renamed} prefix={wildcards.sample} -Xmx{threads}g
-		rm -r tmp/assemblies/{wildcards.sample}/
+		rm -r tmp/assembly_{wildcards.sample}/
 		"""
 
 # MEGAHIT
@@ -570,7 +591,7 @@ rule megahit:
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
 	output:
-		assembly = "tmp/assemblies/{sample}/final.contigs.fa"
+		assembly = "tmp/assembly_{sample}/final.contigs.fa"
 	conda:
 		"envs/megahit.yml"
 	threads:
@@ -581,7 +602,7 @@ rule megahit:
 		min_length = config["assembly_min"]
 	shell:
 		"""
-		megahit -1 {input.b1} -2 {input.b2} -r {input.b3} --min-contig-len {params.min_length} --force -t {threads} -o tmp/assemblies/{wildcards.sample}/
+		megahit -1 {input.b1} -2 {input.b2} -r {input.b3} --min-contig-len {params.min_length} --force -t {threads} -o tmp/assembly_{wildcards.sample}/
 		"""
 
 # -------------------------------
@@ -609,6 +630,7 @@ rule kmc3:
 		echo {input.b2} >> tmp/sample_list.txt
 		echo {input.b3} >> tmp/sample_list.txt
 		kmc @tmp/sample_list.txt output/03_kmer_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
+		rm tmp/sample_list.txt
 		"""
 
 # -------------------------------
