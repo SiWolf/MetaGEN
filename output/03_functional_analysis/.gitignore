@@ -4,11 +4,4 @@
 *
 # Add an exception for this file
 !.gitignore
-!01_preprocessing
-!02_taxonomic_profiling
-!03_functional_analysis
-!04_assemblies
-!05_genomic_bins
-!06_co_assembly
-!07_amr
-!08_visualization
+!kmc3
