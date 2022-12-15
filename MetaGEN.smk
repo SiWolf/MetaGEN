@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 14.12.2022
-# Version: 0.6.5
+# Last Modified: Thu, 15.12.2022
+# Version: 0.6.6
 # -------------------------------
 
 # How to run MetaGEN
@@ -63,6 +63,8 @@ rule deeparg:
 		1
 	message:
 		"[deepARG] identifying novel ARGs."
+	conda:
+		"envs/deeparg.yml"
 	params:
 		db = config["db_deeparg"]
 	shell:
@@ -627,6 +629,7 @@ rule humann:
 	threads:
 		64
 	params:
+		db_meta = config["db_metaphlan"],
 		db_nt = config["db_chocophlan"],
 		db_prot = config["db_uniref"]
 	message:
@@ -634,7 +637,7 @@ rule humann:
 	shell:
 		"""
 		cat {input.b1} {input.b2} {input.b3} > tmp/humann_{wildcards.sample}.fastq.gz
-		humann -i tmp/humann_{wildcards.sample}.fastq.gz -o output/03_functional_analysis/humann3/{wildcards.sample}/ --threads {threads} --nucleotide-database {params.db_nt} --protein-database {params.db_prot}
+		humann -i tmp/humann_{wildcards.sample}.fastq.gz -o output/03_functional_analysis/humann3/{wildcards.sample}/ --threads {threads} --nucleotide-database {params.db_nt} --protein-database {params.db_prot} --metaphlan-options "--bowtie2db {params.db_meta}"
 		rm tmp/humann_{wildcards.sample}.fastq.gz
 		"""
 
