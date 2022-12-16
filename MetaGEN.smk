@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Thu, 15.12.2022
-# Version: 0.6.6
+# Last Modified: Fri, 16.12.2022
+# Version: 0.6.7
 # -------------------------------
 
 # How to run MetaGEN
@@ -60,7 +60,7 @@ rule deeparg:
 	output:
 		deeparg_out = "output/07_amr/deeparg/{sample}.mapping.ARG"
 	threads:
-		1
+		232
 	message:
 		"[deepARG] identifying novel ARGs."
 	conda:
