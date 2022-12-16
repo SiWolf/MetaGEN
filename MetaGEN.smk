@@ -37,9 +37,9 @@ rule all:
 		"output/02_taxonomic_profiling/krona/krona.html",
 		expand("output/03_functional_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
 		expand("output/03_functional_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
-		expand("output/03_functional_analysis/humann3/{sample}/{sample}_genefamilies.tsv", sample = SAMPLES),
-		expand("output/03_functional_analysis/humann3/{sample}/{sample}_pathabundance.tsv", sample = SAMPLES),
-		expand("output/03_functional_analysis/humann3/{sample}/{sample}_pathcoverage.tsv", sample = SAMPLES),
+		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_genefamilies.tsv", sample = SAMPLES),
+		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathabundance.tsv", sample = SAMPLES),
+		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
 		"output/05_genomic_bins/drep/data_tables/Wdb.csv",
@@ -604,9 +604,9 @@ rule humann:
 		b2 = "output/01_preprocessing/bbmap/{sample}_R2.fastq.gz",
 		b3 = "output/01_preprocessing/bbmap/{sample}_R3.fastq.gz"
 	output:
-		families = "output/03_functional_analysis/humann3/{sample}/{sample}_genefamilies.tsv",
-		pathways = "output/03_functional_analysis/humann3/{sample}/{sample}_pathabundance.tsv",
-		coverage = "output/03_functional_analysis/humann3/{sample}/{sample}_pathcoverage.tsv"
+		families = "output/03_functional_analysis/humann3/{sample}/humann_{sample}_genefamilies.tsv",
+		pathways = "output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathabundance.tsv",
+		coverage = "output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv"
 	conda:
 		"envs/humann.yml"
 	threads:
