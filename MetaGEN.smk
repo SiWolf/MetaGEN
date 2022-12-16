@@ -42,8 +42,7 @@ rule all:
 		expand("output/03_functional_analysis/humann3/{sample}/{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
-		expand("output/05_genomic_bins/checkm/{sample}/{sample}.tab", sample = SAMPLES),
-		"output/06_co_assembly/checkm/co_assembly.tab",
+		"output/05_genomic_bins/drep/data_tables/Wdb.csv",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary",
@@ -281,25 +280,6 @@ rule co_assembly_prodigal:
 		prodigal -d {output.co_cds} -p meta -q -i {input.renamed}
 		"""
 
-# CheckM
-rule co_assembly_checkm:
-	input:
-		bins = "output/06_co_assembly/metabat/bin/COASSEMBLY.1.fa",
-		co_depth = "output/06_co_assembly/metabat/depth.txt",
-		co_paired = "output/06_co_assembly/metabat/paired.txt"
-	output:
-		co_tab = "output/06_co_assembly/checkm/co_assembly.tab"
-	conda:
-		"envs/checkm.yml"
-	threads:
-		32
-	message:
-		"[CheckM] Assessing genomic bin quality of co-assembly."
-	shell:
-		"""
-		checkm lineage_wf -t {threads} -f {output.co_tab} -x fa --tab_table --pplacer_threads 2 output/06_co_assembly/metabat/bin/ output/06_co_assembly/checkm/
-		"""
-
 # MetaBAT
 rule co_assembly_metabat:
 	input:
@@ -431,23 +411,26 @@ rule co_assembly_megahit:
 # V: Genomic Binning
 # -------------------------------
 
-# CheckM
-rule checkm:
+# dRep
+rule drep:
 	input:
-		fasta_bins = "output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa",
-		stats_depth = "output/05_genomic_bins/metabat/{sample}/depth.txt",
-		stats_paired = "output/05_genomic_bins/metabat/{sample}/paired.txt"
+		solo_bins = expand("output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa", sample = SAMPLES),
+		co_bins = "output/06_co_assembly/metabat/bin/COASSEMBLY.1.fa"
 	output:
-		checkm_tab = "output/05_genomic_bins/checkm/{sample}/{sample}.tab"
+		drep_table = "output/05_genomic_bins/drep/data_tables/Wdb.csv"
 	conda:
-		"envs/checkm.yml"
+		"envs/drep.yml"
 	threads:
-		16
+		128
 	message:
-		"[CheckM] Assessing genomic bin quality of {wildcards.sample}."
+		"[dRep] Dereplicating reconstructed bins."
 	shell:
 		"""
-		checkm lineage_wf -t {threads} -f {output.checkm_tab} -x fa --tab_table --pplacer_threads 2 output/05_genomic_bins/metabat/{wildcards.sample}/bin/ output/05_genomic_bins/checkm/{wildcards.sample}/
+		mkdir -p tmp/drep
+		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/drep/
+		cp output/06_co_assembly/metabat/bin/*.fa tmp/drep/
+		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/ -p {threads}
+		rm -r tmp/drep/
 		"""
 
 # MetaBAT
