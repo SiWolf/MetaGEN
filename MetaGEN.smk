@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 16.12.2022
-# Version: 0.6.7
+# Last Modified: Mon, 19.12.2022
+# Version: 0.6.8
 # -------------------------------
 
 # How to run MetaGEN
@@ -42,7 +42,7 @@ rule all:
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
-		"output/05_genomic_bins/drep/data_tables/Wdb.csv",
+		"output/05_genomic_bins/gtdbtk/classify/gtdbtk.bac120.summary.tsv",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary",
@@ -410,6 +410,27 @@ rule co_assembly_megahit:
 # -------------------------------
 # V: Genomic Binning
 # -------------------------------
+
+# GTDB-Tk
+# Due to high memory requirements, this rule should not run in parallel
+rule gtdbtk:
+	input:
+		drep_table = "output/05_genomic_bins/drep/data_tables/Wdb.csv"
+	output:
+		tax_table = "output/05_genomic_bins/gtdbtk/classify/gtdbtk.bac120.summary.tsv"
+	conda:
+		"envs/gtdbtk.yml"
+	threads:
+		128
+	message:
+		"[GTDB-Tk] Taxonomic classification of reconstructed bins."
+	params:
+		db = config["db_gtdbtk"]
+	shell:
+		"""
+		GTDBTK_DATA_PATH={params.db}
+		gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/ --cpus {threads}
+		"""
 
 # dRep
 rule drep:
