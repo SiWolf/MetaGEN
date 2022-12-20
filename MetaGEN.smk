@@ -144,7 +144,7 @@ rule fetch_megares_db:
 	threads:
 		16
 	message:
-		"[MMSeqs2] Preprocessing MegaRES database."
+		"[MMSeqs2] preprocessing MegaRES database."
 	params:
 		identity = ID_FRAC,
 		coverage = COV_FRAC
@@ -325,7 +325,7 @@ rule co_assembly_bowtie2:
 	threads:
 		32
 	message:
-		"[Bowtie 2] Mapping reads of {wildcards.sample} to co-assembly."
+		"[Bowtie 2] mapping reads of {wildcards.sample} to co-assembly."
 	shell:
 		"""
 		bowtie2 --quiet --no-unal -p {threads} -x tmp/co_assembly -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/co-{wildcards.sample}.sam
@@ -347,7 +347,7 @@ rule co_assembly_bowtie2_index:
 	threads:
 		64
 	message:
-		"[Bowtie 2] Generating index for co-assembly."
+		"[Bowtie 2] generating index for co-assembly."
 	shell:
 		"""
 		bowtie2-build --quiet --threads {threads} {input.renamed} tmp/co_assembly
@@ -384,7 +384,7 @@ rule co_assembly_megahit:
 	threads:
 		216
 	message:
-		"[MEGAHIT] Performing co-assembly."
+		"[MEGAHIT] performing co-assembly."
 	params:
 		min_length = config["assembly_min"]
 	shell:
@@ -422,7 +422,7 @@ rule gtdbtk:
 	threads:
 		128
 	message:
-		"[GTDB-Tk] Taxonomic classification of reconstructed bins."
+		"[GTDB-Tk] taxonomic classification of reconstructed bins."
 	params:
 		db = config["db_gtdbtk"]
 	shell:
@@ -443,7 +443,7 @@ rule drep:
 	threads:
 		128
 	message:
-		"[dRep] Dereplicating reconstructed bins."
+		"[dRep] dereplicating reconstructed bins."
 	shell:
 		"""
 		mkdir -p tmp/drep/
@@ -636,7 +636,7 @@ rule humann:
 		db_nt = config["db_chocophlan"],
 		db_prot = config["db_uniref"]
 	message:
-		"[HUMAnN3] Performing functional profiling of {wildcards.sample}."
+		"[HUMAnN3] performing functional profiling of {wildcards.sample}."
 	shell:
 		"""
 		cat {input.b1} {input.b2} {input.b3} > tmp/humann_{wildcards.sample}.fastq.gz
@@ -656,7 +656,7 @@ rule kmc3_dump:
 	threads:
 		1
 	message:
-		"[KMC3] calculating k-mer statistics for {wildcards.sample}."
+		"[KMC3] exporting k-mer table of {wildcards.sample}."
 	shell:
 		"""
 		kmc_dump output/03_functional_analysis/kmc3/{wildcards.sample} {output.kmc_txt}
