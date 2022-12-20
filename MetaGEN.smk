@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Mon, 19.12.2022
-# Version: 0.6.8
+# Last Modified: Tue, 20.12.2022
+# Version: 0.6.9
 # -------------------------------
 
 # How to run MetaGEN
@@ -35,8 +35,7 @@ rule all:
 		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/kraken_biom/bracken_update.biom",
 		"output/02_taxonomic_profiling/krona/krona.html",
-		expand("output/03_functional_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
-		expand("output/03_functional_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
+		expand("output/03_functional_analysis/kmc3/{sample}.txt", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_genefamilies.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathabundance.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
@@ -447,10 +446,10 @@ rule drep:
 		"[dRep] Dereplicating reconstructed bins."
 	shell:
 		"""
-		mkdir -p tmp/drep
+		mkdir -p tmp/drep/
 		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/drep/
 		cp output/06_co_assembly/metabat/bin/*.fa tmp/drep/
-		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/ -p {threads}
+		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/*.fa -p {threads} --multiround_primary_clustering --primary_chunksize 1000
 		rm -r tmp/drep/
 		"""
 
@@ -646,6 +645,24 @@ rule humann:
 		"""
 
 # KMC3
+rule kmc3_dump:
+	input:
+		kmc_pre = "output/03_functional_analysis/kmc3/{sample}.kmc_pre",
+		kmc_suf = "output/03_functional_analysis/kmc3/{sample}.kmc_suf"
+	output:
+		kmc_txt = "output/03_functional_analysis/kmc3/{sample}.txt"
+	conda:
+		"envs/kmc3.yml"
+	threads:
+		1
+	message:
+		"[KMC3] calculating k-mer statistics for {wildcards.sample}."
+	shell:
+		"""
+		kmc_dump output/03_functional_analysis/kmc3/{wildcards.sample} {output.kmc_txt}
+		"""
+
+# KMC3
 rule kmc3:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -655,18 +672,18 @@ rule kmc3:
 		kmc_pre = "output/03_functional_analysis/kmc3/{sample}.kmc_pre",
 		kmc_suf = "output/03_functional_analysis/kmc3/{sample}.kmc_suf"
 	conda:
-		"envs/kmc.yml"
+		"envs/kmc3.yml"
 	threads:
 		64
 	message:
 		"[KMC3] calculating k-mer statistics for {wildcards.sample}."
 	shell:
 		"""
-		echo {input.b1} > tmp/sample_list.txt
-		echo {input.b2} >> tmp/sample_list.txt
-		echo {input.b3} >> tmp/sample_list.txt
-		kmc @tmp/sample_list.txt output/03_functional_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
-		rm tmp/sample_list.txt
+		echo {input.b1} > tmp/kmc3_{wildcards.sample}.txt
+		echo {input.b2} >> tmp/kmc3_{wildcards.sample}.txt
+		echo {input.b3} >> tmp/kmc3_{wildcards.sample}.txt
+		kmc @tmp/kmc3_{wildcards.sample}.txt output/03_functional_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
+		rm tmp/kmc3_{wildcards.sample}.txt
 		"""
 
 # -------------------------------
