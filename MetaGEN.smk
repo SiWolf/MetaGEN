@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Tue, 20.12.2022
-# Version: 0.6.9
+# Last Modified: Thu, 22.12.2022
+# Version: 0.7.0
 # -------------------------------
 
 # How to run MetaGEN
@@ -441,7 +441,7 @@ rule drep:
 	conda:
 		"envs/drep.yml"
 	threads:
-		128
+		64
 	message:
 		"[dRep] dereplicating reconstructed bins."
 	shell:
@@ -449,7 +449,7 @@ rule drep:
 		mkdir -p tmp/drep/
 		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/drep/
 		cp output/06_co_assembly/metabat/bin/*.fa tmp/drep/
-		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/*.fa -p {threads} --multiround_primary_clustering --primary_chunksize 1000
+		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/*.fa -p {threads} --multiround_primary_clustering --primary_chunksize 10000
 		rm -r tmp/drep/
 		"""
 
