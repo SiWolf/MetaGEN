@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 16.12.2022
-# Version: 0.6.7
+# Last Modified: Thu, 22.12.2022
+# Version: 0.7.0
 # -------------------------------
 
 # How to run MetaGEN
@@ -35,14 +35,13 @@ rule all:
 		"output/02_taxonomic_profiling/multiqc/multiqc_report.html",
 		"output/02_taxonomic_profiling/kraken_biom/bracken_update.biom",
 		"output/02_taxonomic_profiling/krona/krona.html",
-		expand("output/03_functional_analysis/kmc3/{sample}.kmc_pre", sample = SAMPLES),
-		expand("output/03_functional_analysis/kmc3/{sample}.kmc_suf", sample = SAMPLES),
+		expand("output/03_functional_analysis/kmc3/{sample}.txt", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_genefamilies.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathabundance.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
-		"output/05_genomic_bins/drep/data_tables/Wdb.csv",
+		"output/05_genomic_bins/gtdbtk/classify/gtdbtk.bac120.summary.tsv",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary",
@@ -145,7 +144,7 @@ rule fetch_megares_db:
 	threads:
 		16
 	message:
-		"[MMSeqs2] Preprocessing MegaRES database."
+		"[MMSeqs2] preprocessing MegaRES database."
 	params:
 		identity = ID_FRAC,
 		coverage = COV_FRAC
@@ -326,7 +325,7 @@ rule co_assembly_bowtie2:
 	threads:
 		32
 	message:
-		"[Bowtie 2] Mapping reads of {wildcards.sample} to co-assembly."
+		"[Bowtie 2] mapping reads of {wildcards.sample} to co-assembly."
 	shell:
 		"""
 		bowtie2 --quiet --no-unal -p {threads} -x tmp/co_assembly -1 {input.b1} -2 {input.b2} -U {input.b3} -S tmp/co-{wildcards.sample}.sam
@@ -348,7 +347,7 @@ rule co_assembly_bowtie2_index:
 	threads:
 		64
 	message:
-		"[Bowtie 2] Generating index for co-assembly."
+		"[Bowtie 2] generating index for co-assembly."
 	shell:
 		"""
 		bowtie2-build --quiet --threads {threads} {input.renamed} tmp/co_assembly
@@ -385,7 +384,7 @@ rule co_assembly_megahit:
 	threads:
 		216
 	message:
-		"[MEGAHIT] Performing co-assembly."
+		"[MEGAHIT] performing co-assembly."
 	params:
 		min_length = config["assembly_min"]
 	shell:
@@ -411,6 +410,27 @@ rule co_assembly_megahit:
 # V: Genomic Binning
 # -------------------------------
 
+# GTDB-Tk
+# Due to high memory requirements, this rule should not run in parallel
+rule gtdbtk:
+	input:
+		drep_table = "output/05_genomic_bins/drep/data_tables/Wdb.csv"
+	output:
+		tax_table = "output/05_genomic_bins/gtdbtk/classify/gtdbtk.bac120.summary.tsv"
+	conda:
+		"envs/gtdbtk.yml"
+	threads:
+		128
+	message:
+		"[GTDB-Tk] taxonomic classification of reconstructed bins."
+	params:
+		db = config["db_gtdbtk"]
+	shell:
+		"""
+		GTDBTK_DATA_PATH={params.db}
+		gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/ --cpus {threads}
+		"""
+
 # dRep
 rule drep:
 	input:
@@ -421,15 +441,15 @@ rule drep:
 	conda:
 		"envs/drep.yml"
 	threads:
-		128
+		64
 	message:
-		"[dRep] Dereplicating reconstructed bins."
+		"[dRep] dereplicating reconstructed bins."
 	shell:
 		"""
-		mkdir -p tmp/drep
+		mkdir -p tmp/drep/
 		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/drep/
 		cp output/06_co_assembly/metabat/bin/*.fa tmp/drep/
-		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/ -p {threads}
+		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/*.fa -p {threads} --multiround_primary_clustering --primary_chunksize 10000
 		rm -r tmp/drep/
 		"""
 
@@ -616,12 +636,30 @@ rule humann:
 		db_nt = config["db_chocophlan"],
 		db_prot = config["db_uniref"]
 	message:
-		"[HUMAnN3] Performing functional profiling of {wildcards.sample}."
+		"[HUMAnN3] performing functional profiling of {wildcards.sample}."
 	shell:
 		"""
 		cat {input.b1} {input.b2} {input.b3} > tmp/humann_{wildcards.sample}.fastq.gz
 		humann -i tmp/humann_{wildcards.sample}.fastq.gz -o output/03_functional_analysis/humann3/{wildcards.sample}/ --threads {threads} --nucleotide-database {params.db_nt} --protein-database {params.db_prot} --metaphlan-options "--bowtie2db {params.db_meta}"
 		rm tmp/humann_{wildcards.sample}.fastq.gz
+		"""
+
+# KMC3
+rule kmc3_dump:
+	input:
+		kmc_pre = "output/03_functional_analysis/kmc3/{sample}.kmc_pre",
+		kmc_suf = "output/03_functional_analysis/kmc3/{sample}.kmc_suf"
+	output:
+		kmc_txt = "output/03_functional_analysis/kmc3/{sample}.txt"
+	conda:
+		"envs/kmc3.yml"
+	threads:
+		1
+	message:
+		"[KMC3] exporting k-mer table of {wildcards.sample}."
+	shell:
+		"""
+		kmc_dump output/03_functional_analysis/kmc3/{wildcards.sample} {output.kmc_txt}
 		"""
 
 # KMC3
@@ -634,18 +672,18 @@ rule kmc3:
 		kmc_pre = "output/03_functional_analysis/kmc3/{sample}.kmc_pre",
 		kmc_suf = "output/03_functional_analysis/kmc3/{sample}.kmc_suf"
 	conda:
-		"envs/kmc.yml"
+		"envs/kmc3.yml"
 	threads:
 		64
 	message:
 		"[KMC3] calculating k-mer statistics for {wildcards.sample}."
 	shell:
 		"""
-		echo {input.b1} > tmp/sample_list.txt
-		echo {input.b2} >> tmp/sample_list.txt
-		echo {input.b3} >> tmp/sample_list.txt
-		kmc @tmp/sample_list.txt output/03_functional_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
-		rm tmp/sample_list.txt
+		echo {input.b1} > tmp/kmc3_{wildcards.sample}.txt
+		echo {input.b2} >> tmp/kmc3_{wildcards.sample}.txt
+		echo {input.b3} >> tmp/kmc3_{wildcards.sample}.txt
+		kmc @tmp/kmc3_{wildcards.sample}.txt output/03_functional_analysis/kmc3/{wildcards.sample} tmp/ -m100 -sm -fq -ci0 -cs999 -t {threads}
+		rm tmp/kmc3_{wildcards.sample}.txt
 		"""
 
 # -------------------------------
