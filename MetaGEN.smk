@@ -6,7 +6,7 @@
 # -------------------------------
 
 # How to run MetaGEN
-#snakemake -s MetaGEN.smk -c 232 --use-conda
+#time snakemake -s MetaGEN.smk -c 232 --use-conda
 #snakemake -F -s MetaGEN.smk -c 232 --use-conda
 #snakemake -n -s MetaGEN.smk -c 232 --use-conda
 #snakemake --dag -s MetaGEN.smk -c 232 --use-conda | dot -Tsvg > MetaGEN.svg

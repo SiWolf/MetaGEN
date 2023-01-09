@@ -11,7 +11,7 @@ library("microbiome")
 
 data.biom <- import_biom("../output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 data.alpha <- microbiome::alpha(data.biom)
-meta.raw <- read.csv("../metadata/Horses_Overview.csv", sep = "\t", na.strings = "XXX")
+meta.raw <- read.csv("../metadata/22_12_Horses_Overview.csv", sep = "\t", na.strings = "XXX")
 meta.sorted = meta.raw[match(rownames(data.alpha), meta.raw$SampleID),]
 rownames(meta.sorted) <- meta.sorted$SampleID
 data.biom@sam_data <- sample_data(meta.sorted)

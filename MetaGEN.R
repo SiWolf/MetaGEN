@@ -66,7 +66,7 @@ colnames(rawCountTable) <- sub("output.07_amr.coverm.", "", colnames(rawCountTab
 data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 
 # Metadata
-meta.raw <- read.csv("metadata/Horses_Overview.csv", sep = "\t", na.strings = "XXX")
+meta.raw <- read.csv("metadata/22_12_Horses_Overview.csv", sep = "\t", na.strings = "XXX")
 
 # Group order
 groups.order <- c("SSG", "5DG", "SWITCHED", "REF")
@@ -162,7 +162,7 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
@@ -185,7 +185,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "SSG", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
@@ -208,7 +208,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "5DG", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
@@ -231,7 +231,7 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
@@ -252,7 +252,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t0", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
@@ -275,7 +275,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t1", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
@@ -298,7 +298,7 @@ ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t2", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "AB_GROUP",
           shape = "AB_GROUP",
@@ -321,7 +321,7 @@ ggscatter(data.pcoa.filtered,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.2, 0.6),
+          xlim = c(-0.62, 0.2),
           ylim = c(-0.4, 0.5),
           color = "TIME_GROUP",
           #shape = "TIME_GROUP",
@@ -344,7 +344,7 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIM
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
-        coord_cartesian(ylim = c(2, 9)) +
+        coord_cartesian(ylim = c(1.9, 9)) +
         scale_y_continuous(breaks = c(3, 5, 7)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
@@ -361,7 +361,7 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIME
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
-        coord_cartesian(ylim = c(0.0007, 0.06)) +
+        coord_cartesian(ylim = c(0.0007, 0.055)) +
         scale_y_continuous(breaks = c(0.01, 0.03, 0.05)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
@@ -413,7 +413,7 @@ bar_data_melted$OTU <- bar_data_melted$OTU
 # Individual Horses - 5DG
 bar_data_5dg <- bar_data_melted[bar_data_melted$AB_GROUP == "5DG",]
 
-png("output/08_visualization/tax_bar_horses_5dg.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_5dg.png", width = 20, height = 15, units = "cm", res = 500)
 ggplot(bar_data_5dg, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -451,7 +451,7 @@ dev.off()
 # Individual Horses - Switched
 bar_data_switched <- bar_data_melted[bar_data_melted$AB_GROUP == "SWITCHED",]
 
-png("output/08_visualization/tax_bar_horses_switched.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_switched.png", width = 10, height = 15, units = "cm", res = 500)
 ggplot(bar_data_switched, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -470,7 +470,7 @@ dev.off()
 # Individual Horses - Reference
 bar_data_ref <- bar_data_melted[bar_data_melted$AB_GROUP == "REF",]
 
-png("output/08_visualization/tax_bar_horses_ref.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_ref.png", width = 10, height = 15, units = "cm", res = 500)
 ggplot(bar_data_ref, aes(fill = OTU, y = Abundance, x = HORSE)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -504,7 +504,7 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = 
               )
 dev.off()
 
-png("output/08_visualization/tax_bar_sum_timepoints.png", width = 17, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_timepoints.png", width = 20, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -521,7 +521,7 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = 
         )
 dev.off()
 
-png("output/08_visualization/tax_bar_sum_refs.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_refs.png", width = 10, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP == "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -776,7 +776,7 @@ dev.off()
 
 # Diversity - SSG
 
-# Significant Differences between t0 and t1 -> no
+# Significant Differences between t0 and t1 -> yes
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t2" & data.alpha.rarefy$AB_GROUP == "SSG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
@@ -802,7 +802,7 @@ stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shan
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
-# Significant Differences between t1 and t2 -> no
+# Significant Differences between t1 and t2 -> yes
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t0" & data.alpha.rarefy$AB_GROUP == "5DG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
@@ -862,13 +862,13 @@ stat.res
 
 # AMR - 5DG
 
-# Significant Differences between t0 and t1 -> no
+# Significant Differences between t0 and t1 -> yes
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t2" & amr.norm.reads$AB_GROUP == "5DG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
-# Significant Differences between t1 and t2 -> no
+# Significant Differences between t1 and t2 -> yes
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t0" & amr.norm.reads$AB_GROUP == "5DG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
@@ -900,7 +900,7 @@ stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
-# Significant Differences at t2 -> no
+# Significant Differences at t2 -> yes
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
@@ -1020,7 +1020,7 @@ Class_groupedCounts <- t(Class_groupedCounts)
 colnames(Class_groupedCounts) <- tolower(colnames(Class_groupedCounts))
 
 # Plot AMR Class Heatmap
-png("output/08_visualization/amr_heat_coverm_classes.png", width = 30, height = 20, units = "cm", res = 500)
+png("output/08_visualization/amr_heat_coverm_classes.png", width = 20, height = 25, units = "cm", res = 500)
 Heatmap(Class_groupedCounts,
         cluster_columns = TRUE,
         cluster_rows = FALSE,
@@ -1073,9 +1073,9 @@ ggplot(Class_AMR_SUM[Class_AMR_SUM$AB_GROUP != "REF",], aes(x = TIMEPOINT, y = l
 dev.off()
 
 # Total AMR Sum
-png("output/08_visualization/amr_sum_box.png", width = 20, height = 10, units = "cm", res = 500)
+png("output/08_visualization/amr_sum_box.png", width = 15, height = 10, units = "cm", res = 500)
 ggplot(Class_AMR_SUM, aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
-        coord_cartesian(ylim = c(17, 25)) +
+        coord_cartesian(ylim = c(18, 25)) +
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
@@ -1308,7 +1308,7 @@ ggplot(G2, aes(x = TIMEPOINT, y = log2(Abundance + 1), fill = TIMEPOINT)) +
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
-        coord_cartesian(ylim = c(9, 19.5)) +
+        coord_cartesian(ylim = c(11, 19.5)) +
         scale_y_continuous(breaks = c(9, 12, 15, 18)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
@@ -1505,7 +1505,7 @@ ggplot(taxa.g1.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
               axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
+        scale_size_continuous(limits = c(0, 465), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
 png("output/08_visualization/amr_bubble_families_abs_5dg.png", width = 20, height = 10, units = "cm", res = 500)
@@ -1518,7 +1518,7 @@ ggplot(taxa.g2.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
               axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
+        scale_size_continuous(limits = c(0, 465), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
 png("output/08_visualization/amr_bubble_families_abs_switched.png", width = 20, height = 10, units = "cm", res = 500)
@@ -1531,7 +1531,7 @@ ggplot(taxa.g3.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
               axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 385), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
+        scale_size_continuous(limits = c(0, 465), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
 # Bubbleplots (Percentage)
