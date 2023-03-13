@@ -3,7 +3,7 @@
 # MetaGEN
 >An all-in-one solution for streamlined metagenomic analyses.
 
-![MetaGEN Workflow](https://github.com/SiWolf/MetaGEN/blob/master/workflow.png)
+![MetaGEN Workflow](https://github.com/SiWolf/MetaGEN/blob/master/workflow.jpg)
 
 MetaGEN is an all-in-one pipeline for the analysis of WGS shotgun metagenome data. MetaGEN takes raw paired-end NGS reads (.fastq.gz) as an input and will perform several analysis steps on these in order to produce a wide variety of outputs, including:
 * QC reports
