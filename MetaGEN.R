@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Mon, 28.11.2022
-# Version: 0.6.0
+# Last Modified: Wed, 11.01.2023
+# Version: 0.6.1
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -688,6 +688,7 @@ colours.amr = c("aminoglycosides" = "#e6194B",
                 )
 
 colours.genes = colorRamp2(c(1, 50, 100, 180), c("grey", "yellow", "orange", "red"))
+colours.div = colorRamp2(c(1, 3, 6, 8), c("red", "orange", "yellow", "green"))
 
 # Set Annotations for Heatmap
 annot.column = HeatmapAnnotation(class = megares.db.clean$V2,
@@ -696,9 +697,11 @@ annot.column = HeatmapAnnotation(class = megares.db.clean$V2,
 
 annot.row.left = rowAnnotation(timepoint = abricate.meta$Timepoint,
                                ab_group = abricate.meta$AB_Group,
+                               alpha_div = abricate.meta$DIV,
                                "#amr_genes" = amr.counts,
                                col = list(ab_group = colours.groups,
                                           timepoint = colours.days,
+                                          alpha_div = colours.div,
                                           "#amr_genes" = colours.genes
                                           )
                                )
@@ -978,8 +981,10 @@ Heatmap(Gene_groupedCounts,
         
         left_annotation = rowAnnotation(timepoint = abricate.meta$Timepoint,
                                         ab_group = abricate.meta$AB_Group,
+                                        alpha_div = abricate.meta$DIV,
                                         col = list(ab_group = colours.groups,
-                                                   timepoint = colours.days)
+                                                   timepoint = colours.days,
+                                                   alpha_div = colours.div)
                                         ),
         
         right_annotation = rowAnnotation(horse = anno_text(abricate.meta$HorseID,
@@ -1041,8 +1046,10 @@ Heatmap(Class_groupedCounts,
         
         left_annotation = rowAnnotation(timepoint = abricate.meta$Timepoint,
                                         ab_group = abricate.meta$AB_Group,
+                                        alpha_div = abricate.meta$DIV,
                                         col = list(ab_group = colours.groups,
-                                                   timepoint = colours.days)
+                                                   timepoint = colours.days,
+                                                   alpha_div = colours.div)
                                         ),
         
         right_annotation = rowAnnotation(horse = anno_text(abricate.meta$HorseID,
@@ -1797,7 +1804,7 @@ rownames(vir.filtered) <- vir.table[,1]
 vir.matrix <- data.matrix(vir.filtered) - 1
 vir.counts <- rowSums(vir.matrix)
 vir.meta <- meta.raw[match(rownames(vir.matrix), meta.raw$SampleID),]
-vir.meta$AMR_FOUND <- vir.counts
+vir.meta$VIR_FOUND <- vir.counts
 vir.meta$DIV = data.alpha.rarefy$diversity_shannon
 
 # Update virulence counts
@@ -1823,9 +1830,11 @@ vir.norm.reads.filtered <- vir.norm.reads[vir.norm.reads$AB_GROUP != "SWITCHED",
 # Set Annotations for Heatmap
 annot.row.left = rowAnnotation(timepoint = vir.meta$Timepoint,
                                ab_group = vir.meta$AB_Group,
-                               "#vir_genes" = vir.counts,
-                               col = list(ab_group = colours.groups,
-                                          timepoint = colours.days,
+                               alpha_div = vir.meta$DIV,
+                               "#vir_genes" = vir.meta$VIR_FOUND,
+                               col = list(timepoint = colours.days,
+                                          ab_group = colours.groups,
+                                          alpha_div = colours.div,
                                           "#vir_genes" = colours.genes
                                           )
                                )
