@@ -88,7 +88,7 @@ data.alpha <- microbiome::alpha(data.biom)
 
 # Plot Rarefaction Curve
 #png("output/08_visualization/div_rarefaction_curve.png", width = 16, height = 16, units = "cm", res = 500)
-#rarecurve(as(t(otu_table(data.biom)), "matrix"), step = 50, cex = 0.5)
+#rarecurve(as(t(otu_table(data.biom)), "matrix"), step = 50, cex = 0.5, xlab = "Sequencing Depth (#Reads)", ylab = "Species (#Taxa)")
 #dev.off()
 
 # Alpha diversity (Rarefy)
