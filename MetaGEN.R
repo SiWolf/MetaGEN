@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Wed, 11.01.2023
-# Version: 0.6.1
+# Last Modified: Thu, 16.03.2023
+# Version: 0.6.2
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -17,6 +17,7 @@ library("microbiome")
 library("microbiomeExplorer")
 library("microbiomeutilities")
 library("randomcoloR")
+library("openxlsx")
 library("PathoStat")
 library("phyloseq")
 library("stringr")
@@ -66,7 +67,9 @@ colnames(rawCountTable) <- sub("output.07_amr.coverm.", "", colnames(rawCountTab
 data.biom <- import_biom("output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 
 # Metadata
-meta.raw <- read.csv("metadata/22_12_Horses_Overview.csv", sep = "\t", na.strings = "XXX")
+meta.raw <- read.xlsx("metadata/23_03_Horses_Overview.xlsx", sheet = 1)
+meta.raw <- meta.raw[,-c(1)]
+colnames(meta.raw)[1] <- "SampleID"
 
 # Group order
 groups.order <- c("SSG", "5DG", "SWITCHED", "REF")

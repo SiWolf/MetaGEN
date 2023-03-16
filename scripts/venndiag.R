@@ -1,17 +1,20 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN_Venn.R
 # Author: Silver A. Wolf
-# Last Modified: Mon, 28.11.2022
-# Version: 0.0.2
+# Last Modified: Thu, 16.03.2023
+# Version: 0.0.3
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
 library("eulerr")
 library("microbiome")
+library("openxlsx")
 
 data.biom <- import_biom("../output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 data.alpha <- microbiome::alpha(data.biom)
-meta.raw <- read.csv("../metadata/22_12_Horses_Overview.csv", sep = "\t", na.strings = "XXX")
+meta.raw <- read.xlsx("../metadata/23_03_Horses_Overview.xlsx", sheet = 1)
+meta.raw <- meta.raw[,-c(1)]
+colnames(meta.raw)[1] <- "SampleID"
 meta.sorted = meta.raw[match(rownames(data.alpha), meta.raw$SampleID),]
 rownames(meta.sorted) <- meta.sorted$SampleID
 data.biom@sam_data <- sample_data(meta.sorted)
