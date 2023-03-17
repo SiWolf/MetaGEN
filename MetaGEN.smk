@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Thu, 22.12.2022
-# Version: 0.7.0
+# Last Modified: Fri, 17.03.2023
+# Version: 0.7.1
 # -------------------------------
 
 # How to run MetaGEN
@@ -300,14 +300,14 @@ rule co_assembly_metabat:
 		min_length = config["assembly_min"]
 	shell:
 		"""
+		jgi_summarize_bam_contig_depths --outputDepth {output.co_depth} --pairedContigs {output.co_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
+		metabat2 -m 1500 -a {output.co_depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/COASSEMBLY -t {threads}
 		rm tmp/co-assembly.1.bt2l
 		rm tmp/co-assembly.2.bt2l
 		rm tmp/co-assembly.3.bt2l
 		rm tmp/co-assembly.4.bt2l
 		rm tmp/co-assembly.rev.1.bt2l
 		rm tmp/co-assembly.rev.2.bt2l
-		jgi_summarize_bam_contig_depths --outputDepth {output.co_depth} --pairedContigs {output.co_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
-		metabat2 -m 1500 -a {output.co_depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/COASSEMBLY -t {threads}
 		"""
 
 # Bowtie 2
@@ -640,7 +640,7 @@ rule humann:
 	shell:
 		"""
 		cat {input.b1} {input.b2} {input.b3} > tmp/humann_{wildcards.sample}.fastq.gz
-		humann -i tmp/humann_{wildcards.sample}.fastq.gz -o output/03_functional_analysis/humann3/{wildcards.sample}/ --threads {threads} --nucleotide-database {params.db_nt} --protein-database {params.db_prot} --metaphlan-options "--bowtie2db {params.db_meta}"
+		humann -i tmp/humann_{wildcards.sample}.fastq.gz -o output/03_functional_analysis/humann3/{wildcards.sample}/ --threads {threads} --nucleotide-database {params.db_nt} --protein-database {params.db_prot} --remove-temp-output --metaphlan-options "--bowtie2db {params.db_meta}"
 		rm tmp/humann_{wildcards.sample}.fastq.gz
 		"""
 
