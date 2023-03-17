@@ -4,6 +4,3 @@
 *
 # Add an exception for this file
 !.gitignore
-!abricate
-!coverm
-!deeparg
