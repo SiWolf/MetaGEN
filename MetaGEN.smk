@@ -516,7 +516,11 @@ rule prodigal:
 		"""
 
 # MetaQUAST
-# Due to issues with overwriting the metaquast tmp files, this rule should not run in parallel
+# Note 1: Due to issues with overwriting the metaquast tmp files, this rule should not run in parallel
+# Note 2: Download the corresponding databases at least once for the auto-generated conda enviroment:
+# quast-download-gridss
+# quast-download-silva
+# quast-download-busco
 rule metaquast:
 	input:
 		renamed = "output/04_assemblies/megahit/{sample}.fa"
