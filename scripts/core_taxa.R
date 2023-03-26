@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------------------------------
-# Title: MetaGEN_Venn.R
+# Title: core_taxa.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 16.03.2023
+# Last Modified: Sun, 26.03.2023
 # Version: 0.0.3
 # --------------------------------------------------------------------------------------------------------
 
@@ -21,8 +21,7 @@ data.biom@sam_data <- sample_data(meta.sorted)
 
 colours.groups = c("SSG" = "#00ff7f",
                    "5DG" = "#ffa500",
-                   "SWITCHED" = "#00bfff",
-                   "REF" = "#606060"
+                   "REF" = "#00bfff"
                    )
 
 # Venn Diagram (Groups)
