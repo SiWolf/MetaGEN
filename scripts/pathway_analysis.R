@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: pathway_analysis.R
 # Author: Silver A. Wolf
-# Last Modified: Sun, 26.03.2023
-# Version: 0.0.1
+# Last Modified: Mon, 27.03.2023
+# Version: 0.0.2
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -638,100 +638,100 @@ genes.raw[is.na(genes.raw)] <- 0
 write_tsv(genes.raw, file = "../output/08_visualization/tab_gene_abundances.csv")
 
 # Significantly different gene families between SSG and 5DG at t0
-gf = c()
-sr = c()
-fr = c()
-fc = c()
-pv = c()
-i = 1
+#gf = c()
+#sr = c()
+#fr = c()
+#fc = c()
+#pv = c()
+#i = 1
 
-ssg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "SSG" & meta.raw$Timepoint == "t0", ]$SampleID, "_Abundance.RPKs", sep = ""))
-fdg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "5DG" & meta.raw$Timepoint == "t0", ]$SampleID, "_Abundance.RPKs", sep = ""))
+#ssg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "SSG" & meta.raw$Timepoint == "t0", ]$SampleID, "_Abundance.RPKs", sep = ""))
+#fdg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "5DG" & meta.raw$Timepoint == "t0", ]$SampleID, "_Abundance.RPKs", sep = ""))
 
-ssg.genes <- genes.raw[, colnames(genes.raw) %in% ssg.samples]
-fdg.genes <- genes.raw[, colnames(genes.raw) %in% fdg.samples]
+#ssg.genes <- genes.raw[, colnames(genes.raw) %in% ssg.samples]
+#fdg.genes <- genes.raw[, colnames(genes.raw) %in% fdg.samples]
 
-for (row in genes.raw$X..Gene.Family_1){
-  ssg.abundance = ssg.genes[ssg.genes$X..Gene.Family_1 == row, ]
-  fdg.abundance = fdg.genes[fdg.genes$X..Gene.Family_1 == row, ]
+#for (row in genes.raw$X..Gene.Family_1){
+#  ssg.abundance = ssg.genes[ssg.genes$X..Gene.Family_1 == row, ]
+#  fdg.abundance = fdg.genes[fdg.genes$X..Gene.Family_1 == row, ]
   
-  stat.df <- data.frame(GROUP = c(rep("SSG", length(ssg.samples)-1), rep("5DG", length(fdg.samples)-1)), ABN = c(as.character(ssg.abundance[-1]), as.character(fdg.abundance[-1])))
-  stat.res <- pairwise.wilcox.test(as.numeric(stat.df$ABN), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = FALSE, exact = FALSE)
+#  stat.df <- data.frame(GROUP = c(rep("SSG", length(ssg.samples)-1), rep("5DG", length(fdg.samples)-1)), ABN = c(as.character(ssg.abundance[-1]), as.character(fdg.abundance[-1])))
+#  stat.res <- pairwise.wilcox.test(as.numeric(stat.df$ABN), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = FALSE, exact = FALSE)
   
-  gf[i] <- row
-  sr[i] <- sum(ssg.abundance[-1])/(length(ssg.samples)-1)
-  fr[i] <- sum(fdg.abundance[-1])/(length(fdg.samples)-1)
-  fc[i] <- foldchange(fr[i], sr[i])
-  pv[i] <- as.numeric(stat.res$p.value)
+#  gf[i] <- row
+#  sr[i] <- sum(ssg.abundance[-1])/(length(ssg.samples)-1)
+#  fr[i] <- sum(fdg.abundance[-1])/(length(fdg.samples)-1)
+#  fc[i] <- foldchange(fr[i], sr[i])
+#  pv[i] <- as.numeric(stat.res$p.value)
   
-  i = i + 1
-}
+#  i = i + 1
+#}
 
-pathways.comparison = data.frame(Gene_Family = gf, SSG_Avg_RPK = sr, FDG_Avg_RPK = fr, FoldChange = fc, pval = pv)
-write_tsv(pathways.comparison, file = "../output/08_visualization/tab_genes_diff_t0.tsv")
+#pathways.comparison = data.frame(Gene_Family = gf, SSG_Avg_RPK = sr, FDG_Avg_RPK = fr, FoldChange = fc, pval = pv)
+#write_tsv(pathways.comparison, file = "../output/08_visualization/tab_genes_diff_t0.tsv")
 
 # Significantly different gene families between SSG and 5DG at t1
-gf = c()
-sr = c()
-fr = c()
-fc = c()
-pv = c()
-i = 1
+#gf = c()
+#sr = c()
+#fr = c()
+#fc = c()
+#pv = c()
+#i = 1
 
-ssg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "SSG" & meta.raw$Timepoint == "t1", ]$SampleID, "_Abundance.RPKs", sep = ""))
-fdg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "5DG" & meta.raw$Timepoint == "t1", ]$SampleID, "_Abundance.RPKs", sep = ""))
+#ssg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "SSG" & meta.raw$Timepoint == "t1", ]$SampleID, "_Abundance.RPKs", sep = ""))
+#fdg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "5DG" & meta.raw$Timepoint == "t1", ]$SampleID, "_Abundance.RPKs", sep = ""))
 
-ssg.genes <- genes.raw[, colnames(genes.raw) %in% ssg.samples]
-fdg.genes <- genes.raw[, colnames(genes.raw) %in% fdg.samples]
+#ssg.genes <- genes.raw[, colnames(genes.raw) %in% ssg.samples]
+#fdg.genes <- genes.raw[, colnames(genes.raw) %in% fdg.samples]
 
-for (row in genes.raw$X..Gene.Family_1){
-  ssg.abundance = ssg.genes[ssg.genes$X..Gene.Family_1 == row, ]
-  fdg.abundance = fdg.genes[fdg.genes$X..Gene.Family_1 == row, ]
+#for (row in genes.raw$X..Gene.Family_1){
+#  ssg.abundance = ssg.genes[ssg.genes$X..Gene.Family_1 == row, ]
+#  fdg.abundance = fdg.genes[fdg.genes$X..Gene.Family_1 == row, ]
   
-  stat.df <- data.frame(GROUP = c(rep("SSG", length(ssg.samples)-1), rep("5DG", length(fdg.samples)-1)), ABN = c(as.character(ssg.abundance[-1]), as.character(fdg.abundance[-1])))
-  stat.res <- pairwise.wilcox.test(as.numeric(stat.df$ABN), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = FALSE, exact = FALSE)
+#  stat.df <- data.frame(GROUP = c(rep("SSG", length(ssg.samples)-1), rep("5DG", length(fdg.samples)-1)), ABN = c(as.character(ssg.abundance[-1]), as.character(fdg.abundance[-1])))
+#  stat.res <- pairwise.wilcox.test(as.numeric(stat.df$ABN), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = FALSE, exact = FALSE)
   
-  pw[i] <- row
-  sr[i] <- sum(ssg.abundance[-1])/(length(ssg.samples)-1)
-  fr[i] <- sum(fdg.abundance[-1])/(length(fdg.samples)-1)
-  fc[i] <- foldchange(fr[i], sr[i])
-  pv[i] <- as.numeric(stat.res$p.value)
+#  pw[i] <- row
+#  sr[i] <- sum(ssg.abundance[-1])/(length(ssg.samples)-1)
+#  fr[i] <- sum(fdg.abundance[-1])/(length(fdg.samples)-1)
+#  fc[i] <- foldchange(fr[i], sr[i])
+#  pv[i] <- as.numeric(stat.res$p.value)
   
-  i = i + 1
-}
+#  i = i + 1
+#}
 
-pathways.comparison = data.frame(Gene_Family = gf, SSG_Avg_RPK = sr, FDG_Avg_RPK = fr, FoldChange = fc, pval = pv)
-write_tsv(pathways.comparison, file = "../output/08_visualization/tab_genes_diff_t1.tsv")
+#pathways.comparison = data.frame(Gene_Family = gf, SSG_Avg_RPK = sr, FDG_Avg_RPK = fr, FoldChange = fc, pval = pv)
+#write_tsv(pathways.comparison, file = "../output/08_visualization/tab_genes_diff_t1.tsv")
 
 # Significantly different gene families between SSG and 5DG at t2
-gf = c()
-sr = c()
-fr = c()
-fc = c()
-pv = c()
-i = 1
+#gf = c()
+#sr = c()
+#fr = c()
+#fc = c()
+#pv = c()
+#i = 1
 
-ssg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "SSG" & meta.raw$Timepoint == "t2", ]$SampleID, "_Abundance.RPKs", sep = ""))
-fdg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "5DG" & meta.raw$Timepoint == "t2", ]$SampleID, "_Abundance.RPKs", sep = ""))
+#ssg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "SSG" & meta.raw$Timepoint == "t2", ]$SampleID, "_Abundance.RPKs", sep = ""))
+#fdg.samples <- c("X..Gene.Family_1", paste("humann_", meta.raw[meta.raw$AB_Group == "5DG" & meta.raw$Timepoint == "t2", ]$SampleID, "_Abundance.RPKs", sep = ""))
 
-ssg.genes <- genes.raw[, colnames(genes.raw) %in% ssg.samples]
-fdg.genes <- genes.raw[, colnames(genes.raw) %in% fdg.samples]
+#ssg.genes <- genes.raw[, colnames(genes.raw) %in% ssg.samples]
+#fdg.genes <- genes.raw[, colnames(genes.raw) %in% fdg.samples]
 
-for (row in genes.raw$X..Gene.Family_1){
-  ssg.abundance = ssg.genes[ssg.genes$X..Gene.Family_1 == row, ]
-  fdg.abundance = fdg.genes[fdg.genes$X..Gene.Family_1 == row, ]
+#for (row in genes.raw$X..Gene.Family_1){
+#  ssg.abundance = ssg.genes[ssg.genes$X..Gene.Family_1 == row, ]
+#  fdg.abundance = fdg.genes[fdg.genes$X..Gene.Family_1 == row, ]
   
-  stat.df <- data.frame(GROUP = c(rep("SSG", length(ssg.samples)-1), rep("5DG", length(fdg.samples)-1)), ABN = c(as.character(ssg.abundance[-1]), as.character(fdg.abundance[-1])))
-  stat.res <- pairwise.wilcox.test(as.numeric(stat.df$ABN), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = FALSE, exact = FALSE)
+#  stat.df <- data.frame(GROUP = c(rep("SSG", length(ssg.samples)-1), rep("5DG", length(fdg.samples)-1)), ABN = c(as.character(ssg.abundance[-1]), as.character(fdg.abundance[-1])))
+#  stat.res <- pairwise.wilcox.test(as.numeric(stat.df$ABN), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = FALSE, exact = FALSE)
   
-  pw[i] <- row
-  sr[i] <- sum(ssg.abundance[-1])/(length(ssg.samples)-1)
-  fr[i] <- sum(fdg.abundance[-1])/(length(fdg.samples)-1)
-  fc[i] <- foldchange(fr[i], sr[i])
-  pv[i] <- as.numeric(stat.res$p.value)
+#  pw[i] <- row
+#  sr[i] <- sum(ssg.abundance[-1])/(length(ssg.samples)-1)
+#  fr[i] <- sum(fdg.abundance[-1])/(length(fdg.samples)-1)
+#  fc[i] <- foldchange(fr[i], sr[i])
+#  pv[i] <- as.numeric(stat.res$p.value)
   
-  i = i + 1
-}
+#  i = i + 1
+#}
 
-pathways.comparison = data.frame(Gene_Family = gf, SSG_Avg_RPK = sr, FDG_Avg_RPK = fr, FoldChange = fc, pval = pv)
-write_tsv(pathways.comparison, file = "../output/08_visualization/tab_genes_diff_t2.tsv")
+#pathways.comparison = data.frame(Gene_Family = gf, SSG_Avg_RPK = sr, FDG_Avg_RPK = fr, FoldChange = fc, pval = pv)
+#write_tsv(pathways.comparison, file = "../output/08_visualization/tab_genes_diff_t2.tsv")

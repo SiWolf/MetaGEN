@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 16.03.2023
-# Version: 0.6.2
+# Last Modified: Mon, 27.03.2023
+# Version: 0.6.3
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -72,7 +72,7 @@ meta.raw <- meta.raw[,-c(1)]
 colnames(meta.raw)[1] <- "SampleID"
 
 # Group order
-groups.order <- c("SSG", "5DG", "SWITCHED", "REF")
+groups.order <- c("SSG", "5DG", "REF")
 timepoints.order <- c("t0", "t1", "t2", "REF")
 
 # --------------------------------------------------------------------------------------------------------
@@ -120,7 +120,6 @@ data.pcoa$HORSE = meta.sorted$HorseID
 data.pcoa$AB_GROUP = factor(meta.sorted$AB_Group, levels = groups.order)
 data.pcoa$TIMEPOINT = factor(meta.sorted$Timepoint, levels = timepoints.order)
 data.pcoa$TIME_GROUP = paste(meta.sorted$Timepoint, meta.sorted$AB_Group, sep = " ")
-data.pcoa.filtered <- data.pcoa[data.pcoa$AB_GROUP != "SWITCHED" & data.pcoa$AB_GROUP != "REF", ]
 
 # Experimental
 rownames(meta.sorted) <- meta.sorted$SampleID
@@ -151,8 +150,7 @@ colours.days = c("t0" = "#00BA38",
 
 colours.groups = c("SSG" = "#00ff7f",
                    "5DG" = "#ffa500",
-                   "SWITCHED" = "#00bfff",
-                   "REF" = "#606060"
+                   "REF" = "#00bfff"
                    )
 
 eigenvalue_pc1 = round(braycurtis.pcoa$values$Relative_eig[1]*100, 1)
@@ -165,8 +163,8 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -183,13 +181,13 @@ dev.off()
 
 # Timepoints - SSG
 png("output/08_visualization/div_pca_time_ssg.png", width = 16, height = 16, units = "cm", res = 500)
-ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "SSG", ],
+ggscatter(data.pcoa[data.pcoa$AB_GROUP == "SSG", ],
           x = "Axis.1",
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -206,13 +204,13 @@ dev.off()
 
 # Timepoints - 5DG
 png("output/08_visualization/div_pca_time_5dg.png", width = 16, height = 16, units = "cm", res = 500)
-ggscatter(data.pcoa.filtered[data.pcoa.filtered$AB_GROUP == "5DG", ],
+ggscatter(data.pcoa[data.pcoa$AB_GROUP == "5DG", ],
           x = "Axis.1",
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -234,8 +232,8 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           ellipse = TRUE,
@@ -250,13 +248,13 @@ dev.off()
 
 # Groups - t0
 png("output/08_visualization/div_pca_group_t0.png", width = 16, height = 16, units = "cm", res = 500)
-ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t0", ],
+ggscatter(data.pcoa[data.pcoa$TIMEPOINT == "t0", ],
           x = "Axis.1",
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -273,13 +271,13 @@ dev.off()
 
 # Groups - t1
 png("output/08_visualization/div_pca_group_t1.png", width = 16, height = 16, units = "cm", res = 500)
-ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t1", ],
+ggscatter(data.pcoa[data.pcoa$TIMEPOINT == "t1", ],
           x = "Axis.1",
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -296,13 +294,13 @@ dev.off()
 
 # Groups - t2
 png("output/08_visualization/div_pca_group_t2.png", width = 16, height = 16, units = "cm", res = 500)
-ggscatter(data.pcoa.filtered[data.pcoa.filtered$TIMEPOINT == "t2", ],
+ggscatter(data.pcoa[data.pcoa$TIMEPOINT == "t2", ],
           x = "Axis.1",
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -319,13 +317,13 @@ dev.off()
 
 # Timepoints-Groups - All Samples
 png("output/08_visualization/div_pca_group_time_all.png", width = 16, height = 16, units = "cm", res = 500)
-ggscatter(data.pcoa.filtered,
+ggscatter(data.pcoa,
           x = "Axis.1",
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.62, 0.2),
-          ylim = c(-0.4, 0.5),
+          xlim = c(-0.57, 0.17),
+          ylim = c(-0.43, 0.46),
           color = "TIME_GROUP",
           #shape = "TIME_GROUP",
           #star.plot = TRUE,
@@ -451,25 +449,6 @@ ggplot(bar_data_ssg, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) +
               )
 dev.off()
 
-# Individual Horses - Switched
-bar_data_switched <- bar_data_melted[bar_data_melted$AB_GROUP == "SWITCHED",]
-
-png("output/08_visualization/tax_bar_horses_switched.png", width = 10, height = 15, units = "cm", res = 500)
-ggplot(bar_data_switched, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
-        geom_bar(position = "fill", stat = "identity") +
-        scale_fill_manual(values = palette) +
-        labs(title = "Relative Abundance (Switched)",
-             x = "Horses",
-             y = "Relative Abundance (%)",
-             fill = "Top 10 Phyla"
-             ) +
-        facet_grid(~ HORSE) +
-        theme(plot.title = element_text(hjust = 0.5),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()
-              )
-dev.off()
-
 # Individual Horses - Reference
 bar_data_ref <- bar_data_melted[bar_data_melted$AB_GROUP == "REF",]
 
@@ -567,7 +546,7 @@ per_verr_norm
 
 # Abundance heatmap
 abundance_columns <- unique(bar_data_melted$OTU)
-abundance_rows <- c("SSG_t0", "5DG_t0", "SWITCHED_t0", "SSG_t1", "5DG_t1", "SWITCHED_t1", "SSG_t2", "5DG_t2", "SWITCHED_t2", "REF")
+abundance_rows <- c("SSG_t0", "5DG_t0", "SSG_t1", "5DG_t1", "SSG_t2", "5DG_t2", "REF")
 abundance_matrix <- matrix(0, length(abundance_rows), length(unique(bar_data_melted$OTU)))
 
 j = 1
@@ -591,7 +570,7 @@ for (c in abundance_columns){
 abundance_matrix <- t(abundance_matrix)
 rownames(abundance_matrix) <- abundance_columns
 
-colnames(abundance_matrix) <- c("SSG (t0)", "5DG (t0)", "SWITCHED (t0)", "SSG (t1)", "5DG (t1)", "SWITCHED (t1)", "SSG (t2)", "5DG (t2)", "SWITCHED (t2)", "REF")
+colnames(abundance_matrix) <- c("SSG (t0)", "5DG (t0)", "SSG (t1)", "5DG (t1)", "SSG (t2)", "5DG (t2)", "REF")
 
 png("output/08_visualization/tax_heat_sim.png", width = 20, height = 15, units = "cm", res = 500)
 Heatmap(log2(abundance_matrix),
@@ -605,14 +584,14 @@ Heatmap(log2(abundance_matrix),
         )
 dev.off()
 
-colnames(abundance_matrix) <- c("SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED", "SSG", "5DG", "SWITCHED", "REF")
+colnames(abundance_matrix) <- c("SSG", "5DG", "SSG", "5DG", "SSG", "5DG", "REF")
 
 png("output/08_visualization/tax_heat_time.png", width = 20, height = 15, units = "cm", res = 500)
 Heatmap(log2(abundance_matrix),
         cluster_rows = TRUE,
         cluster_columns = FALSE,
         col = c("black", "darkred", "red", "orange", "yellow"),
-        column_split = c(rep("t0", 3), rep("t1", 3), rep("t2", 3), "REF"),
+        column_split = c(rep("t0", 2), rep("t1", 2), rep("t2", 2), "REF"),
         row_title = "Top 10 Phyla",
         name = "log2(Abundance)",
         row_names_gp = gpar(fontsize = 10),
@@ -666,7 +645,6 @@ amr.norm.reads <- subset(amr.df.stats, select = c("SAMPLE", "CPM", "CP60M"))
 amr.norm.reads$DIV = data.alpha.rarefy$diversity_shannon
 amr.norm.reads$TIMEPOINT = data.alpha.rarefy$TIMEPOINT
 amr.norm.reads$AB_GROUP = data.alpha.rarefy$AB_GROUP
-amr.norm.reads.filtered <- amr.norm.reads[amr.norm.reads$AB_GROUP != "SWITCHED",]
 
 # Define colours for heatmap
 colours.amr = c("aminoglycosides" = "#e6194B",
@@ -823,25 +801,25 @@ stat.res
 # Diversity - SSG vs. 5DG
 
 # Significant Differences at t0-t2 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t0 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t0" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t0" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t1 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t1" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t1" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t2 -> no
-stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t2" & data.alpha.rarefy$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT == "t2" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
@@ -889,25 +867,25 @@ stat.res
 # AMR - SSG vs. 5DG
 
 # Significant Differences at t0-t2 -> no
-stat.data <- amr.norm.reads[amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- amr.norm.reads[data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t0 -> no
-stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t0" & amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t0" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t1 -> no
-stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t1" & amr.norm.reads$AB_GROUP != "SWITCHED"  & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t1" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
 # Significant Differences at t2 -> yes
-stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & amr.norm.reads$AB_GROUP != "SWITCHED" & data.alpha.rarefy$AB_GROUP != "REF",]
+stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
@@ -1084,7 +1062,7 @@ dev.off()
 
 # Total AMR Sum
 png("output/08_visualization/amr_sum_box.png", width = 15, height = 10, units = "cm", res = 500)
-ggplot(Class_AMR_SUM, aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
+ggplot(Class_AMR_SUM[Class_AMR_SUM$AB_GROUP != "REF",], aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
         coord_cartesian(ylim = c(18, 25)) +
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
@@ -1119,7 +1097,7 @@ amr.class.df.ssg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:
 
 png("output/08_visualization/amr_box_group_ssg.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.ssg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
-        coord_cartesian(ylim = c(0, 25)) +
+        coord_cartesian(ylim = c(0, 30)) +
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AMR_Class, scale = "free") +
@@ -1128,7 +1106,7 @@ ggplot(amr.class.df.ssg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPO
         stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
-                           label.y = c(21, 22.5, 24),
+                           label.y = c(23, 25.5, 28),
                            size = 2,
                            paired = TRUE,
                            method.args = list(exact = FALSE))
@@ -1148,7 +1126,7 @@ amr.class.df.5dg <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:
 
 png("output/08_visualization/amr_box_group_5dg.png", width = 40, height = 30, units = "cm", res = 500)
 ggplot(amr.class.df.5dg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
-        coord_cartesian(ylim = c(0, 25)) +
+        coord_cartesian(ylim = c(0, 30)) +
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AMR_Class, scale = "free") +
@@ -1157,36 +1135,7 @@ ggplot(amr.class.df.5dg, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPO
         stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
-                           label.y = c(21, 22.5, 24),
-                           size = 2,
-                           paired = TRUE,
-                           method.args = list(exact = FALSE))
-dev.off()
-
-# SWITCHED
-amr.class.df.filtered <- amr.class.df[amr.class.df$AB_GROUP == "SWITCHED", ]
-amr.class.length <- length(colnames(amr.class.df.filtered)) - 4
-num.switched <- length(meta.raw[meta.raw$AB_Group == "SWITCHED",]$SampleID)
-amr.class.df.switched <- data.frame(AMR_Class = rep(colnames(amr.class.df.filtered[1:amr.class.length]), each = num.switched),
-                                    AMR_TMM = unlist(amr.class.df.filtered[1:amr.class.length]),
-                                    AB_GROUP = rep(amr.class.df.filtered$AB_GROUP, amr.class.length),
-                                    HORSE = rep(amr.class.df.filtered$HORSE, amr.class.length),
-                                    TIMEPOINT = rep(amr.class.df.filtered$TIMEPOINT, amr.class.length),
-                                    TIME_GROUP = rep(amr.class.df.filtered$TIME_GROUP, amr.class.length)
-                                    )
-
-png("output/08_visualization/amr_box_group_switched.png", width = 40, height = 30, units = "cm", res = 500)
-ggplot(amr.class.df.switched, aes(x = TIMEPOINT, y = log2(AMR_TMM + 1), fill = TIMEPOINT)) +
-        coord_cartesian(ylim = c(0, 25)) +
-        geom_boxplot(alpha = 0.9) +
-        geom_jitter(alpha = 0.5) +
-        facet_wrap(~AMR_Class, scale = "free") +
-        stat_boxplot(geom = "errorbar", width = 0.5) +
-        scale_fill_manual(values = colours.days[1:3]) +
-        stat_compare_means(comparisons = boxplot.timepoints,
-                           alternative = "two.sided",
-                           method = "wilcox.test",
-                           label.y = c(21, 22.5, 24),
+                           label.y = c(23, 25.5, 28),
                            size = 2,
                            paired = TRUE,
                            method.args = list(exact = FALSE))
@@ -1215,7 +1164,8 @@ ggscatter(Class_AMR_SUM,
                                 label.sep = "\n"),
           title = "CORRELATION - AMR / DIVERSITY - READS",
           palette = colours.days,
-          size = 2.5
+          size = 2.5,
+          cor.coef.coord = c(22.5, 4)
           ) +
         theme(plot.title = element_text(hjust = 0.5)) +
         labs(shape = "AB GROUP")
@@ -1353,16 +1303,16 @@ alpha.ssg.diff.t0.t1 = round(alpha.ssg.t1 - alpha.ssg.t0, 2)
 alpha.ssg.diff.t1.t2 = round(alpha.ssg.t2 - alpha.ssg.t1, 2)
 
 # ARG abundance (assembly)
-arg.5dg.t0 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t0", ]$CP60M)
-arg.5dg.t1 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t1", ]$CP60M)
-arg.5dg.t2 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "5DG" & amr.norm.reads.filtered$TIMEPOINT == "t2", ]$CP60M)
+arg.5dg.t0 = mean(amr.norm.reads[amr.norm.reads$AB_GROUP == "5DG" & amr.norm.reads$TIMEPOINT == "t0", ]$CP60M)
+arg.5dg.t1 = mean(amr.norm.reads[amr.norm.reads$AB_GROUP == "5DG" & amr.norm.reads$TIMEPOINT == "t1", ]$CP60M)
+arg.5dg.t2 = mean(amr.norm.reads[amr.norm.reads$AB_GROUP == "5DG" & amr.norm.reads$TIMEPOINT == "t2", ]$CP60M)
 
 arg.5dg.diff.t0.t1 = round(arg.5dg.t1 - arg.5dg.t0, 2)
 arg.5dg.diff.t0.t2 = round(arg.5dg.t2 - arg.5dg.t1, 2)
 
-arg.ssg.t0 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t0", ]$CP60M)
-arg.ssg.t1 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t1", ]$CP60M)
-arg.ssg.t2 = mean(amr.norm.reads.filtered[amr.norm.reads.filtered$AB_GROUP == "SSG" & amr.norm.reads.filtered$TIMEPOINT == "t2", ]$CP60M)
+arg.ssg.t0 = mean(amr.norm.reads[amr.norm.reads$AB_GROUP == "SSG" & amr.norm.reads$TIMEPOINT == "t0", ]$CP60M)
+arg.ssg.t1 = mean(amr.norm.reads[amr.norm.reads$AB_GROUP == "SSG" & amr.norm.reads$TIMEPOINT == "t1", ]$CP60M)
+arg.ssg.t2 = mean(amr.norm.reads[amr.norm.reads$AB_GROUP == "SSG" & amr.norm.reads$TIMEPOINT == "t2", ]$CP60M)
 
 arg.ssg.diff.t0.t1 = round(arg.ssg.t1 - arg.ssg.t0, 2)
 arg.ssg.diff.t0.t2 = round(arg.ssg.t2 - arg.ssg.t1, 2)
@@ -1416,6 +1366,9 @@ for (t in unique(taxnames$family)){
 colnames(taxa.matrix) <- names
 rownames(taxa.matrix) <- names(taxa.sums)
 
+# Failsafe to secure correct sample list (can be removed)
+taxa.matrix <- taxa.matrix[rownames(taxa.matrix) %in% rownames(data.alpha.rarefy),]
+
 # Select top taxas and merge lower taxas
 taxa.filter.top <- names(sort(colSums(taxa.matrix), T)[1:9])
 taxa.filter.other <- names(sort(colSums(taxa.matrix), T)[10:ncol(taxa.matrix)])
@@ -1436,10 +1389,6 @@ taxa.g2.t0 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "5DG" & taxa
 taxa.g2.t1 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "5DG" & taxa.matrix.filtered$TIMEPOINT == "t1",]
 taxa.g2.t2 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "5DG" & taxa.matrix.filtered$TIMEPOINT == "t2",]
 
-taxa.g3.t0 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "SWITCHED" & taxa.matrix.filtered$TIMEPOINT == "t0",]
-taxa.g3.t1 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "SWITCHED" & taxa.matrix.filtered$TIMEPOINT == "t1",]
-taxa.g3.t2 <- taxa.matrix.filtered[taxa.matrix.filtered$AB_GROUP == "SWITCHED" & taxa.matrix.filtered$TIMEPOINT == "t2",]
-
 # Bubbleplots (Absolute)
 taxa.g1.t0.nom <- taxa.g1.t0
 taxa.g1.t1.nom <- taxa.g1.t1
@@ -1448,10 +1397,6 @@ taxa.g1.t2.nom <- taxa.g1.t2
 taxa.g2.t0.nom <- taxa.g2.t0
 taxa.g2.t1.nom <- taxa.g2.t1
 taxa.g2.t2.nom <- taxa.g2.t2
-
-taxa.g3.t0.nom <- taxa.g3.t0
-taxa.g3.t1.nom <- taxa.g3.t1
-taxa.g3.t2.nom <- taxa.g3.t2
 
 for (s in unique(seqreport$SAMPLE)) {
         r = sum(seqreport[seqreport$SAMPLE == s & seqreport$READ != "R3", ]$X.Seq)
@@ -1473,15 +1418,6 @@ for (s in unique(seqreport$SAMPLE)) {
         if (s %in% rownames(taxa.g2.t2.nom)){
                 taxa.g2.t2.nom[rownames(taxa.g2.t2.nom) == s, ][1:10] <- ((taxa.g2.t2.nom[rownames(taxa.g2.t2.nom) == s, ][1:10]/r)*60000000)
         }
-        if (s %in% rownames(taxa.g3.t0.nom)){
-                taxa.g3.t0.nom[rownames(taxa.g3.t0.nom) == s, ][1:10] <- ((taxa.g3.t0.nom[rownames(taxa.g3.t0.nom) == s, ][1:10]/r)*60000000)
-        }
-        if (s %in% rownames(taxa.g3.t1.nom)){
-                taxa.g3.t1.nom[rownames(taxa.g3.t1.nom) == s, ][1:10] <- ((taxa.g3.t1.nom[rownames(taxa.g3.t1.nom) == s, ][1:10]/r)*60000000)
-        }
-        if (s %in% rownames(taxa.g3.t2.nom)){
-                taxa.g3.t2.nom[rownames(taxa.g3.t2.nom) == s, ][1:10] <- ((taxa.g3.t2.nom[rownames(taxa.g3.t2.nom) == s, ][1:10]/r)*60000000)
-        }
 }
 
 taxa.g1.abs.df <- data.frame(SIZE = c(colSums(taxa.g1.t0.nom[1:10]),
@@ -1496,13 +1432,6 @@ taxa.g2.abs.df <- data.frame(SIZE = c(colSums(taxa.g2.t0.nom[1:10]),
                                       colSums(taxa.g2.t2.nom[1:10])),
                              TIME = c(rep("t0", 10), rep("t1", 10), rep("t2", 10)),
                              SPECIES = factor(rep(colnames(taxa.g2.t0.nom)[1:10], 3), levels = sort(colnames(taxa.g2.t0.nom), decreasing = TRUE))
-                             )
-
-taxa.g3.abs.df <- data.frame(SIZE = c(colSums(taxa.g3.t0.nom[1:10]),
-                                      colSums(taxa.g3.t1.nom[1:10]),
-                                      colSums(taxa.g3.t2.nom[1:10])),
-                             TIME = c(rep("t0", 10), rep("t1", 10), rep("t2", 10)),
-                             SPECIES = factor(rep(colnames(taxa.g3.t0.nom)[1:10], 3), levels = sort(colnames(taxa.g3.t0.nom), decreasing = TRUE))
                              )
 
 png("output/08_visualization/amr_bubble_families_abs_ssg.png", width = 20, height = 10, units = "cm", res = 500)
@@ -1531,19 +1460,6 @@ ggplot(taxa.g2.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         scale_size_continuous(limits = c(0, 465), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
 dev.off()
 
-png("output/08_visualization/amr_bubble_families_abs_switched.png", width = 20, height = 10, units = "cm", res = 500)
-ggplot(taxa.g3.abs.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
-        geom_point(alpha = 0.9, color = "red") +
-        xlab("TIMEPOINT") +
-        ylab("FAMILY") +
-        ggtitle("SWITCHED - FAMILIES") +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-              panel.background = element_blank(), axis.line = element_line(colour = "black"),
-              axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 465), range = c(1, 12), breaks = c(10, 100, 200, 300), name = "ARG Count (CP60M)")
-dev.off()
-
 # Bubbleplots (Percentage)
 taxa.g1.per.df <- data.frame(SIZE = c((colSums(taxa.g1.t0[1:10])/sum(colSums(taxa.g1.t0[1:10])))*100,
                                       (colSums(taxa.g1.t1[1:10])/sum(colSums(taxa.g1.t1[1:10])))*100,
@@ -1557,13 +1473,6 @@ taxa.g2.per.df <- data.frame(SIZE = c((colSums(taxa.g2.t0[1:10])/sum(colSums(tax
                                       (colSums(taxa.g2.t2[1:10])/sum(colSums(taxa.g2.t2[1:10])))*100),
                              TIME = c(rep("t0", 10), rep("t1", 10), rep("t2", 10)),
                              SPECIES = factor(rep(colnames(taxa.g2.t0)[1:10], 3), levels = sort(colnames(taxa.g2.t0), decreasing = TRUE))
-                             )
-
-taxa.g3.per.df <- data.frame(SIZE = c((colSums(taxa.g3.t0[1:10])/sum(colSums(taxa.g3.t0[1:10])))*100,
-                                      (colSums(taxa.g3.t1[1:10])/sum(colSums(taxa.g3.t1[1:10])))*100,
-                                      (colSums(taxa.g3.t2[1:10])/sum(colSums(taxa.g3.t2[1:10])))*100),
-                             TIME = c(rep("t0", 10), rep("t1", 10), rep("t2", 10)),
-                             SPECIES = factor(rep(colnames(taxa.g3.t0)[1:10], 3), levels = sort(colnames(taxa.g3.t0), decreasing = TRUE))
                              )
 
 png("output/08_visualization/amr_bubble_families_rel_ssg.png", width = 20, height = 10, units = "cm", res = 500)
@@ -1585,19 +1494,6 @@ ggplot(taxa.g2.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
         xlab("TIMEPOINT") +
         ylab("FAMILY") +
         ggtitle("5DG - FAMILIES") +
-        theme(plot.title = element_text(hjust = 0.5)) +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-              panel.background = element_blank(), axis.line = element_line(colour = "black"),
-              axis.text = element_text(size = 10)) +
-        scale_size_continuous(limits = c(0, 100), range = c(1, 12), breaks = c(10, 40, 80), name = "ARG Abundance (%)")
-dev.off()
-
-png("output/08_visualization/amr_bubble_families_rel_switched.png", width = 20, height = 10, units = "cm", res = 500)
-ggplot(taxa.g3.per.df, aes(x = TIME, y = SPECIES, size = SIZE)) +
-        geom_point(alpha = 0.9, color = "red") +
-        xlab("TIMEPOINT") +
-        ylab("FAMILY") +
-        ggtitle("SWITCHED - FAMILIES") +
         theme(plot.title = element_text(hjust = 0.5)) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -1631,10 +1527,6 @@ samples.5dg.t0 <- meta.sorted[meta.sorted$AB_Group == "5DG" & meta.sorted$Timepo
 samples.5dg.t1 <- meta.sorted[meta.sorted$AB_Group == "5DG" & meta.sorted$Timepoint == "t1", ]$SampleID
 samples.5dg.t2 <- meta.sorted[meta.sorted$AB_Group == "5DG" & meta.sorted$Timepoint == "t2", ]$SampleID
 
-samples.switched.t0 <- meta.sorted[meta.sorted$AB_Group == "SWITCHED" & meta.sorted$Timepoint == "t0", ]$SampleID
-samples.switched.t1 <- meta.sorted[meta.sorted$AB_Group == "SWITCHED" & meta.sorted$Timepoint == "t1", ]$SampleID
-samples.switched.t2 <- meta.sorted[meta.sorted$AB_Group == "SWITCHED" & meta.sorted$Timepoint == "t2", ]$SampleID
-
 samples.ref <- meta.sorted[meta.sorted$AB_Group == "REF", ]$SampleID
 
 samples.taxa <- c("c__Subdivision5",
@@ -1666,9 +1558,6 @@ c4 = c()
 c5 = c()
 c6 = c()
 c7 = c()
-c8 = c()
-c9 = c()
-c10 = c()
 x = 1
 
 for (t in samples.taxa){
@@ -1722,33 +1611,12 @@ for (t in samples.taxa){
         t6 <- round(t5, 2)
         c6[x] <- t6
         
-        t2 <- t1[samples.switched.t0]
-        t3 <- colSums(t2)
-        t4 <- sum(t3)/length(samples.switched.t0)
-        t5 <- (t4/min(sample_depth))*100
-        t6 <- round(t5, 2)
-        c7[x] <- t6
-        
-        t2 <- t1[samples.switched.t1]
-        t3 <- colSums(t2)
-        t4 <- sum(t3)/length(samples.switched.t1)
-        t5 <- (t4/min(sample_depth))*100
-        t6 <- round(t5, 2)
-        c8[x] <- t6
-        
-        t2 <- t1[samples.switched.t2]
-        t3 <- colSums(t2)
-        t4 <- sum(t3)/length(samples.switched.t2)
-        t5 <- (t4/min(sample_depth))*100
-        t6 <- round(t5, 2)
-        c9[x] <- t6
-        
         t2 <- t1[samples.ref]
         t3 <- colSums(t2)
         t4 <- sum(t3)/length(samples.ref)
         t5 <- (t4/min(sample_depth))*100
         t6 <- round(t5, 2)
-        c10[x] <- t6
+        c7[x] <- t6
         
         x = x + 1
 }
@@ -1756,8 +1624,7 @@ for (t in samples.taxa){
 taxa.abundancies <- data.frame(TAXA = samples.taxa,
                                SSG_t0 = c1, SSG_t1 = c2, SSG_t2 = c3,
                                FDG_t0 = c4, FDG_t1 = c5, FDG_t2 = c6,
-                               SWI_t0 = c7, SWI_t1 = c8, SWI_t2 = c9,
-                               REF = c10
+                               REF = c7
                                )
 
 write.csv(taxa.abundancies, file = "output/08_visualization/tab_otu_species_mean.csv", quote = FALSE, row.names = FALSE)
@@ -1828,7 +1695,6 @@ vir.norm.reads <- subset(vir.df.stats, select = c("SAMPLE", "CPM", "CP60M"))
 vir.norm.reads$DIV = data.alpha.rarefy$diversity_shannon
 vir.norm.reads$TIMEPOINT = data.alpha.rarefy$TIMEPOINT
 vir.norm.reads$AB_GROUP = data.alpha.rarefy$AB_GROUP
-vir.norm.reads.filtered <- vir.norm.reads[vir.norm.reads$AB_GROUP != "SWITCHED",]
 
 # Set Annotations for Heatmap
 annot.row.left = rowAnnotation(timepoint = vir.meta$Timepoint,
