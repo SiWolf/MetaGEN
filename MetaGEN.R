@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Mon, 27.03.2023
+# Last Modified: Tue, 28.03.2023
 # Version: 0.6.3
 # --------------------------------------------------------------------------------------------------------
 
@@ -23,6 +23,7 @@ library("phyloseq")
 library("stringr")
 library("taxonomizr")
 library("tidyr")
+library("tidyverse")
 library("vegan")
 
 # --------------------------------------------------------------------------------------------------------
@@ -1805,3 +1806,109 @@ micro.core.ssg <- core(data.ssg.rel, detection = 0, prevalence = 0.95)
 core.taxa.ids.ssg <- taxa(micro.core.ssg)
 core.taxa.names.ssg <- as.data.frame(getTaxonomy(core.taxa.ids.ssg, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = c("superkingdom", "phylum", "class", "order", "family", "genus", "species")))
 write.csv(core.taxa.names.ssg, file = "output/08_visualization/tab_taxa_core_ssg.csv", quote = FALSE)
+
+# --------------------------------------------------------------------------------------------------------
+
+# [15] Plasmid Analysis
+
+plas.counts.args <- read.csv("output/08_visualization/tab_mobile_arg_counts.tsv", sep = "\t")
+plas.counts.vir <- read.csv("output/08_visualization/tab_mobile_vir_counts.tsv", sep = "\t")
+colnames(plas.counts.args) <- c("SampleID", "mobile_args")
+colnames(plas.counts.vir) <- c("SampleID", "mobile_virs")
+plas.df <- list(meta.sorted, plas.counts.args, plas.counts.vir) %>% reduce(full_join, by = "SampleID")
+
+# Barchart of args per timepoint
+png("output/08_visualization/plas_box_time_args.png", width = 20, height = 10, units = "cm", res = 500)
+ggplot(plas.df[plas.df$AB_Group != "REF",], aes(x = Timepoint, y = log(mobile_args + 1), fill = Timepoint)) +
+  geom_boxplot(alpha = 0.9) +
+  geom_jitter(alpha = 0.5) +
+  facet_wrap(~AB_Group, scale = "free") +
+  coord_cartesian(ylim = c(0, 4.9)) +
+  scale_y_continuous(breaks = c(0, 2, 4)) +
+  stat_boxplot(geom = "errorbar", width = 0.5) +
+  scale_fill_manual(values = colours.days[1:3]) +
+  stat_compare_means(comparisons = boxplot.timepoints,
+                     alternative = "two.sided",
+                     method = "wilcox.test",
+                     label.y = c(4.1, 4.3, 4.6),
+                     size = 3,
+                     paired = TRUE,
+                     method.args = list(exact = FALSE))
+dev.off()
+
+# Barchart of virs per timepoint
+png("output/08_visualization/plas_box_time_vir.png", width = 20, height = 10, units = "cm", res = 500)
+ggplot(plas.df[plas.df$AB_Group != "REF",], aes(x = Timepoint, y = log(mobile_virs + 1), fill = Timepoint)) +
+  geom_boxplot(alpha = 0.9) +
+  geom_jitter(alpha = 0.5) +
+  facet_wrap(~AB_Group, scale = "free") +
+  coord_cartesian(ylim = c(0, 4.9)) +
+  scale_y_continuous(breaks = c(0, 2, 4)) +
+  stat_boxplot(geom = "errorbar", width = 0.5) +
+  scale_fill_manual(values = colours.days[1:3]) +
+  stat_compare_means(comparisons = boxplot.timepoints,
+                     alternative = "two.sided",
+                     method = "wilcox.test",
+                     label.y = c(4.1, 4.3, 4.6),
+                     size = 3,
+                     paired = TRUE,
+                     method.args = list(exact = FALSE))
+dev.off()
+
+# Piecharts for ARGs per family
+plas.species.args <- read.csv("output/08_visualization/tab_mobile_arg_list.tsv", sep = "\t")
+plas.species.args.taxa <- as.data.frame(getTaxonomy(plas.species.args$taxid, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = "family"))
+
+# Excludes taxa at higher ranks
+plas.species.args.sum <- table(plas.species.args.taxa)
+
+plas.species.args.sum <- as.data.frame(plas.species.args.sum)
+plas.species.args.sum <- plas.species.args.sum[order(plas.species.args.sum$Freq, decreasing = TRUE), ]
+plas.species.args.top <- plas.species.args.sum[1:4, ]
+plas.species.args.other <- c("Other", sum(plas.species.args.sum[5:nrow(plas.species.args.sum), ]$Freq))
+levels(plas.species.args.top$family) <- c(levels(plas.species.args.top$family), "Other")
+plas.species.args.top <- rbind(plas.species.args.top, plas.species.args.other)
+plas.species.args.top$Freq <- as.numeric(plas.species.args.top$Freq)
+colnames(plas.species.args.top) <- c("Family", "Freq")
+plas.species.args.top[is.na(plas.species.args.top)] <- 0
+plas.species.args.percentages <- round(((plas.species.args.top$Freq/sum(plas.species.args.top$Freq))*100), 0)
+plas.species.args.percentages <- paste(plas.species.args.percentages, "%", sep = "")
+
+png("output/08_visualization/plas_piechart_args.png", width = 15, height = 12, units = "cm", res = 500)
+ggplot(plas.species.args.top, aes(x = "", y = Freq, fill = Family)) +
+  geom_bar(stat = "identity", width = 1, color = "black") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = plas.species.args.percentages),
+            position = position_stack(vjust = 0.53)) +
+  theme_void() +
+  ggtitle("\nMobile ARGs per Family") +
+  theme(plot.title = element_text(hjust = 0.5))
+dev.off()
+
+# Piecharts for vir per family
+plas.species.vir <- read.csv("output/08_visualization/tab_mobile_vir_list.tsv", sep = "\t")
+plas.species.vir.taxa <- as.data.frame(getTaxonomy(plas.species.vir$taxid, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = "family"))
+
+# Excludes taxa at higher ranks
+plas.species.vir.sum <- table(plas.species.vir.taxa)
+
+plas.species.vir.sum <- as.data.frame(plas.species.vir.sum)
+plas.species.vir.sum <- plas.species.vir.sum[order(plas.species.vir.sum$Freq, decreasing = TRUE), ]
+plas.species.vir.top <- plas.species.vir.sum[1, ]
+levels(plas.species.vir.top$family) <- c(levels(plas.species.vir.top$family), "Other")
+plas.species.vir.top$Freq <- as.numeric(plas.species.vir.top$Freq)
+colnames(plas.species.vir.top) <- c("Family", "Freq")
+plas.species.vir.top[is.na(plas.species.vir.top)] <- 0
+plas.species.vir.percentages <- round(((plas.species.vir.top$Freq/sum(plas.species.vir.top$Freq))*100), 0)
+plas.species.vir.percentages <- paste(plas.species.vir.percentages, "%", sep = "")
+
+png("output/08_visualization/plas_piechart_vir.png", width = 15, height = 12, units = "cm", res = 500)
+ggplot(plas.species.vir.top[1,], aes(x = "", y = Freq, fill = Family)) +
+  geom_bar(stat = "identity", width = 1, color = "black") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = plas.species.vir.percentages),
+            position = position_stack(vjust = 0.5)) +
+  theme_void() +
+  ggtitle("\nMobile VFs per Family") +
+  theme(plot.title = element_text(hjust = 0.5))
+dev.off()
