@@ -1,14 +1,15 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: core_taxa.R
 # Author: Silver A. Wolf
-# Last Modified: Sun, 26.03.2023
-# Version: 0.0.3
+# Last Modified: Wed, 29.03.2023
+# Version: 0.0.4
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
 library("eulerr")
 library("microbiome")
 library("openxlsx")
+library("taxonomizr")
 
 data.biom <- import_biom("../output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 data.alpha <- microbiome::alpha(data.biom)
@@ -101,6 +102,14 @@ png("../output/08_visualization/venn_taxa_time_t0.png", width = 10, height = 10,
 plot(venn(list_core), fills = colours.groups, main = "t0")
 dev.off()
 
+core_t0_unique_ssg <- as.data.frame(getTaxonomy(list_core$SSG[!(list_core$SSG %in% list_core$'5DG')], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+core_t0_unique_5dg <- as.data.frame(getTaxonomy(list_core$'5DG'[!(list_core$'5DG' %in% list_core$SSG)], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+core_t0_shared_ssg_5dg <- as.data.frame(getTaxonomy(list_core$'5DG'[list_core$'5DG' %in% list_core$SSG], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+
+write.csv(core_t0_unique_ssg, "../output/08_visualization/tab_taxa_core_ssg_t0.csv", quote = FALSE)
+write.csv(core_t0_unique_5dg, "../output/08_visualization/tab_taxa_core_5dg_t0.csv", quote = FALSE)
+write.csv(core_t0_shared_ssg_5dg, "../output/08_visualization/tab_taxa_core_shared_t0.csv", quote = FALSE)
+
 # Venn Diagram (t1)
 samples.t1 <- meta.sorted[meta.sorted$Timepoint == "t1" & meta.sorted$AB_Group %in% c("SSG", "5DG"), ]$SampleID
 data.t1 <- prune_samples(samples.t1, data.biom)
@@ -121,6 +130,14 @@ png("../output/08_visualization/venn_taxa_time_t1.png", width = 10, height = 10,
 plot(venn(list_core), fills = colours.groups, main = "t1")
 dev.off()
 
+core_t1_unique_ssg <- as.data.frame(getTaxonomy(list_core$SSG[!(list_core$SSG %in% list_core$'5DG')], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+core_t1_unique_5dg <- as.data.frame(getTaxonomy(list_core$'5DG'[!(list_core$'5DG' %in% list_core$SSG)], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+core_t1_shared_ssg_5dg <- as.data.frame(getTaxonomy(list_core$'5DG'[list_core$'5DG' %in% list_core$SSG], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+
+write.csv(core_t1_unique_ssg, "../output/08_visualization/tab_taxa_core_ssg_t1.csv", quote = FALSE)
+write.csv(core_t1_unique_5dg, "../output/08_visualization/tab_taxa_core_5dg_t1.csv", quote = FALSE)
+write.csv(core_t1_shared_ssg_5dg, "../output/08_visualization/tab_taxa_core_shared_t1.csv", quote = FALSE)
+
 # Venn Diagram (t2)
 samples.t2 <- meta.sorted[meta.sorted$Timepoint == "t2" & meta.sorted$AB_Group %in% c("SSG", "5DG"), ]$SampleID
 data.t2 <- prune_samples(samples.t2, data.biom)
@@ -140,3 +157,11 @@ for (n in disease_states){
 png("../output/08_visualization/venn_taxa_time_t2.png", width = 10, height = 10, units = "cm", res = 500)
 plot(venn(list_core), fills = colours.groups, main = "t2")
 dev.off()
+
+core_t2_unique_ssg <- as.data.frame(getTaxonomy(list_core$SSG[!(list_core$SSG %in% list_core$'5DG')], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+core_t2_unique_5dg <- as.data.frame(getTaxonomy(list_core$'5DG'[!(list_core$'5DG' %in% list_core$SSG)], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+core_t2_shared_ssg_5dg <- as.data.frame(getTaxonomy(list_core$'5DG'[list_core$'5DG' %in% list_core$SSG], sqlFile = "../tmp/accessionTaxa.sql", desiredTaxa = c("family", "genus", "species")))
+
+write.csv(core_t2_unique_ssg, "../output/08_visualization/tab_taxa_core_ssg_t2.csv", quote = FALSE)
+write.csv(core_t2_unique_5dg, "../output/08_visualization/tab_taxa_core_5dg_t2.csv", quote = FALSE)
+write.csv(core_t2_shared_ssg_5dg, "../output/08_visualization/tab_taxa_core_shared_t2.csv", quote = FALSE)
