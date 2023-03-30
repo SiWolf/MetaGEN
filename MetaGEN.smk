@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 17.03.2023
-# Version: 0.7.1
+# Last Modified: Thu, 30.03.2023
+# Version: 0.7.2
 # -------------------------------
 
 # How to run MetaGEN
@@ -536,7 +536,7 @@ rule metaquast:
 		max_refs = config["metaquast_max_refs"]
 	shell:
 		"""
-		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent --max-ref-number {params.max_refs}
+		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent --max-ref-number {params.max_refs} --no-html --space-efficient
 		"""
 
 #PlasClass
