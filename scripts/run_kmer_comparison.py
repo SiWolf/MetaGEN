@@ -6,7 +6,7 @@
 # -------------------------------
 
 import os
-threads = "232"
+threads = "216"
 kmer_threshold = "254"
 
 # Identification of unique kmers per timepoint
