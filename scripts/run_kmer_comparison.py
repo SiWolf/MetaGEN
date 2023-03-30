@@ -1,12 +1,12 @@
 # -------------------------------
 # Title: run_kmer_comparsion.py
 # Author: Silver A. Wolf
-# Last Modified: Wed, 29.03.2023
-# Version: 0.0.2
+# Last Modified: Thu, 30.03.2023
+# Version: 0.0.3
 # -------------------------------
 
 import os
-threads = "216"
+threads = "232"
 kmer_threshold = "254"
 
 # Identification of unique kmers per timepoint
