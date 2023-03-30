@@ -9,7 +9,7 @@ import glob
 import os
 
 kmer_lists = (glob.glob("output/03_functional_analysis/kmc3/unique_filter*"))
-threads = 6
+threads = 35
 
 for comparison in kmer_lists:
     name = comparison.split("/")[-1].split(".")[0]
@@ -23,4 +23,4 @@ for comparison in kmer_lists:
     fasta_out.close()
     blast_out = "output/03_functional_analysis/kmc3/blast_" + name + ".txt"
     #os.system("#makeblastdb -in db/uniprot_sprot.fasta -out db/uniprot_blast_db -dbtype prot")
-    os.system("blastp -query " + fasta + " -db db/uniprot_blast_db -outfmt \"6 delim=@ qseqid salltitles\" -max_target_seqs 1 -num_threads " + str(threads) + " > " + blast_out)
+    os.system("blastx -query " + fasta + " -db db/uniprot_blast_db -outfmt \"6 delim=@ qseqid salltitles\" -max_target_seqs 1 -num_threads " + str(threads) + " > " + blast_out)

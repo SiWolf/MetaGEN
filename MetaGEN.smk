@@ -40,7 +40,7 @@ rule all:
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathabundance.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
-		expand("output/04_assemblies/metaquast/{sample}/report.html", sample = SAMPLES),
+		expand("output/04_assemblies/metaquast/{sample}/metaquast.log", sample = SAMPLES),
 		"output/05_genomic_bins/gtdbtk/classify/gtdbtk.bac120.summary.tsv",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
@@ -525,7 +525,7 @@ rule metaquast:
 	input:
 		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	output:
-		qc_assembly = "output/04_assemblies/metaquast/{sample}/report.html"
+		qc_assembly = "output/04_assemblies/metaquast/{sample}/metaquast.log"
 	conda:
 		"envs/metaquast.yml"
 	threads:
