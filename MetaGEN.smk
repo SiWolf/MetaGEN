@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Thu, 30.03.2023
-# Version: 0.7.2
+# Last Modified: Fri, 31.03.2023
+# Version: 0.7.3
 # -------------------------------
 
 # How to run MetaGEN
@@ -302,12 +302,12 @@ rule co_assembly_metabat:
 		"""
 		jgi_summarize_bam_contig_depths --outputDepth {output.co_depth} --pairedContigs {output.co_paired} --minContigLength {params.min_length} --minContigDepth {params.min_depth} output/06_co_assembly/bowtie2/*.bam
 		metabat2 -m 1500 -a {output.co_depth} -i {input.renamed} -o output/06_co_assembly/metabat/bin/COASSEMBLY -t {threads}
-		rm tmp/co-assembly.1.bt2l
-		rm tmp/co-assembly.2.bt2l
-		rm tmp/co-assembly.3.bt2l
-		rm tmp/co-assembly.4.bt2l
-		rm tmp/co-assembly.rev.1.bt2l
-		rm tmp/co-assembly.rev.2.bt2l
+		rm tmp/co_assembly.1.bt2l
+		rm tmp/co_assembly.2.bt2l
+		rm tmp/co_assembly.3.bt2l
+		rm tmp/co_assembly.4.bt2l
+		rm tmp/co_assembly.rev.1.bt2l
+		rm tmp/co_assembly.rev.2.bt2l
 		"""
 
 # Bowtie 2
