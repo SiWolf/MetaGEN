@@ -41,7 +41,7 @@ rule all:
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/metaquast.log", sample = SAMPLES),
-		"output/05_genomic_bins/raxml_ng/ar122.raxml.bestTree",
+		"output/05_genomic_bins/raxml_ng/ar53.raxml.bestTree",
 		"output/05_genomic_bins/raxml_ng/bac120.raxml.bestTree",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
@@ -414,10 +414,10 @@ rule co_assembly_megahit:
 # RAxML-NG
 rule raxml_ng:
 	input:
-		gtdbtk_ar_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.ar122.user_msa.fasta",
-		gtdbtk_bac_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.bac120.user_msa.fasta"
+		gtdbtk_ar_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.ar53.user_msa.fasta.gz",
+		gtdbtk_bac_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.bac120.user_msa.fasta.gz"
 	output:
-		raxmlng_ar_nwk = "output/05_genomic_bins/raxml_ng/ar122.raxml.bestTree",
+		raxmlng_ar_nwk = "output/05_genomic_bins/raxml_ng/ar53.raxml.bestTree",
 		raxmlng_bac_nwk = "output/05_genomic_bins/raxml_ng/bac120.raxml.bestTree"
 	conda:
 		"envs/raxml_ng.yml"
@@ -427,8 +427,14 @@ rule raxml_ng:
 		"[RAxML-NG] generating phylogenetic tree of taxonomic bins."
 	shell:
 		"""
-		raxml-ng --all --model Blosum62 --msa {input.gtdbtk_ar_msa} --threads {threads} --prefix output/05_genomic_bins/raxml_ng/ar122
-		raxml-ng --all --model Blosum62 --msa {input.gtdbtk_bac_msa} --threads {threads} --prefix output/05_genomic_bins/raxml_ng/bac120
+		cp {input.gtdbtk_ar_msa} tmp/
+		gunzip tmp/gtdbtk.ar53.user_msa.fasta.gz
+		raxml-ng --all --model Blosum62 --msa tmp/gtdbtk.ar53.user_msa.fasta --threads {threads} --prefix output/05_genomic_bins/raxml_ng/ar53 --force perf_threads
+		rm tmp/gtdbtk.ar53.user_msa.fasta
+		cp {input.gtdbtk_bac_msa} tmp/
+		gunzip tmp/gtdbtk.bac120.user_msa.fasta.gz
+		raxml-ng --all --model Blosum62 --msa tmp/gtdbtk.bac120.user_msa.fasta --threads {threads} --prefix output/05_genomic_bins/raxml_ng/bac120 --force perf_threads
+		rm tmp/gtdbtk.bac120.user_msa.fasta
 		"""
 
 # GTDB-Tk
@@ -437,8 +443,8 @@ rule gtdbtk:
 	input:
 		drep_table = "output/05_genomic_bins/drep/data_tables/Wdb.csv"
 	output:
-		gtdbtk_ar_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.ar122.user_msa.fasta",
-		gtdbtk_bac_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.bac120.user_msa.fasta"
+		gtdbtk_ar_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.ar53.user_msa.fasta.gz",
+		gtdbtk_bac_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.bac120.user_msa.fasta.gz"
 	conda:
 		"envs/gtdbtk.yml"
 	threads:
@@ -449,8 +455,7 @@ rule gtdbtk:
 		db = config["db_gtdbtk"]
 	shell:
 		"""
-		GTDBTK_DATA_PATH={params.db}
-		gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/ --cpus {threads} --mash_db tmp/mash_db
+		GTDBTK_DATA_PATH={params.db} gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/ --cpus {threads} --mash_db tmp/mash_db
 		rm tmp/mash_db*
 		"""
 
