@@ -442,7 +442,7 @@ rule gtdbtk:
 	conda:
 		"envs/gtdbtk.yml"
 	threads:
-		128
+		216
 	message:
 		"[GTDB-Tk] taxonomic classification of reconstructed bins."
 	params:
@@ -450,7 +450,8 @@ rule gtdbtk:
 	shell:
 		"""
 		GTDBTK_DATA_PATH={params.db}
-		gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/ --cpus {threads}
+		gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/ --cpus {threads} --mash_db tmp/mash_db
+		rm tmp/mash_db*
 		"""
 
 # dRep
