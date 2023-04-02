@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 31.03.2023
-# Version: 0.7.3
+# Last Modified: Sun, 02.04.2023
+# Version: 0.7.4
 # -------------------------------
 
 # How to run MetaGEN
@@ -41,7 +41,8 @@ rule all:
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/metaquast.log", sample = SAMPLES),
-		"output/05_genomic_bins/gtdbtk/classify/gtdbtk.bac120.summary.tsv",
+		"output/05_genomic_bins/raxml_ng/ar122.raxml.bestTree",
+		"output/05_genomic_bins/raxml_ng/bac120.raxml.bestTree",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary",
@@ -410,13 +411,34 @@ rule co_assembly_megahit:
 # V: Genomic Binning
 # -------------------------------
 
+# RAxML-NG
+rule raxml_ng:
+	input:
+		gtdbtk_ar_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.ar122.user_msa.fasta",
+		gtdbtk_bac_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.bac120.user_msa.fasta"
+	output:
+		raxmlng_ar_nwk = "output/05_genomic_bins/raxml_ng/ar122.raxml.bestTree",
+		raxmlng_bac_nwk = "output/05_genomic_bins/raxml_ng/bac120.raxml.bestTree"
+	conda:
+		"envs/raxml_ng.yml"
+	threads:
+		216
+	message:
+		"[RAxML-NG] generating phylogenetic tree of taxonomic bins."
+	shell:
+		"""
+		raxml-ng --all --model Blosum62 --msa {input.gtdbtk_ar_msa} --threads {threads} --prefix output/05_genomic_bins/raxml_ng/ar122
+		raxml-ng --all --model Blosum62 --msa {input.gtdbtk_bac_msa} --threads {threads} --prefix output/05_genomic_bins/raxml_ng/bac120
+		"""
+
 # GTDB-Tk
 # Due to high memory requirements, this rule should not run in parallel
 rule gtdbtk:
 	input:
 		drep_table = "output/05_genomic_bins/drep/data_tables/Wdb.csv"
 	output:
-		tax_table = "output/05_genomic_bins/gtdbtk/classify/gtdbtk.bac120.summary.tsv"
+		gtdbtk_ar_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.ar122.user_msa.fasta",
+		gtdbtk_bac_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.bac120.user_msa.fasta"
 	conda:
 		"envs/gtdbtk.yml"
 	threads:
