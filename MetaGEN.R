@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Tue, 28.03.2023
-# Version: 0.6.3
+# Last Modified: Wed, 05.04.2023
+# Version: 0.6.4
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -151,7 +151,7 @@ colours.days = c("t0" = "#00BA38",
 
 colours.groups = c("SSG" = "#00ff7f",
                    "5DG" = "#ffa500",
-                   "REF" = "#00bfff"
+                   "REF" = "#606060"
                    )
 
 eigenvalue_pc1 = round(braycurtis.pcoa$values$Relative_eig[1]*100, 1)
@@ -457,7 +457,7 @@ png("output/08_visualization/tax_bar_horses_ref.png", width = 10, height = 15, u
 ggplot(bar_data_ref, aes(fill = OTU, y = Abundance, x = HORSE)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
-        labs(title = "Relative Abundance (Ref)",
+        labs(title = "Relative Abundance (REF)",
              x = "Horses",
              y = "Relative Abundance (%)",
              fill = "Top 10 Phyla"
@@ -1773,43 +1773,7 @@ dev.off()
 
 # --------------------------------------------------------------------------------------------------------
 
-# [14] core Taxa Analysis
-
-# core taxa
-data.rel <- microbiome::transform(data.biom, "compositional")
-micro.core <- core(data.rel, detection = 0, prevalence = 0.95)
-core.taxa.ids <- taxa(micro.core)
-core.taxa.names <- as.data.frame(getTaxonomy(core.taxa.ids, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = c("superkingdom", "phylum", "class", "order", "family", "genus", "species")))
-write.csv(core.taxa.names, file = "output/08_visualization/tab_taxa_core.csv", quote = FALSE)
-
-# accessory taxa
-data.taxa <- as.data.frame(tax_table(data.biom))
-micro.accessory <- data.taxa[!(rownames(data.taxa) %in% core.taxa.ids), ]
-accesssory.taxa.ids <- rownames(micro.accessory)
-accesssory.taxa.names <- as.data.frame(getTaxonomy(accesssory.taxa.ids, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = c("superkingdom", "phylum", "class", "order", "family", "genus", "species")))
-write.csv(accesssory.taxa.names, file = "output/08_visualization/tab_taxa_accesssory.csv", quote = FALSE)
-
-# 5DG core taxa
-samples.5dg <- meta.sorted[meta.sorted$AB_Group == "5DG", ]$SampleID
-data.5dg <- prune_samples(samples.5dg, data.biom)
-data.5dg.rel <- microbiome::transform(data.5dg, "compositional")
-micro.core.5dg <- core(data.5dg.rel, detection = 0, prevalence = 0.95)
-core.taxa.ids.5dg <- taxa(micro.core.5dg)
-core.taxa.names.5dg <- as.data.frame(getTaxonomy(core.taxa.ids.5dg, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = c("superkingdom", "phylum", "class", "order", "family", "genus", "species")))
-write.csv(core.taxa.names.5dg, file = "output/08_visualization/tab_taxa_core_5dg.csv", quote = FALSE)
-
-# SSG core taxa
-samples.ssg <- meta.sorted[meta.sorted$AB_Group == "SSG", ]$SampleID
-data.ssg <- prune_samples(samples.ssg, data.biom)
-data.ssg.rel <- microbiome::transform(data.ssg, "compositional")
-micro.core.ssg <- core(data.ssg.rel, detection = 0, prevalence = 0.95)
-core.taxa.ids.ssg <- taxa(micro.core.ssg)
-core.taxa.names.ssg <- as.data.frame(getTaxonomy(core.taxa.ids.ssg, sqlFile = "tmp/accessionTaxa.sql", desiredTaxa = c("superkingdom", "phylum", "class", "order", "family", "genus", "species")))
-write.csv(core.taxa.names.ssg, file = "output/08_visualization/tab_taxa_core_ssg.csv", quote = FALSE)
-
-# --------------------------------------------------------------------------------------------------------
-
-# [15] Plasmid Analysis
+# [14] Plasmid Analysis
 
 plas.counts.args <- read.csv("output/08_visualization/tab_mobile_arg_counts.tsv", sep = "\t")
 plas.counts.vir <- read.csv("output/08_visualization/tab_mobile_vir_counts.tsv", sep = "\t")
