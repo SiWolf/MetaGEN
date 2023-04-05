@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Sun, 02.04.2023
-# Version: 0.7.4
+# Last Modified: Wed, 05.04.2023
+# Version: 0.7.5
 # -------------------------------
 
 # How to run MetaGEN
@@ -429,11 +429,11 @@ rule raxml_ng:
 		"""
 		cp {input.gtdbtk_ar_msa} tmp/
 		gunzip tmp/gtdbtk.ar53.user_msa.fasta.gz
-		raxml-ng --all --model Blosum62 --msa tmp/gtdbtk.ar53.user_msa.fasta --threads {threads} --prefix output/05_genomic_bins/raxml_ng/ar53 --force perf_threads
+		raxml-ng --all --model LG --msa tmp/gtdbtk.ar53.user_msa.fasta --threads {threads} --prefix output/05_genomic_bins/raxml_ng/ar53 --force perf_threads --bs-trees 100
 		rm tmp/gtdbtk.ar53.user_msa.fasta
 		cp {input.gtdbtk_bac_msa} tmp/
 		gunzip tmp/gtdbtk.bac120.user_msa.fasta.gz
-		raxml-ng --all --model Blosum62 --msa tmp/gtdbtk.bac120.user_msa.fasta --threads {threads} --prefix output/05_genomic_bins/raxml_ng/bac120 --force perf_threads
+		raxml-ng --all --model LG --msa tmp/gtdbtk.bac120.user_msa.fasta --threads {threads} --prefix output/05_genomic_bins/raxml_ng/bac120 --force perf_threads --bs-trees 100
 		rm tmp/gtdbtk.bac120.user_msa.fasta
 		"""
 
