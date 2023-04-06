@@ -873,6 +873,8 @@ rule seqfu:
 		"""
 
 # bbmap split
+# Command to create merged references:
+# bbsplit.sh ref=references/ path=references/ threads=128 -Xmx128g
 rule bbmap_split:
 	input:
 		f1 = "output/01_preprocessing/fastp/{sample}_R1.fastq.gz",
