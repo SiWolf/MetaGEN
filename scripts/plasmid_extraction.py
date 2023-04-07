@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: plasmid_extraction.py
 # Author: Silver A. Wolf
-# Last Modified: Tue, 28.03.2023
-# Version: 0.0.1
+# Last Modified: Tue, 07.04.2023
+# Version: 0.0.2
 # -------------------------------
 
 import glob
@@ -37,7 +37,7 @@ def summarize_mobilome(name, path):
 				amr_contig = amr_line.split("\t")[1].strip()
 				amr_gene = amr_line.split("\t")[5].strip()
 			
-				plas_tab = "output/04_assemblies/plasclass/" + sample + ".txt"
+				plas_tab = "output/07_amr/plasclass/" + sample + ".txt"
 				with open(plas_tab) as plas_report:
 					for plas_line in plas_report:
 						plas_contig = plas_line.split("\t")[0].strip()

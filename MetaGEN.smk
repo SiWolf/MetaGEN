@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Wed, 05.04.2023
-# Version: 0.7.5
+# Last Modified: Fri, 07.04.2023
+# Version: 0.7.6
 # -------------------------------
 
 # How to run MetaGEN
@@ -27,6 +27,7 @@ configfile: "config/config.yml"
 COV_FRAC = str(int(config["amr_coverage"])/100)
 ID_FRAC = str(int(config["amr_identity"]/100))
 
+# Main rule
 # One rule to rule them all
 rule all:
 	input:
@@ -39,20 +40,21 @@ rule all:
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_genefamilies.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathabundance.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
-		expand("output/04_assemblies/plasclass/{sample}.txt", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/metaquast.log", sample = SAMPLES),
 		"output/05_genomic_bins/raxml_ng/ar53.raxml.bestTree",
 		"output/05_genomic_bins/raxml_ng/bac120.raxml.bestTree",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary",
-		expand("output/07_amr/deeparg/{sample}.mapping.ARG", sample = SAMPLES)
+		expand("output/07_amr/deeparg/{sample}.mapping.ARG", sample = SAMPLES),
+		expand("output/07_assemblies/plasclass/{sample}.txt", sample = SAMPLES)
 
 # -------------------------------
 # VII: AMR & Virulence Profiling
 # -------------------------------
 
 # deepARG
+# Novel ARG identification
 rule deeparg:
 	input:
 		cds = "output/04_assemblies/prodigal/{sample}.cds"
@@ -72,6 +74,7 @@ rule deeparg:
 		"""
 
 # CoverM Summary
+# Summarizing low-abundance ARG results
 rule coverm_summary:
 	input:
 		coverm_profile = expand("output/07_amr/coverm/{sample}.txt", sample = SAMPLES)
@@ -109,6 +112,7 @@ rule coverm_summary:
 		f.close()
 
 # CoverM
+# Utilization of the MEGAres database to assess the prevalence of low-abundance ARGs
 rule coverm:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -137,6 +141,7 @@ rule coverm:
 		"""
 
 # MMSeqs2
+# Preparing a local copy of the MEGAres database for further AMR profiling
 rule fetch_megares_db:
 	output:
 		megares_db = "db/megares_rep_seq.fasta"
@@ -158,6 +163,7 @@ rule fetch_megares_db:
 		"""
 
 # ABRicate TaxCaller
+# Taxonomic annotation of contigs associated with AMR
 rule abricate_taxcaller:
 	input:
 		a_stdout = expand("output/04_assemblies/kraken2/{sample}.stdout", sample = SAMPLES),
@@ -218,6 +224,7 @@ rule abricate_taxcaller:
 			summary_table.write(sample_name + tmpstr + "\n")
 
 # ABRicate Summary
+# Summarizing the AMR and virulence profiling results
 rule abricate_summary:
 	input:
 		amr_profile = expand("output/07_amr/abricate/amr/{sample}.tab", sample = SAMPLES),
@@ -238,6 +245,7 @@ rule abricate_summary:
 		"""
 
 # ABRicate
+# AMR and virulence profiling of the assemblies
 rule abricate:
 	input:
 		renamed = "output/04_assemblies/megahit/{sample}.fa"
@@ -259,11 +267,30 @@ rule abricate:
 		abricate --db vfdb --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath {input.renamed} > {output.vir_profile}
 		"""
 
+# PlasClass
+# Plasmid identification on assembly contigs
+rule plasclass:
+	input:
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
+	output:
+		plasmids = "output/07_amr/plasclass/{sample}.txt"
+	conda:
+		"envs/plasclass.yml"
+	threads:
+		32
+	message:
+		"[PlasClass] detecting plasmid sequences in the assembly of {wildcards.sample}."
+	shell:
+		"""
+		classify_fasta.py -f {input.renamed} -o {output.plasmids} -p {threads}
+		"""
+
 # -------------------------------
 # VI: Co-Assembly
 # -------------------------------
 
 # Prodigal
+# CDS calling on the assembly contigs
 rule co_assembly_prodigal:
 	input:
 		renamed = "output/06_co_assembly/megahit/co_assembly.fa"
@@ -281,6 +308,7 @@ rule co_assembly_prodigal:
 		"""
 
 # MetaBAT
+# Binning of the co-assembly into MAGs
 rule co_assembly_metabat:
 	input:
 		bam = expand("output/06_co_assembly/bowtie2/{sample}.bam", sample = SAMPLES),
@@ -312,6 +340,7 @@ rule co_assembly_metabat:
 		"""
 
 # Bowtie 2
+# Mapping of individual sample reads back to the co-assembly
 rule co_assembly_bowtie2:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -338,6 +367,7 @@ rule co_assembly_bowtie2:
 		"""
 
 # Bowtie 2
+# Generation of an index for the co-assembly
 rule co_assembly_bowtie2_index:
 	input:
 		renamed = "output/06_co_assembly/megahit/co_assembly.fa"
@@ -355,6 +385,7 @@ rule co_assembly_bowtie2_index:
 		"""
 
 # bbmap reformat
+# Cleaning of the co-assembly contig names
 rule co_assembly_bbmap:
 	input:
 		co_assembly = "tmp/co.assembly.final.contigs.fa"
@@ -373,6 +404,7 @@ rule co_assembly_bbmap:
 		"""
 
 # MEGAHIT
+# Co-assembly of all metagenomic samples
 rule co_assembly_megahit:
 	input:
 		b1 = expand("output/01_preprocessing/bbmap/{sample}_R1.fastq.gz", sample = SAMPLES),
@@ -412,6 +444,7 @@ rule co_assembly_megahit:
 # -------------------------------
 
 # RAxML-NG
+# Phylogenetic reconstruction using conserved genes within the MAGs
 rule raxml_ng:
 	input:
 		gtdbtk_ar_msa = "output/05_genomic_bins/gtdbtk/align/gtdbtk.ar53.user_msa.fasta.gz",
@@ -438,6 +471,7 @@ rule raxml_ng:
 		"""
 
 # GTDB-Tk
+# QC and taxonomic annotation of the dereplicated MAGs
 # Due to high memory requirements, this rule should not run in parallel
 rule gtdbtk:
 	input:
@@ -460,6 +494,7 @@ rule gtdbtk:
 		"""
 
 # dRep
+# Dereplication of the MAGs to a set of representative genomes
 rule drep:
 	input:
 		solo_bins = expand("output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa", sample = SAMPLES),
@@ -482,6 +517,7 @@ rule drep:
 		"""
 
 # MetaBAT
+# Binning of the metagenomic assemblies into MAGs
 rule metabat:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -527,6 +563,7 @@ rule metabat:
 # -------------------------------
 
 # Prodigal
+# CDS calling on the assembly contigs
 rule prodigal:
 	input:
 		renamed = "output/04_assemblies/megahit/{sample}.fa"
@@ -543,9 +580,33 @@ rule prodigal:
 		prodigal -d {output.cds} -p meta -q -i {input.renamed}
 		"""
 
+# kraken2
+# Taxonomic assignment of assembly contigs
+rule kraken2_assembly:
+	input:
+		renamed = "output/04_assemblies/megahit/{sample}.fa"
+	output:
+		a_report = "output/04_assemblies/kraken2/{sample}.report",
+		a_stdout = "output/04_assemblies/kraken2/{sample}.stdout"
+	conda:
+		"envs/kraken2.yml"
+	threads:
+		32
+	message:
+		"[kraken2] assessing taxonomic content of assembly for {wildcards.sample}."
+	params:
+		db = config["db_kraken"],
+		confidence = config["kraken_confidence_score"]
+	shell:
+		"""
+		kraken2 --db {params.db} --threads {threads} --confidence {params.confidence} --report {output.a_report} --output {output.a_stdout} {input.renamed}
+		"""
+
 # MetaQUAST
-# Note 1: Due to issues with overwriting the metaquast tmp files, this rule should not run in parallel
-# Note 2: Download the corresponding databases at least once for the auto-generated conda enviroment:
+# QC of metagenomic assemblies
+# Due to issues with overwriting the metaquast tmp files
+# This rule should therefire not run in parallel
+# Download the corresponding databases at least once for the auto-generated conda environment:
 # quast-download-gridss
 # quast-download-silva
 # quast-download-busco
@@ -567,45 +628,8 @@ rule metaquast:
 		metaquast -o output/04_assemblies/metaquast/{wildcards.sample}/ -t {threads} {input.renamed} --plots-format png --silent --max-ref-number {params.max_refs} --no-html --space-efficient
 		"""
 
-#PlasClass
-rule plasclass:
-	input:
-		renamed = "output/04_assemblies/megahit/{sample}.fa"
-	output:
-		plasmids = "output/04_assemblies/plasclass/{sample}.txt"
-	conda:
-		"envs/plasclass.yml"
-	threads:
-		32
-	message:
-		"[PlasClass] detecting plasmid sequences in the assembly of {wildcards.sample}."
-	shell:
-		"""
-		classify_fasta.py -f {input.renamed} -o {output.plasmids} -p {threads}
-		"""
-
-# kraken2
-rule kraken2_assembly:
-	input:
-		renamed = "output/04_assemblies/megahit/{sample}.fa"
-	output:
-		a_report = "output/04_assemblies/kraken2/{sample}.report",
-		a_stdout = "output/04_assemblies/kraken2/{sample}.stdout"
-	conda:
-		"envs/kraken2.yml"
-	threads:
-		32
-	message:
-		"[kraken2] assessing taxonomic content of assembly for {wildcards.sample}."
-	params:
-		db = config["db_kraken"],
-		confidence = config["kraken_confidence_score"]
-	shell:
-		"""
-		kraken2 --db {params.db} --threads {threads} --confidence {params.confidence} --report {output.a_report} --output {output.a_stdout} {input.renamed}
-		"""
-
 # bbmap reformat
+# Cleaning of the assembly contig names
 rule bbmap_reformat:
 	input:
 		assembly = "tmp/assembly_{sample}/final.contigs.fa"
@@ -625,6 +649,7 @@ rule bbmap_reformat:
 		"""
 
 # MEGAHIT
+# Metagenomic assembly
 rule megahit:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -650,6 +675,7 @@ rule megahit:
 # -------------------------------
 
 # HUMAnN3
+# Pathway analysis of cleaned reads
 rule humann:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -677,6 +703,7 @@ rule humann:
 		"""
 
 # KMC3
+# Exports kmer statistics into a human-readable format
 rule kmc3_dump:
 	input:
 		kmc_pre = "output/03_functional_analysis/kmc3/{sample}.kmc_pre",
@@ -695,6 +722,7 @@ rule kmc3_dump:
 		"""
 
 # KMC3
+# Computes kmer abundances for each sample
 rule kmc3:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -723,6 +751,7 @@ rule kmc3:
 # -------------------------------
 
 # Krona
+# Create html report of taxonomic profiles
 rule krona:
 	input:
 		k_stdout = expand("output/02_taxonomic_profiling/kraken2/{sample}.stdout", sample = SAMPLES)
@@ -741,6 +770,7 @@ rule krona:
 		"""
 
 # Update phyla names
+# Updating of the (old) phyla titles to the current nomenclature
 rule biom_update_phyla:
 	input:
 		b_summary = "output/02_taxonomic_profiling/kraken_biom/bracken.biom"
@@ -768,6 +798,7 @@ rule biom_update_phyla:
 			os.system("sed -i -- \'s/" + old_name + "/" + new_name + "/g\' " + output.b_new_phyla)
 
 # kraken-biom
+# Conversion of bracken report into the biom format
 rule kraken_biom:
 	input:
 		b_report = expand("output/02_taxonomic_profiling/bracken/{sample}.report", sample = SAMPLES)
@@ -786,6 +817,7 @@ rule kraken_biom:
 		"""
 
 # bracken abundancies
+# Re-estimation of taxonomic assignments down to species level
 rule bracken_abundancies:
 	input:
 		k_report = "output/02_taxonomic_profiling/kraken2/{sample}.report"
@@ -808,6 +840,7 @@ rule bracken_abundancies:
 		"""
 
 # kraken2
+# Taxonomic assignment of reads
 rule kraken2_reads:
 	input:
 		b1 = "output/01_preprocessing/bbmap/{sample}_R1.fastq.gz",
@@ -834,6 +867,7 @@ rule kraken2_reads:
 # -------------------------------
 
 # MultiQC
+# Creates html report of trimming and kraken reports
 rule multiqc:
 	input:
 		json = expand("output/01_preprocessing/fastp/reports/{sample}.fastp.json", sample = SAMPLES),
@@ -854,6 +888,7 @@ rule multiqc:
 		"""
 
 # SeqFu
+# Creates statistics on cleaned read files
 rule seqfu:
 	input:
 		b1 = expand("output/01_preprocessing/bbmap/{sample}_R1.fastq.gz", sample = SAMPLES),
@@ -873,7 +908,11 @@ rule seqfu:
 		"""
 
 # bbmap split
-# Command to create merged references:
+# Removes host genome contamination through mapping
+# Outputs cleaned reads in fastq format and mapping statistics
+# First run will generate index for the reference genomes
+# Should therefore not run in parallel
+# Alternative command to create merged references:
 # bbsplit.sh ref=references/ path=references/ threads=128 -Xmx128g
 rule bbmap_split:
 	input:
@@ -891,7 +930,7 @@ rule bbmap_split:
 	conda:
 		"envs/bbmap.yml"
 	threads:
-		64
+		128
 	message:
 		"[bbmap] removing host contamination in {wildcards.sample}."
 	shell:
@@ -901,6 +940,8 @@ rule bbmap_split:
 		"""
 
 # fastp
+# Performs adapter- and quality-trimming of raw reads
+# Outputs trimmed fastq files and qc reports
 rule fastp:
 	input:
 		r1 = "input/{sample}_R1.fastq.gz",

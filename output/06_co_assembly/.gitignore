@@ -4,9 +4,7 @@
 *
 # Add an exception for this file
 !.gitignore
-!bbmap
 !bowtie2
-!checkm
 !megahit
 !metabat
 !prodigal

@@ -4,9 +4,7 @@
 *
 # Add an exception for this file
 !.gitignore
-!bbmap
 !kraken2
 !megahit
 !metaquast
-!plasclass
 !prodigal
