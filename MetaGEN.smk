@@ -47,7 +47,7 @@ rule all:
 		"output/07_amr/abricate/amr/kraken2.summary",
 		"output/07_amr/coverm/coverm.summary",
 		expand("output/07_amr/deeparg/{sample}.mapping.ARG", sample = SAMPLES),
-		expand("output/07_assemblies/plasclass/{sample}.txt", sample = SAMPLES)
+		expand("output/07_amr/plasclass/{sample}.txt", sample = SAMPLES)
 
 # -------------------------------
 # VII: AMR & Virulence Profiling
