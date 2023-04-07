@@ -45,6 +45,8 @@ rule all:
 		"output/05_genomic_bins/raxml_ng/bac120.raxml.bestTree",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
 		"output/07_amr/abricate/amr/kraken2.summary",
+		"output/07_amr/abricate/mags/amr.tab",
+		"output/07_amr/abricate/mags/vir.tab",
 		"output/07_amr/coverm/coverm.summary",
 		expand("output/07_amr/deeparg/{sample}.mapping.ARG", sample = SAMPLES),
 		expand("output/07_amr/plasclass/{sample}.txt", sample = SAMPLES)
@@ -162,6 +164,34 @@ rule fetch_megares_db:
 		mmseqs easy-cluster db/megares_filtered.fasta db/megares tmp/ --threads {threads} --min-seq-id {params.identity} -c {params.coverage} --remove-tmp-files 1
 		"""
 
+# ABRicate
+# AMR and virulence profiling on the dereplicated MAGs
+rule abricate_mags:
+	input:
+		solo_bins = expand("output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa", sample = SAMPLES),
+		co_bins = "output/06_co_assembly/metabat/bin/COASSEMBLY.1.fa"
+	output:
+		amr_mags = "output/07_amr/abricate/mags/amr.tab",
+		vir_mags = "output/07_amr/abricate/mags/vir.tab"
+	conda:
+		"envs/abricate.yml"
+	threads:
+		16
+	message:
+		"[ABRicate] scanning MAGs for AMR and virulence genes."
+	params:
+		identity = config["amr_identity"],
+		coverage = config["amr_coverage"]
+	shell:
+		"""
+		mkdir -p tmp/mags/
+		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/mags/
+		cp output/06_co_assembly/metabat/bin/*.fa tmp/mags/
+		abricate --db megares --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath tmp/mags/* > {output.amr_mags}
+		abricate --db vfdb --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath tmp/mags/* > {output.vir_mags}
+		rm -r tmp/mags/
+		"""
+
 # ABRicate TaxCaller
 # Taxonomic annotation of contigs associated with AMR
 rule abricate_taxcaller:
@@ -246,7 +276,7 @@ rule abricate_summary:
 
 # ABRicate
 # AMR and virulence profiling of the assemblies
-rule abricate:
+rule abricate_assemblies:
 	input:
 		renamed = "output/04_assemblies/megahit/{sample}.fa"
 	output:
