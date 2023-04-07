@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------------------------------------
-# Title: MetaGEN_Gut.R
+# Title: MetaGEN.R
 # Author: Silver A. Wolf
 # Last Modified: Thu, 06.04.2023
 # Version: 0.6.5
