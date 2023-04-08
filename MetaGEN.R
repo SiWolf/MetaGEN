@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 06.04.2023
-# Version: 0.6.5
+# Last Modified: Sat, 08.04.2023
+# Version: 0.6.6
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -1876,3 +1876,43 @@ ggplot(plas.species.vir.top[1,], aes(x = "", y = Freq, fill = Family)) +
   ggtitle("\nMobile VFs per Family") +
   theme(plot.title = element_text(hjust = 0.5))
 dev.off()
+
+# --------------------------------------------------------------------------------------------------------
+
+# [15] Analysis of MDR MAGs
+
+amr.mags.raw <- read.csv("output/07_amr/abricate/mags/amr.tab", sep = "\t")
+amr.mags.split <- data.frame(do.call("rbind", strsplit(as.character(amr.mags.raw$PRODUCT), ":", fixed = TRUE)))
+amr.mags.merged <- data.frame(amr.mags.raw, amr.mags.split)
+
+s = c()
+c = c()
+i = 1
+
+for (sample in unique(amr.mags.merged$X.FILE)){
+  s[i] <- sample
+  c[i] <- length(unique(amr.mags.merged[amr.mags.merged$X.FILE == sample & amr.mags.merged$X1 == "Drugs", ]$X2))
+  i = i + 1
+}
+
+amr.mags.sum <- data.frame(SAMPLE = s, DRUG_RESISTANCE_CLASSES = c)
+amr.mags.count = 8265
+
+amr.mags.overview.rownames <- c("Total MAGs", "MDR (> 2 antibiotic classes)", "Resistant (1-2 antibiotic classes)", "Susceptible (0 antibiotic classes)")
+amr.mags.overview.colnames <- c("Count", "Percentage of MAGs")
+amr.mags.overview.counts <- c(amr.mags.count,
+                              nrow(amr.mags.sum[amr.mags.sum$DRUG_RESISTANCE_CLASSES > 2, ]),
+                              nrow(amr.mags.sum[amr.mags.sum$DRUG_RESISTANCE_CLASSES == 2 | amr.mags.sum$DRUG_RESISTANCE_CLASSES == 1, ]),
+                              amr.mags.count - nrow(amr.mags.sum[amr.mags.sum$DRUG_RESISTANCE_CLASSES > 0, ])
+                              )
+amr.mags.overview.percentages <- round((amr.mags.overview.counts/amr.mags.count) * 100, 1)
+
+amr.mags.overview <- data.frame(Counts = amr.mags.overview.counts, Percentages = amr.mags.overview.percentages)
+colnames(amr.mags.overview) <- amr.mags.overview.colnames
+rownames(amr.mags.overview) <- amr.mags.overview.rownames
+
+# Filter any hits below 1 before exporting
+amr.mags.sum.filtered <- amr.mags.sum[amr.mags.sum$DRUG_RESISTANCE_CLASSES > 0, ]
+
+write.csv(amr.mags.sum.filtered, file = "output/08_visualization/tab_mags_sum.csv", quote = FALSE, row.names = FALSE)
+write.csv(amr.mags.overview, file = "output/08_visualization/tab_mags_mdr.csv", quote = FALSE)
