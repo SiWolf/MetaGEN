@@ -4,8 +4,3 @@
 *
 # Add an exception for this file
 !.gitignore
-!drep
-!gtdbtk
-!gtdbtk_full
-!metabat
-!raxml_ng

@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Sat, 08.04.2023
-# Version: 0.6.6
+# Last Modified: Thu, 13.04.2023
+# Version: 0.6.7
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -1914,5 +1914,17 @@ rownames(amr.mags.overview) <- amr.mags.overview.rownames
 # Filter any hits below 1 before exporting
 amr.mags.sum.filtered <- amr.mags.sum[amr.mags.sum$DRUG_RESISTANCE_CLASSES > 0, ]
 
-write.csv(amr.mags.sum.filtered, file = "output/08_visualization/tab_mags_sum.csv", quote = FALSE, row.names = FALSE)
+# Add taxonomic assignment from gtdbtk
+gtdbtk.ar <- read.csv("output/05_genomic_bins/gtdbtk_full/classify/gtdbtk.ar53.summary.tsv", sep = "\t")
+gtdbtk.bac <- read.csv("output/05_genomic_bins/gtdbtk_full/classify/gtdbtk.bac120.summary.tsv", sep = "\t")
+gtdbtk.all <- rbind(gtdbtk.ar, gtdbtk.bac)
+gtdbtk.all.split <- separate(data = gtdbtk.all, col = classification, into = c("DOMAIN", "PHYLUM", "CLASS", "ORDER", "FAMILY", "GENUS", "SPECIES"), sep = ";")
+
+gtdbtk.all.filter <- gtdbtk.all.split[, 1:8]
+gtdbtk.all.filter$user_genome <- paste(gtdbtk.all.filter$user_genome, ".fa", sep = "")
+
+gtdbtk.all.merged <- merge(amr.mags.sum.filtered, gtdbtk.all.filter, by.x = "SAMPLE", by.y = "user_genome")
+gtdbtk.all.merged <- gtdbtk.all.merged[, c(1, 3, 4, 5, 6, 7, 8, 9, 2)]
+
+write.csv(gtdbtk.all.merged, file = "output/08_visualization/tab_mags_sum.csv", quote = FALSE, row.names = FALSE)
 write.csv(amr.mags.overview, file = "output/08_visualization/tab_mags_mdr.csv", quote = FALSE)

@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Fri, 07.04.2023
-# Version: 0.7.6
+# Last Modified: Thu, 13.04.2023
+# Version: 0.7.7
 # -------------------------------
 
 # How to run MetaGEN
@@ -41,6 +41,8 @@ rule all:
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathabundance.tsv", sample = SAMPLES),
 		expand("output/03_functional_analysis/humann3/{sample}/humann_{sample}_pathcoverage.tsv", sample = SAMPLES),
 		expand("output/04_assemblies/metaquast/{sample}/metaquast.log", sample = SAMPLES),
+		"output/05_genomic_bins/gtdbtk_full/align/gtdbtk.ar53.user_msa.fasta.gz",
+		"output/05_genomic_bins/gtdbtk_full/align/gtdbtk.bac120.user_msa.fasta.gz",
 		"output/05_genomic_bins/raxml_ng/ar53.raxml.bestTree",
 		"output/05_genomic_bins/raxml_ng/bac120.raxml.bestTree",
 		"output/06_co_assembly/prodigal/co_assembly.cds",
@@ -501,9 +503,9 @@ rule raxml_ng:
 		"""
 
 # GTDB-Tk
-# QC and taxonomic annotation of the dereplicated MAGs
+# Taxonomic annotation of the dereplicated MAGs
 # Due to high memory requirements, this rule should not run in parallel
-rule gtdbtk:
+rule gtdbtk_drep:
 	input:
 		drep_table = "output/05_genomic_bins/drep/data_tables/Wdb.csv"
 	output:
@@ -514,17 +516,20 @@ rule gtdbtk:
 	threads:
 		216
 	message:
-		"[GTDB-Tk] taxonomic classification of reconstructed bins."
+		"[GTDB-Tk] taxonomic classification of dereplicated bins."
 	params:
 		db = config["db_gtdbtk"]
 	shell:
 		"""
-		GTDBTK_DATA_PATH={params.db} gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/ --cpus {threads} --mash_db tmp/mash_db
-		rm tmp/mash_db*
+		mkdir -p tmp/mash_db/
+		mkdir -p tmp/tmp2/
+		GTDBTK_DATA_PATH={params.db} gtdbtk classify_wf --genome_dir output/05_genomic_bins/drep/dereplicated_genomes/ --out_dir output/05_genomic_bins/gtdbtk/ --extension fa --tmpdir tmp/tmp2/ --cpus {threads} --mash_db tmp/mash_db/
+		rm -r tmp/mash_db/
+		rm -r tmp/tmp2/
 		"""
 
 # dRep
-# Dereplication of the MAGs to a set of representative genomes
+# QC and dereplication of the MAGs to a set of representative genomes
 rule drep:
 	input:
 		solo_bins = expand("output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa", sample = SAMPLES),
@@ -544,6 +549,37 @@ rule drep:
 		cp output/06_co_assembly/metabat/bin/*.fa tmp/drep/
 		dRep dereplicate output/05_genomic_bins/drep/ -g tmp/drep/*.fa -p {threads} --multiround_primary_clustering --primary_chunksize 10000
 		rm -r tmp/drep/
+		"""
+
+# GTDB-Tk
+# Taxonomic annotation of all MAGs
+# Due to high memory requirements, this rule should not run in parallel
+rule gtdbtk_full:
+	input:
+		solo_bins = expand("output/05_genomic_bins/metabat/{sample}/bin/{sample}.1.fa", sample = SAMPLES),
+		co_bins = "output/06_co_assembly/metabat/bin/COASSEMBLY.1.fa"
+	output:
+		gtdbtk_ar_full = "output/05_genomic_bins/gtdbtk_full/align/gtdbtk.ar53.user_msa.fasta.gz",
+		gtdbtk_bac_full = "output/05_genomic_bins/gtdbtk_full/align/gtdbtk.bac120.user_msa.fasta.gz"
+	conda:
+		"envs/gtdbtk.yml"
+	threads:
+		216
+	message:
+		"[GTDB-Tk] taxonomic classification of reconstructed bins."
+	params:
+		db = config["db_gtdbtk"]
+	shell:
+		"""
+		mkdir -p tmp/mags/
+		mkdir -p tmp/mash_db_full/
+		mkdir -p tmp/tmp_full/
+		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/mags/
+		cp output/06_co_assembly/metabat/bin/*.fa tmp/mags/
+		GTDBTK_DATA_PATH={params.db} gtdbtk classify_wf --genome_dir tmp/mags/ --out_dir output/05_genomic_bins/gtdbtk_full/ --extension fa --tmpdir tmp/tmp_full/ --cpus {threads} --mash_db tmp/mash_db_full/
+		rm -r tmp/mags/
+		rm -r tmp/mash_db_full/
+		rm -r tmp/tmp_full/
 		"""
 
 # MetaBAT
