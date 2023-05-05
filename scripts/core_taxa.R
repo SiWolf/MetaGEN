@@ -14,7 +14,7 @@ library("taxonomizr")
 # Import data
 data.biom <- import_biom("../output/02_taxonomic_profiling/kraken_biom/bracken_update.biom", parseFunction = parse_taxonomy_default)
 data.alpha <- microbiome::alpha(data.biom)
-meta.raw <- read.xlsx("../metadata/23_03_Horses_Overview.xlsx", sheet = 1)
+meta.raw <- read.xlsx("../metadata/23_05_Horses_Overview.xlsx", sheet = 1)
 meta.raw <- meta.raw[,-c(1)]
 colnames(meta.raw)[1] <- "SampleID"
 meta.sorted = meta.raw[match(rownames(data.alpha), meta.raw$SampleID),]

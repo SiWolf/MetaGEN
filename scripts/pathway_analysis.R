@@ -12,7 +12,7 @@ library("splitstackshape")
 library("tidyverse")
 
 # Read metadata
-meta.raw <- read.xlsx("../metadata/23_03_Horses_Overview.xlsx", sheet = 1)
+meta.raw <- read.xlsx("../metadata/23_05_Horses_Overview.xlsx", sheet = 1)
 meta.raw <- meta.raw[,-c(1)]
 colnames(meta.raw)[1] <- "SampleID"
 
