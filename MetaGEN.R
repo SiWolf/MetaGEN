@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 13.04.2023
-# Version: 0.6.7
+# Last Modified: Mon, 08.05.2023
+# Version: 0.6.8
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -1928,3 +1928,35 @@ gtdbtk.all.merged <- gtdbtk.all.merged[, c(1, 3, 4, 5, 6, 7, 8, 9, 2)]
 
 write.csv(gtdbtk.all.merged, file = "output/08_visualization/tab_mags_sum.csv", quote = FALSE, row.names = FALSE)
 write.csv(amr.mags.overview, file = "output/08_visualization/tab_mags_mdr.csv", quote = FALSE)
+
+# --------------------------------------------------------------------------------------------------------
+
+# [16] Merging metadata tables
+
+results.16s <- read.csv("../Meta16s/results/tab_div_alpha_rarefy.csv")
+
+merge.tab.01 <- merge(meta.sorted, data.alpha.rarefy, by.x = "SampleID", by.y = 0)
+merge.tab.02 <- merge(merge.tab.01, amr.df.stats, by.x = "SampleID", by.y = "SAMPLE")
+merge.tab.03 <- merge(merge.tab.02, vir.df.stats, by.x = "SampleID", by.y = "SAMPLE")
+merge.tab.04 <- merge(merge.tab.03, plas.df, by = "SampleID")
+merge.tab.05 <- merge(merge.tab.04, results.16s, by.x = c("HorseID.x", "AB_Group.x", "Timepoint.x"), by.y = c("HORSE", "AB_GROUP", "TIMEPOINT"), all.x = TRUE)
+merge.tab.06 <- merge.tab.05[c("SampleID", "DiaryID.x", "HorseID.x", "Name.x",
+                               "AB_Group.x", "Timepoint.x", "Day.x", "#PE_READS.x",
+                               "chao1.x", "evenness_simpson.x", "diversity_shannon.x",
+                               "chao1.y", "evenness_simpson.y", "diversity_shannon.y",
+                               "CP60M.x", "CP60M.y", "mobile_args", "mobile_virs")]
+colnames(merge.tab.06) <- c("SampleID", "DiaryID", "HorseID", "Name",
+                            "AB_Group", "Timepoint", "Day", "SeqDepth",
+                            "gut_chao1", "gut_evenness_simpson", "gut_diversity_shannon",
+                            "nasal_chao1", "nasal_evenness_simpson", "nasal_diversity_shannon",
+                            "ARGs_CP60M", "VIR_CP60M", "ARGs_Mobile", "VIR_Mobile")
+merge.tab.06$SeqDepth <- merge.tab.06$SeqDepth * 150
+merge.tab.06$gut_chao1 <- round(merge.tab.06$gut_chao1, 0)
+merge.tab.06$gut_evenness_simpson <- round(merge.tab.06$gut_evenness_simpson, 3)
+merge.tab.06$gut_diversity_shannon <- round(merge.tab.06$gut_diversity_shannon, 2)
+merge.tab.06$nasal_chao1 <- round(merge.tab.06$nasal_chao1, 0)
+merge.tab.06$nasal_evenness_simpson <- round(merge.tab.06$nasal_evenness_simpson, 3)
+merge.tab.06$nasal_diversity_shannon <- round(merge.tab.06$nasal_diversity_shannon, 2)
+merge.tab.06$ARGs_CP60M <- round(merge.tab.06$ARGs_CP60M, 0)
+merge.tab.06$VIR_CP60M <- round(merge.tab.06$VIR_CP60M, 0)
+write.csv(merge.tab.06, file = "output/08_visualization/tab_summary.csv", quote = FALSE, row.names = FALSE)
