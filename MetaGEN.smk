@@ -1,8 +1,8 @@
 # -------------------------------
 # Title: MetaGEN_Main.smk
 # Author: Silver A. Wolf
-# Last Modified: Thu, 13.04.2023
-# Version: 0.7.7
+# Last Modified: Mon, 29.05.2023
+# Version: 0.7.8
 # -------------------------------
 
 # How to run MetaGEN
@@ -186,12 +186,12 @@ rule abricate_mags:
 		coverage = config["amr_coverage"]
 	shell:
 		"""
-		mkdir -p tmp/mags/
-		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/mags/
-		cp output/06_co_assembly/metabat/bin/*.fa tmp/mags/
-		abricate --db megares --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath tmp/mags/* > {output.amr_mags}
-		abricate --db vfdb --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath tmp/mags/* > {output.vir_mags}
-		rm -r tmp/mags/
+		mkdir -p tmp/amr_mags/
+		cp output/05_genomic_bins/metabat/*/bin/*.fa tmp/amr_mags/
+		cp output/06_co_assembly/metabat/bin/*.fa tmp/amr_mags/
+		abricate --db megares --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath tmp/amr_mags/* > {output.amr_mags}
+		abricate --db vfdb --threads {threads} --minid {params.identity} --mincov {params.coverage} --nopath tmp/amr_mags/* > {output.vir_mags}
+		rm -r tmp/amr_mags/
 		"""
 
 # ABRicate TaxCaller
