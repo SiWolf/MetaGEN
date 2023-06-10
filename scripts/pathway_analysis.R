@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: pathway_analysis.R
 # Author: Silver A. Wolf
-# Last Modified: Mon, 27.03.2023
-# Version: 0.0.2
+# Last Modified: Sat, 10.06.2023
+# Version: 0.0.3
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -91,6 +91,96 @@ c1 <- read.csv("../output/03_functional_analysis/humann3/D61015/humann_D61015_pa
 c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
 c3 <- c2[is.na(c2$X..Pathway_2),]
 D61015 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11021/humann_F11021_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11021 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11022/humann_F11022_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11022 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11023/humann_F11023_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11023 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11024/humann_F11024_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11024 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11025/humann_F11025_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11025 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11026/humann_F11026_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11026 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11027/humann_F11027_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11027 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11028/humann_F11028_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11028 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11029/humann_F11029_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11029 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11030/humann_F11030_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11030 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11031/humann_F11031_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11031 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11032/humann_F11032_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11032 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11033/humann_F11033_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11033 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11034/humann_F11034_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11034 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11035/humann_F11035_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11035 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11036/humann_F11036_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11036 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11037/humann_F11037_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11037 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11038/humann_F11038_pathabundance.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Pathway_2),]
+F11038 <- data.frame(PW = c3[,2], RPK = c3[,1])
 
 c1 <- read.csv("../output/03_functional_analysis/humann3/H25286/humann_H25286_pathabundance.tsv", sep = "\t")
 c2 <- concat.split(data = c1, split.col = "X..Pathway", sep = "\\|", drop = TRUE)
@@ -268,7 +358,9 @@ c3 <- c2[is.na(c2$X..Pathway_2),]
 SRR10505697 <- data.frame(PW = c3[,2], RPK = c3[,1])
 
 pathways.raw <- list(D61001, D61002, D61003, D61004, D61005, D61006, D61007, D61008, D61009, D61010,
-                     D61011, D61012, D61013, D61014, D61015, H25286, H25287, H25288, H25289, H25290,
+                     D61011, D61012, D61013, D61014, D61015, F11021, F11022, F11023, F11024, F11025,
+                     F11026, F11027, F11028, F11029, F11030, F11031, F11032, F11033, F11034, F11035,
+                     F11036, F11037, F11038, H25286, H25287, H25288, H25289, H25290,
                      H25294, H25296, H25297, I12271, I12272, I12273, I12276, I12277, I12278, I12279,
                      I12280, I12281, I12282, J10519, J10520, J10521, J10522, J10523, J10524, J10525,
                      J10526, J10527, J10528, J10529, J10530, SRR10505693, SRR10505694, SRR10505695,
@@ -452,6 +544,98 @@ c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = 
 c3 <- c2[is.na(c2$X..Gene.Family_2),]
 D61015 <- data.frame(PW = c3[,2], RPK = c3[,1])
 
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11021/humann_F11021_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11021 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11022/humann_F11022_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11022 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11023/humann_F11023_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11023 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11024/humann_F11024_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11024 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11025/humann_F11025_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11025 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11026/humann_F11026_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11026 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11027/humann_F11027_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11027 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11028/humann_F11028_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11028 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11029/humann_F11029_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11029 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11030/humann_F11030_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11030 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11031/humann_F11031_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11031 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11032/humann_F11032_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11032 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11033/humann_F11033_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11033 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11034/humann_F11034_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11034 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11035/humann_F11035_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11035 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11036/humann_F11036_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11036 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11037/humann_F11037_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11037 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+c1 <- read.csv("../output/03_functional_analysis/humann3/F11038/humann_F11038_genefamilies.tsv", sep = "\t")
+c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
+c3 <- c2[is.na(c2$X..Gene.Family_2),]
+F11038 <- data.frame(PW = c3[,2], RPK = c3[,1])
+
+
 c1 <- read.csv("../output/03_functional_analysis/humann3/H25286/humann_H25286_genefamilies.tsv", sep = "\t")
 c2 <- concat.split(data = c1, split.col = "X..Gene.Family", sep = "\\|", drop = TRUE)
 c3 <- c2[is.na(c2$X..Gene.Family_2),]
@@ -628,11 +812,13 @@ c3 <- c2[is.na(c2$X..Gene.Family_2),]
 SRR10505697 <- data.frame(PW = c3[,2], RPK = c3[,1])
 
 genes.raw <- list(D61001, D61002, D61003, D61004, D61005, D61006, D61007, D61008, D61009, D61010,
-                     D61011, D61012, D61013, D61014, D61015, H25286, H25287, H25288, H25289, H25290,
-                     H25294, H25296, H25297, I12271, I12272, I12273, I12276, I12277, I12278, I12279,
-                     I12280, I12281, I12282, J10519, J10520, J10521, J10522, J10523, J10524, J10525,
-                     J10526, J10527, J10528, J10529, J10530, SRR10505693, SRR10505694, SRR10505695,
-                     SRR10505696, SRR10505697) %>% reduce(full_join, by = "X..Gene.Family_1")
+                  D61011, D61012, D61013, D61014, D61015, F11021, F11022, F11023, F11024, F11025,
+                  F11026, F11027, F11028, F11029, F11030, F11031, F11032, F11033, F11034, F11035,
+                  F11036, F11037, F11038, H25286, H25287, H25288, H25289, H25290,
+                  H25294, H25296, H25297, I12271, I12272, I12273, I12276, I12277, I12278, I12279,
+                  I12280, I12281, I12282, J10519, J10520, J10521, J10522, J10523, J10524, J10525,
+                  J10526, J10527, J10528, J10529, J10530, SRR10505693, SRR10505694, SRR10505695,
+                  SRR10505696, SRR10505697) %>% reduce(full_join, by = "X..Gene.Family_1")
 
 genes.raw[is.na(genes.raw)] <- 0
 write_tsv(genes.raw, file = "../output/08_visualization/tab_gene_abundances.csv")

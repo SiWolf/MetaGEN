@@ -1,15 +1,15 @@
 # -------------------------------
 # Title: BLAST_kmer_subset.py
 # Author: Silver A. Wolf
-# Last Modified: Thu, 30.03.2023
-# Version: 0.0.1
+# Last Modified: Sat, 10.06.2023
+# Version: 0.0.2
 # -------------------------------
 
 import glob
 import os
 
 kmer_lists = (glob.glob("output/03_functional_analysis/kmc3/unique_filter*"))
-threads = 35
+threads = 216
 
 for comparison in kmer_lists:
     name = comparison.split("/")[-1].split(".")[0]
