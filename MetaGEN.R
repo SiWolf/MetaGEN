@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Mon, 08.05.2023
-# Version: 0.6.8
+# Last Modified: Sun, 11.06.2023
+# Version: 0.6.9
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -164,8 +164,8 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -187,8 +187,8 @@ ggscatter(data.pcoa[data.pcoa$AB_GROUP == "SSG", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -210,8 +210,8 @@ ggscatter(data.pcoa[data.pcoa$AB_GROUP == "5DG", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "TIMEPOINT",
           shape = "TIMEPOINT",
           #star.plot = TRUE,
@@ -233,8 +233,8 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           ellipse = TRUE,
@@ -254,8 +254,8 @@ ggscatter(data.pcoa[data.pcoa$TIMEPOINT == "t0", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -277,8 +277,8 @@ ggscatter(data.pcoa[data.pcoa$TIMEPOINT == "t1", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -300,8 +300,8 @@ ggscatter(data.pcoa[data.pcoa$TIMEPOINT == "t2", ],
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "AB_GROUP",
           shape = "AB_GROUP",
           #star.plot = TRUE,
@@ -323,8 +323,8 @@ ggscatter(data.pcoa,
           y = "Axis.2",
           xlab = paste("PC1 (", eigenvalue_pc1, "%)", sep = ""),
           ylab = paste("PC2 (", eigenvalue_pc2, "%)", sep = ""),
-          xlim = c(-0.57, 0.17),
-          ylim = c(-0.43, 0.46),
+          xlim = c(-0.59, 0.17),
+          ylim = c(-0.39, 0.46),
           color = "TIME_GROUP",
           #shape = "TIME_GROUP",
           #star.plot = TRUE,
@@ -346,14 +346,14 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = diversity_shannon, fill = TIM
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
-        coord_cartesian(ylim = c(1.9, 9)) +
+        coord_cartesian(ylim = c(1.9, 8.9)) +
         scale_y_continuous(breaks = c(3, 5, 7)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
-                           label.y = c(7.5, 8.1, 8.7),
+                           label.y = c(7.7, 8.1, 8.6),
                            size = 3,
                            paired = TRUE)
 dev.off()
@@ -370,7 +370,7 @@ ggplot(data.alpha.filtered, aes(x = TIMEPOINT, y = evenness_simpson, fill = TIME
         stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
-                           label.y = c(0.042, 0.047, 0.052),
+                           label.y = c(0.045, 0.048, 0.052),
                            size = 3,
                            paired = TRUE)
 dev.off()
@@ -434,7 +434,7 @@ dev.off()
 # Individual Horses - SSG
 bar_data_ssg <- bar_data_melted[bar_data_melted$AB_GROUP == "SSG",]
 
-png("output/08_visualization/tax_bar_horses_ssg.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_horses_ssg.png", width = 25, height = 15, units = "cm", res = 500)
 ggplot(bar_data_ssg, aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -470,7 +470,7 @@ ggplot(bar_data_ref, aes(fill = OTU, y = Abundance, x = HORSE)) +
 dev.off()
 
 # Summarized groups
-png("output/08_visualization/tax_bar_sum_groups.png", width = 15, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_groups.png", width = 14, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = Abundance, x = TIMEPOINT)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -487,7 +487,7 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = 
               )
 dev.off()
 
-png("output/08_visualization/tax_bar_sum_timepoints.png", width = 20, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_timepoints.png", width = 15, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -504,7 +504,7 @@ ggplot(bar_data_melted[bar_data_melted$AB_GROUP != "REF",], aes(fill = OTU, y = 
         )
 dev.off()
 
-png("output/08_visualization/tax_bar_sum_refs.png", width = 10, height = 15, units = "cm", res = 500)
+png("output/08_visualization/tax_bar_sum_refs.png", width = 9, height = 15, units = "cm", res = 500)
 ggplot(bar_data_melted[bar_data_melted$AB_GROUP == "REF",], aes(fill = OTU, y = Abundance, x = AB_GROUP)) + 
         geom_bar(position = "fill", stat = "identity") +
         scale_fill_manual(values = palette) +
@@ -700,7 +700,7 @@ re.order.rows <- abricate.meta[with(abricate.meta, order(Day, AB_Group, HorseID)
 abricate.matrix[abricate.matrix >= 2] = 2
 
 # Plot Heatmap
-png("output/08_visualization/amr_heat_abricate.png", width = 40, height = 20, units = "cm", res = 500)
+png("output/08_visualization/amr_heat_abricate.png", width = 40, height = 22, units = "cm", res = 500)
 Heatmap(abricate.matrix,
         cluster_columns = FALSE,
         cluster_rows = FALSE,
@@ -733,7 +733,7 @@ dev.off()
 # Correlation - AMR and Diversity
 cor.test(amr.norm.reads$CP60M, amr.norm.reads$DIV, method = "spearman")
 
-png("output/08_visualization/amr_div_cor.png", width = 17, height = 16, units = "cm", res = 500)
+png("output/08_visualization/amr_div_cor.png", width = 18, height = 16, units = "cm", res = 500)
 ggscatter(amr.norm.reads,
           x = "CP60M",
           y = "DIV",
@@ -767,7 +767,7 @@ stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shan
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
-# Significant Differences between t1 and t2 -> no
+# Significant Differences between t1 and t2 -> yes
 stat.data <- data.alpha.rarefy[data.alpha.rarefy$TIMEPOINT != "t0" & data.alpha.rarefy$AB_GROUP == "SSG",]
 stat.df <- data.frame(TIME = stat.data$TIMEPOINT, DIV = stat.data$diversity_shannon)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$DIV), stat.df$TIME, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
@@ -827,19 +827,19 @@ stat.res
 
 # AMR - SSG
 
-# Significant Differences between t0 and t1 -> no
+# Significant Differences between t0 and t1 -> yes
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t2" & amr.norm.reads$AB_GROUP == "SSG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
-# Significant Differences between t1 and t2 -> no
+# Significant Differences between t1 and t2 -> yes
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t0" & amr.norm.reads$AB_GROUP == "SSG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
 stat.res
 
-# Significant Differences between t0 and t2 -> no
+# Significant Differences between t0 and t2 -> yes
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT != "t1" & amr.norm.reads$AB_GROUP == "SSG",]
 stat.df <- data.frame(GROUP = stat.data$TIMEPOINT, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH", paired = TRUE)
@@ -885,7 +885,7 @@ stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
 stat.res
 
-# Significant Differences at t2 -> yes
+# Significant Differences at t2 -> no
 stat.data <- amr.norm.reads[amr.norm.reads$TIMEPOINT == "t2" & data.alpha.rarefy$AB_GROUP != "REF",]
 stat.df <- data.frame(GROUP = stat.data$AB_GROUP, AMR = stat.data$CP60M)
 stat.res <- pairwise.wilcox.test(as.numeric(stat.df$AMR), stat.df$GROUP, alternative = "two.sided", p.adjust.method = "BH")
@@ -942,7 +942,7 @@ Gene_AMR_DF = data.frame(AMR_Gene = h, AMR_Class = tolower(g))
 re.order.cols.reads = Gene_AMR_DF[order(Gene_AMR_DF$AMR_Class),]
 
 # Plot AMR Read Heatmap
-png("output/08_visualization/amr_heat_coverm_genes.png", width = 40, height = 20, units = "cm", res = 500)
+png("output/08_visualization/amr_heat_coverm_genes.png", width = 40, height = 22, units = "cm", res = 500)
 Heatmap(Gene_groupedCounts,
         cluster_columns = TRUE,
         cluster_rows = FALSE,
@@ -1064,7 +1064,7 @@ dev.off()
 # Total AMR Sum
 png("output/08_visualization/amr_sum_box.png", width = 15, height = 10, units = "cm", res = 500)
 ggplot(Class_AMR_SUM[Class_AMR_SUM$AB_GROUP != "REF",], aes(x = TIMEPOINT, y = log2(AMR), fill = TIMEPOINT)) +
-        coord_cartesian(ylim = c(18, 25)) +
+        coord_cartesian(ylim = c(18, 24.4)) +
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
@@ -1073,7 +1073,7 @@ ggplot(Class_AMR_SUM[Class_AMR_SUM$AB_GROUP != "REF",], aes(x = TIMEPOINT, y = l
         stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
-                           label.y = c(22.5, 23.5, 24.5),
+                           label.y = c(23.2, 23.6, 24.1),
                            size = 3,
                            paired = TRUE)
 dev.off()
@@ -1148,7 +1148,7 @@ Class_AMR_SUM$DIV = amr.norm.reads$DIV
 
 cor.test(Class_AMR_SUM$AMR, Class_AMR_SUM$DIV, method = "spearman")
 
-png("output/08_visualization/amr_div_cor_reads.png", width = 17, height = 16, units = "cm", res = 500)
+png("output/08_visualization/amr_div_cor_reads.png", width = 18, height = 16, units = "cm", res = 500)
 ggscatter(Class_AMR_SUM,
           x = "AMR_LOG2",
           y = "DIV",
@@ -1269,14 +1269,14 @@ ggplot(G2, aes(x = TIMEPOINT, y = log2(Abundance + 1), fill = TIMEPOINT)) +
         geom_boxplot(alpha = 0.9) +
         geom_jitter(alpha = 0.5) +
         facet_wrap(~AB_GROUP, scale = "free") +
-        coord_cartesian(ylim = c(11, 19.5)) +
+        coord_cartesian(ylim = c(11, 19)) +
         scale_y_continuous(breaks = c(9, 12, 15, 18)) +
         stat_boxplot(geom = "errorbar", width = 0.5) +
         scale_fill_manual(values = colours.days[1:3]) +
         stat_compare_means(comparisons = boxplot.timepoints,
                            alternative = "two.sided",
                            method = "wilcox.test",
-                           label.y = c(17, 18, 19),
+                           label.y = c(17, 17.7, 18.5),
                            size = 3,
                            paired = TRUE,
                            method.args = list(exact = FALSE)) +
@@ -1720,7 +1720,7 @@ re.order.rows <- abricate.meta[with(abricate.meta, order(Day, AB_Group, HorseID)
 vir.matrix[vir.matrix >= 2] = 2
 
 # Plot Heatmap
-png("output/08_visualization/vir_heat_abricate.png", width = 40, height = 20, units = "cm", res = 500)
+png("output/08_visualization/vir_heat_abricate.png", width = 40, height = 22, units = "cm", res = 500)
 Heatmap(vir.matrix,
         cluster_columns = FALSE,
         cluster_rows = FALSE,
@@ -1747,7 +1747,7 @@ dev.off()
 # Correlation - Virulence and Diversity
 cor.test(vir.norm.reads$CP60M, vir.norm.reads$DIV, method = "spearman", exact = FALSE)
 
-png("output/08_visualization/vir_div_cor.png", width = 17, height = 16, units = "cm", res = 500)
+png("output/08_visualization/vir_div_cor.png", width = 18, height = 16, units = "cm", res = 500)
 ggscatter(vir.norm.reads,
           x = "CP60M",
           y = "DIV",
@@ -1787,14 +1787,14 @@ ggplot(plas.df[plas.df$AB_Group != "REF",], aes(x = Timepoint, y = log(mobile_ar
   geom_boxplot(alpha = 0.9) +
   geom_jitter(alpha = 0.5) +
   facet_wrap(~AB_Group, scale = "free") +
-  coord_cartesian(ylim = c(0, 4.9)) +
+  coord_cartesian(ylim = c(0, 5.0)) +
   scale_y_continuous(breaks = c(0, 2, 4)) +
   stat_boxplot(geom = "errorbar", width = 0.5) +
   scale_fill_manual(values = colours.days[1:3]) +
   stat_compare_means(comparisons = boxplot.timepoints,
                      alternative = "two.sided",
                      method = "wilcox.test",
-                     label.y = c(4.1, 4.3, 4.6),
+                     label.y = c(4.1, 4.4, 4.7),
                      size = 3,
                      paired = TRUE,
                      method.args = list(exact = FALSE))
@@ -1806,14 +1806,14 @@ ggplot(plas.df[plas.df$AB_Group != "REF",], aes(x = Timepoint, y = log(mobile_vi
   geom_boxplot(alpha = 0.9) +
   geom_jitter(alpha = 0.5) +
   facet_wrap(~AB_Group, scale = "free") +
-  coord_cartesian(ylim = c(0, 4.9)) +
+  coord_cartesian(ylim = c(0, 5.0)) +
   scale_y_continuous(breaks = c(0, 2, 4)) +
   stat_boxplot(geom = "errorbar", width = 0.5) +
   scale_fill_manual(values = colours.days[1:3]) +
   stat_compare_means(comparisons = boxplot.timepoints,
                      alternative = "two.sided",
                      method = "wilcox.test",
-                     label.y = c(4.1, 4.3, 4.6),
+                     label.y = c(4.1, 4.4, 4.7),
                      size = 3,
                      paired = TRUE,
                      method.args = list(exact = FALSE))
