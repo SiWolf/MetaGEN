@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Tue, 13.06.2023
-# Version: 0.7.0
+# Last Modified: Thu, 15.06.2023
+# Version: 0.7.1
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -1896,7 +1896,12 @@ for (sample in unique(amr.mags.merged$X.FILE)){
 }
 
 amr.mags.sum <- data.frame(SAMPLE = s, DRUG_RESISTANCE_CLASSES = c)
-amr.mags.count = 8265
+
+# Read info on generated bins
+gtdbtk.ar <- read.csv("output/05_genomic_bins/gtdbtk_full/classify/gtdbtk.ar53.summary.tsv", sep = "\t")
+gtdbtk.bac <- read.csv("output/05_genomic_bins/gtdbtk_full/classify/gtdbtk.bac120.summary.tsv", sep = "\t")
+gtdbtk.all <- rbind(gtdbtk.ar, gtdbtk.bac)
+amr.mags.count = nrow(gtdbtk.all)
 
 amr.mags.overview.rownames <- c("Total MAGs", "MDR (> 2 antibiotic classes)", "Resistant (1-2 antibiotic classes)", "Susceptible (0 antibiotic classes)")
 amr.mags.overview.colnames <- c("Count", "Percentage of MAGs")
@@ -1915,9 +1920,6 @@ rownames(amr.mags.overview) <- amr.mags.overview.rownames
 amr.mags.sum.filtered <- amr.mags.sum[amr.mags.sum$DRUG_RESISTANCE_CLASSES > 0, ]
 
 # Add taxonomic assignment from gtdbtk
-gtdbtk.ar <- read.csv("output/05_genomic_bins/gtdbtk_full/classify/gtdbtk.ar53.summary.tsv", sep = "\t")
-gtdbtk.bac <- read.csv("output/05_genomic_bins/gtdbtk_full/classify/gtdbtk.bac120.summary.tsv", sep = "\t")
-gtdbtk.all <- rbind(gtdbtk.ar, gtdbtk.bac)
 gtdbtk.all.split <- separate(data = gtdbtk.all, col = classification, into = c("DOMAIN", "PHYLUM", "CLASS", "ORDER", "FAMILY", "GENUS", "SPECIES"), sep = ";")
 
 gtdbtk.all.filter <- gtdbtk.all.split[, 1:8]
