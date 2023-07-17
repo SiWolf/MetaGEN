@@ -1,8 +1,8 @@
 # --------------------------------------------------------------------------------------------------------
 # Title: MetaGEN.R
 # Author: Silver A. Wolf
-# Last Modified: Thu, 15.06.2023
-# Version: 0.7.1
+# Last Modified: Mon, 17.07.2023
+# Version: 0.7.2
 # --------------------------------------------------------------------------------------------------------
 
 # Libraries
@@ -1962,3 +1962,90 @@ merge.tab.06$nasal_diversity_shannon <- round(merge.tab.06$nasal_diversity_shann
 merge.tab.06$ARGs_CP60M <- round(merge.tab.06$ARGs_CP60M, 0)
 merge.tab.06$VIR_CP60M <- round(merge.tab.06$VIR_CP60M, 0)
 write.csv(merge.tab.06, file = "output/08_visualization/tab_summary.csv", quote = FALSE, row.names = FALSE)
+
+# Average div values
+avg_nasal_ssg_t0_rich <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t0",]$chao1)
+avg_nasal_ssg_t1_rich <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t1",]$chao1)
+avg_nasal_ssg_t2_rich <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t2",]$chao1)
+avg_nasal_fdg_t0_rich <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t0",]$chao1)
+avg_nasal_fdg_t1_rich <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t1",]$chao1)
+avg_nasal_fdg_t2_rich <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t2",]$chao1)
+
+avg_nasal_ssg_t0_even <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t0",]$evenness_simpson)
+avg_nasal_ssg_t1_even <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t1",]$evenness_simpson)
+avg_nasal_ssg_t2_even <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t2",]$evenness_simpson)
+avg_nasal_fdg_t0_even <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t0",]$evenness_simpson)
+avg_nasal_fdg_t1_even <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t1",]$evenness_simpson)
+avg_nasal_fdg_t2_even <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t2",]$evenness_simpson)
+
+avg_nasal_ssg_t0_div <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t0",]$diversity_shannon)
+avg_nasal_ssg_t1_div <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t1",]$diversity_shannon)
+avg_nasal_ssg_t2_div <- mean(results.16s[results.16s$AB_GROUP == "SSG" & results.16s$TIMEPOINT == "t2",]$diversity_shannon)
+avg_nasal_fdg_t0_div <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t0",]$diversity_shannon)
+avg_nasal_fdg_t1_div <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t1",]$diversity_shannon)
+avg_nasal_fdg_t2_div <- mean(results.16s[results.16s$AB_GROUP == "5DG" & results.16s$TIMEPOINT == "t2",]$diversity_shannon)
+
+avg_gut_ssg_t0_rich <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t0",]$chao1)
+avg_gut_ssg_t1_rich <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t1",]$chao1)
+avg_gut_ssg_t2_rich <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t2",]$chao1)
+avg_gut_fdg_t0_rich <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t0",]$chao1)
+avg_gut_fdg_t1_rich <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t1",]$chao1)
+avg_gut_fdg_t2_rich <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t2",]$chao1)
+
+avg_gut_ssg_t0_even <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t0",]$evenness_simpson)
+avg_gut_ssg_t1_even <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t1",]$evenness_simpson)
+avg_gut_ssg_t2_even <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t2",]$evenness_simpson)
+avg_gut_fdg_t0_even <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t0",]$evenness_simpson)
+avg_gut_fdg_t1_even <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t1",]$evenness_simpson)
+avg_gut_fdg_t2_even <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t2",]$evenness_simpson)
+
+avg_gut_ssg_t0_div <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t0",]$diversity_shannon)
+avg_gut_ssg_t1_div <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t1",]$diversity_shannon)
+avg_gut_ssg_t2_div <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "SSG" & data.alpha.rarefy$TIMEPOINT == "t2",]$diversity_shannon)
+avg_gut_fdg_t0_div <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t0",]$diversity_shannon)
+avg_gut_fdg_t1_div <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t1",]$diversity_shannon)
+avg_gut_fdg_t2_div <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "5DG" & data.alpha.rarefy$TIMEPOINT == "t2",]$diversity_shannon)
+
+avg_gut_ref_rich <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "REF",]$chao1)
+avg_gut_ref_even <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "REF",]$evenness_simpson)
+avg_gut_ref_div <- mean(data.alpha.rarefy[data.alpha.rarefy$AB_GROUP == "REF",]$diversity_shannon)
+
+list_env = c(rep("gut", 7), rep("nasal", 6))
+list_ab = c("5DG", "5DG", "5DG",
+            "SSG", "SSG", "SSG",
+            "NCBI",
+            "5DG", "5DG", "5DG",
+            "SSG", "SSG", "SSG"
+            )
+list_tp = c("t0", "t1", "t2",
+            "t0", "t1", "t2",
+            "-",
+            "t0", "t1", "t2",
+            "t0", "t1", "t2"
+            )
+list_div = c(avg_gut_fdg_t0_div, avg_gut_fdg_t1_div, avg_gut_fdg_t2_div,
+             avg_gut_ssg_t0_div, avg_gut_ssg_t1_div, avg_gut_ssg_t2_div,
+             avg_gut_ref_div,
+             avg_nasal_fdg_t0_div, avg_nasal_fdg_t1_div, avg_nasal_fdg_t2_div,
+             avg_nasal_ssg_t0_div, avg_nasal_ssg_t1_div, avg_nasal_ssg_t2_div
+             )
+list_even = c(avg_gut_fdg_t0_even, avg_gut_fdg_t1_even, avg_gut_fdg_t2_even,
+             avg_gut_ssg_t0_even, avg_gut_ssg_t1_even, avg_gut_ssg_t2_even,
+             avg_gut_ref_even,
+             avg_nasal_fdg_t0_even, avg_nasal_fdg_t1_even, avg_nasal_fdg_t2_even,
+             avg_nasal_ssg_t0_even, avg_nasal_ssg_t1_even, avg_nasal_ssg_t2_even
+             )
+list_rich = c(avg_gut_fdg_t0_rich, avg_gut_fdg_t1_rich, avg_gut_fdg_t2_rich,
+              avg_gut_ssg_t0_rich, avg_gut_ssg_t1_rich, avg_gut_ssg_t2_rich,
+              avg_gut_ref_rich,
+              avg_nasal_fdg_t0_rich, avg_nasal_fdg_t1_rich, avg_nasal_fdg_t2_rich,
+              avg_nasal_ssg_t0_rich, avg_nasal_ssg_t1_rich, avg_nasal_ssg_t2_rich
+              )
+avg_df = data.frame(microbiome = list_env,
+                    ab_group = list_ab,
+                    timepoint = list_tp,
+                    diversity_shannon = round(list_div, 2),
+                    evenness_simpson = round(list_even, 3),
+                    richness_chao1 = round(list_rich, 0)
+                    )
+write.csv(avg_df, file = "output/08_visualization/tab_summary_div.csv", quote = FALSE, row.names = FALSE)
